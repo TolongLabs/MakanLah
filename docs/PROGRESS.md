@@ -1,49 +1,34 @@
-# Progress — 2026-08-28 · pre-spike
+# Progress — 2026-08-27 · spike in flight
 
-**Terminal condition:** the Xiaohongshu spike returns a number. Can ~50 KL restaurant posts be pulled with name,
-location, dish and sentiment into records matching the `source_post` / `venue` / `mention` schema in [`TRD.md`](TRD.md)?
-**Report counts, not a verdict** — "34 of 50, 6 missing location" is the shape of the answer.
+**Terminal condition:** ~50 KL restaurant posts pulled into `source_post` / `venue` / `mention` ([`TRD.md`](TRD.md))
+with name, location, dish, sentiment. Report counts, not a verdict.
 
-**First command, before anything else:** `scripts/chrome-session.sh start && scripts/chrome-session.sh verify`
+**Xiaohongshu is logged out — the primary source is unavailable.** Not a CDP fault: the plumbing works. `web_session`
+copies and decrypts (len 38, HttpOnly, visible to CDP), but the server rejects it. Search returns `登录后查看搜索结果`
+with 0 cards. **A human must re-login in Chrome, then fully quit Chrome** before `chrome-session.sh start`.
 
-Chrome 136+ refuses CDP against the default profile, so the naive approach fails **silently** — no debugging port, and
-every fetch returns a login wall indistinguishable from an expired session. The script works around it; `verify` proves
-the session carried. **Nobody has confirmed it end to end yet.** If verify fails, that is a finding: record it, fall
-through to open-web sources via Firecrawl, keep going.
+**Routed around:** Google Maps reviews via CDP — no key, real user text, mixed EN/MS/ZH, and lat/lng inline in the place
+URL (`!3d<lat>!4d<lng>`), which may remove the geocode stage. Reddit serves a bot challenge; logged and skipped, not
+evaded.
 
-**State:** repo scaffolded, no application code. `PRODUCT.md`, `SWARM.md`, `AUTONOMY.md`, `TRD.md` written. **`PRD.md`
-is the one gate document missing** — write it after the spike, do not stop for it.
+**Two bugs fixed in `scripts/chrome-session.sh`:**
 
-**In flight:** nothing. **Blockers routed around:** none yet.
+1. `verify` used `GET /json/new`; Chrome 111+ answers with an error _string_, so the empty-body PUT fallback never
+   fired. Now PUT only. **Fixed.**
+2. `verify` returns a **false pass** on a logged-out XHS session — it greps the title for "login", and XHS keeps the
+   title 小红书 while overlaying a login modal. The one check meant to prevent a silent login wall lets one through.
+   **Being rewritten to assert content, not absent keywords.**
 
-**Next:**
+**Credentials.** `.env` created (mode 600). `DATABASE_URL` / `DATABASE_URL_UNPOOLED` filled from a new Neon project
+`MakanLah` (`hidden-resonance-97962934`, `aws-ap-southeast-1`, free tier). `gh` is ADMIN. **Still empty and
+human-gated:** `MODELSCOPE_API_KEY` (+ `MODELSCOPE_MODEL_EXTRACT`), `FIRECRAWL_API_KEY`, `OPENROUTER_API_KEY`,
+`HERMES_API_KEY`. `flyctl` and `wrangler` are installed but unauthenticated — deploy-time only. Firecrawl CLI never
+installed: only `~/.firecrawl/update-check.json` exists, the signature of an ephemeral `bunx` run.
 
-1. `scripts/preflight.sh` — confirm keys and mode
-2. Chrome session up and **verified**
-3. Spike: **orchestrator only, no workers, no GSD.** `SWARM.md` §3 rules it out of fan-out — exploratory work fails in
-   ways no test anticipates
-4. Raw captures to `docs/source/`, dated. Numbers here
-5. The TRD schema is a hypothesis. If real posts do not fit, change the TRD and say what changed
-6. Then `PRD.md`, then `/gsd-new-project` for the scaffold phase
+**If ModelScope stays empty**, extraction for the spike runs on the orchestrator model and the boundary is marked
+`TODO(blocked)`. `raw_payload` makes re-extraction free once a key lands.
 
----
+**Branch:** `feat/xhs-spike`. **Gate:** `docs/PRD.md` still missing — write after the spike.
 
-## How To Write This
-
-Session state only. The backlog lives in GitHub Issues — see [`../AGENTS.md`](../AGENTS.md#how-work-ships).
-
-**The session-brief hook prints the first twenty lines**, so the state belongs at the top and this guidance at the
-bottom. Rewrite whenever you finish a unit, make a decision, route around a blocker, or a `PreCompact` hook tells you
-to.
-
-| Field                  | Holds                                                                             |
-| ---------------------- | --------------------------------------------------------------------------------- |
-| **Terminal condition** | What "done" means for the current run. Named and checkable, never "make progress" |
-| **First command**      | The one thing a resuming session should run before deciding anything              |
-| **State**              | Where the work actually is. One paragraph                                         |
-| **In flight**          | Started and unfinished. What a resuming session would otherwise redo              |
-| **Blockers**           | What you skipped, why, and what you did instead. A silent skip reads as done      |
-| **Next**               | The ordered short list. Anything beyond the current push goes to Issues           |
-
-Keep the state block under twenty lines. It is a handoff to someone with none of your context, not a log — and a log
-that scrolls past the printed head is a log nobody reads.
+**Next:** build the Google Maps CDP scraper in `spike/`, pull ~50 KL venue reviews, map to the TRD schema, report
+counts, write redacted captures to `docs/source/2026-08-27-*`.

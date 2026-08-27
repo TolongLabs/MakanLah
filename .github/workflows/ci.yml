@@ -25,6 +25,11 @@ jobs:
         with:
           bun-version: latest
 
+      # bun run lint shells out to ruff via uv, so uv must exist before it runs.
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - run: bun install --frozen-lockfile
 
       - name: Lint and format check
