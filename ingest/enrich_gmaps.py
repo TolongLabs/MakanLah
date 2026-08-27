@@ -17,6 +17,7 @@ import argparse
 import asyncio
 import re
 import sys
+import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -33,6 +34,19 @@ def star_sentiment(label):
     if not m:
         return None
     return round((int(m.group(1)) - 3) / 2, 2)
+
+
+def review_url(venue_name, city='Kuala Lumpur'):
+    """Where a human verifies this citation.
+
+    Google Maps has no stable per-review URL, so the citation points at the
+    place's own page, which is where the review lives. It must be a link that
+    actually resolves: an earlier version built this from the venue's internal
+    UUID and produced a URL that went nowhere, which breaks the one thing the
+    product promises.
+    """
+    q = urllib.parse.quote(f'{venue_name} {city}'.strip())
+    return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
 def pending_venues(con, limit=None, only_missing_coords=True):
@@ -71,7 +85,7 @@ def apply(con, records):
                 con,
                 platform='google_maps',
                 platform_post_id=rv['review_id'],
-                url=f'https://www.google.com/maps/place/?q=place_id:{rec["id"]}',
+                url=review_url(rec['name']),
                 author_handle=None,
                 posted_at_raw=rv.get('when') or None,
                 langs=['und'],

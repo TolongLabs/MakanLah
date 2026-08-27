@@ -93,3 +93,37 @@ class TestMergeOrdering:
         s = steps(con)
         assert sorted(s) == sorted(set(s))
         assert len(s) == 5
+
+
+class TestReviewUrl:
+    """A citation that does not resolve is worse than no citation: it looks like
+    evidence and is not. An earlier version built this from the venue's internal
+    UUID and produced a URL that went nowhere."""
+
+    def test_the_url_resolves_to_a_real_maps_search(self):
+        from ingest.enrich_gmaps import review_url
+
+        u = review_url('Village Park')
+        assert u.startswith('https://www.google.com/maps/search/?api=1&query=')
+        assert 'Village' in u
+
+    def test_no_internal_identifier_leaks_into_the_url(self):
+        from ingest.enrich_gmaps import review_url
+
+        u = review_url('Village Park')
+        assert 'place_id:' not in u
+        assert '-' * 4 not in u  # no uuid fragment
+
+    def test_a_chinese_name_is_escaped_rather_than_dropped(self):
+        from ingest.enrich_gmaps import review_url
+
+        u = review_url('兴记肉骨茶')
+        assert '%' in u.split('query=')[1]
+        assert len(u.split('query=')[1]) > 10
+
+    def test_the_city_is_included_so_the_search_lands_in_kl(self):
+        from urllib.parse import unquote
+
+        from ingest.enrich_gmaps import review_url
+
+        assert 'Kuala Lumpur' in unquote(review_url('Yut Kee'))
