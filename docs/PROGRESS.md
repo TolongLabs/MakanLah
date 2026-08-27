@@ -11,14 +11,16 @@ post, answered in the language it was asked in.** Median response **2.51s**, ins
 
 ## The Corpus
 
-|                 |                                                                    |
-| --------------- | ------------------------------------------------------------------ |
-| **Posts**       | **607** — 488 Google Maps, 119 RedNote                             |
-| **Venues**      | **281**, 139 geocoded, 89 with a Google `place_id`                 |
-| **Mentions**    | **822** — 822 with sentiment, 822 with an excerpt, 183 with a dish |
-| **Excerpts**    | 812 verbatim from the model, 10 repaired, **0 fabricated**         |
-| **Two sources** | 61 venues cited by both. Neither is load-bearing                   |
-| **Invariants**  | 0 uncited venues · 0 non-verbatim excerpts · 281 embeddings        |
+Still growing: Google Maps enrichment is mid-run. Numbers as of the last check.
+
+|                 |                                                              |
+| --------------- | ------------------------------------------------------------ |
+| **Posts**       | **783** — 664 Google Maps, 119 RedNote                       |
+| **Venues**      | **269**, 154 geocoded, 122 with a Google `place_id`          |
+| **Mentions**    | **989** — all with sentiment and an excerpt, 249 with a dish |
+| **Excerpts**    | 979 verbatim from the model, 10 repaired, **0 fabricated**   |
+| **Two sources** | **83** venues cited by both. Neither is load-bearing         |
+| **Invariants**  | 0 uncited venues · 0 non-verbatim excerpts · 269 embeddings  |
 
 RedNote languages per post: **84 Chinese only · 14 Chinese+Malay · 13 Chinese+English · 8 all three.**
 
@@ -38,7 +40,7 @@ and also returns the `place_id` that makes venue merging evidence-based rather t
 
 ---
 
-## Twelve Defects Found And Fixed
+## Fifteen Defects Found And Fixed
 
 Each was found by running something, not by reading code.
 
@@ -55,13 +57,22 @@ Each was found by running something, not by reading code.
 11. **A 3-way venue merge aborted** on the unique key: two dropped rows can hold a mention of the same post
 12. **Latency was 12.5s against a 3s target.** The re-rank prompt was missing the literal word `json`, so DashScope
     returned 400 and re-ranking **silently never happened**; the lane was also a 235B model reading 48 candidates
+13. **`他们家` was stored as a venue** — a pronoun meaning "their place", taken as a name by the extractor
+14. **`华阳` / `华阳茶室` / `华阳冰室` were three rows for one kopitiam** — `茶餐室` and `冰室` were missing from the
+    CJK generics
+15. **A dry run reported 0 merges, then the real run merged 7** — it previewed against the stored key rather than the
+    recomputed one, which is the shape of a dry run nobody should trust
 
 ---
 
 ## Next
 
-- Google Maps enrichment is running over the 116 venues that have only one source. Incremental, so partial results stick
+- Google Maps enrichment is running over the venues carrying only one source. Incremental, so partial results stick. A
+  dish pass, a venue merge and an embedding rebuild are chained behind it
 - The corpus still holds duplicate venue rows where no shared `place_id` proves they are one place
-- `degraded` reads `true` until a pipeline run records a pass for both platforms
+- **`degraded` reads `true`, honestly**: the Maps run is mid-flight, so its `ingest_run` row has `ok = null`, which
+  reads as "did not finish" rather than as a pass. It clears when the run completes
+- Dish coverage is the weakest field, 249 of 989 mentions. Reviews name dishes; listicles often give a verdict without
+  naming one
 
 **Branches:** `feat/xhs-spike` (PR #3) → `feat/app-scaffold` (PR #5, stacked). **Merge #3 first.**
