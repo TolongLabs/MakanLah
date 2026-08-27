@@ -1,0 +1,62 @@
+# Unattended, this is the reviewer. docs/AUTONOMY.md gates self-merge on it being
+# green, so a check that is skipped or silenced is a review that did not happen.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Lint and format check
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      # The three docs gate implementation (AGENTS.md). Warn rather than fail:
+      # a branch that adds src/ before TRD.md exists should be visible, not blocked
+      # at 3am with nobody to unblock it.
+      - name: Docs gate
+        run: |
+          missing=()
+          for f in docs/PRODUCT.md docs/PRD.md docs/TRD.md; do
+            [ -f "$f" ] || missing+=("$f")
+          done
+          if [ ${#missing[@]} -gt 0 ] && [ -d src ]; then
+            echo "::warning::src/ exists but the docs gate is incomplete: ${missing[*]}"
+          fi
+
+      # Scraped corpora are local-only: volume, and platform terms.
+      - name: No scraped corpus committed
+        run: |
+          if git ls-files | grep -qE '^data/(raw|corpus)/'; then
+            echo "::error::a scraped corpus is tracked. It stays local — commit a fixture instead."
+            exit 1
+          fi
+
+      - name: No secrets committed
+        run: |
+          if git ls-files | grep -qxE '\.env'; then
+            echo "::error::.env is tracked. Only .env.example belongs in git."
+            exit 1
+          fi

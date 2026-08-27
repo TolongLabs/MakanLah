@@ -1,0 +1,4 @@
+# No-op unless graphify is installed and a graph already exists.
+if [ -f graphify-out/graph.json ] && command -v graphify >/dev/null 2>&1; then
+  graphify update . >/dev/null 2>&1 || true
+fi
