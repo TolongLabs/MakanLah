@@ -11,6 +11,4 @@ cd "$root" || exit 1
 
 PORT="${PORT:-8000}"
 
-exec uv run --quiet \
-  --with "psycopg[binary]" --with fastapi --with uvicorn \
-  python -m uvicorn api.main:app --host 127.0.0.1 --port "$PORT" "$@"
+exec uv run --quiet python -m uvicorn api.main:app --host 127.0.0.1 --port "$PORT" "$@"
