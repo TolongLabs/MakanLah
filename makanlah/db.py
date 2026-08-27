@@ -192,7 +192,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
            order by v.id, m.confidence desc nulls last""",
         (list(venue_ids),),
     ).fetchall()
-    out = {}
+    out, pool = {}, {}
     for r in rows:
         v = out.setdefault(
             r['venue_id'],
@@ -211,17 +211,45 @@ def venues_with_citations(con, venue_ids, per_venue=3):
         for d in r['dishes'] or []:
             if d not in v['dishes']:
                 v['dishes'].append(d)
-        if len(v['citations']) < per_venue:
-            v['citations'].append(
-                {
-                    'post_url': r['post_url'],
-                    'excerpt': r['excerpt'],
-                    'platform': r['platform'],
-                    'author_handle': r['author_handle'],
-                    'posted_at': r['posted_at_raw'],
-                }
-            )
+        pool.setdefault(r['venue_id'], []).append(
+            {
+                'post_url': r['post_url'],
+                'excerpt': r['excerpt'],
+                'platform': r['platform'],
+                'author_handle': r['author_handle'],
+                'posted_at': r['posted_at_raw'],
+            }
+        )
+
+    for venue_id, cites in pool.items():
+        out[venue_id]['citations'] = diverse_citations(cites, per_venue)
     return out
+
+
+def diverse_citations(citations, limit):
+    """Take one citation from each platform before taking a second from any.
+
+    Ordering purely by confidence hands every slot to whichever source the
+    extractor is most sure about, which was RedNote across the whole corpus, so
+    Google Maps evidence existed and never appeared. Two sources the user cannot
+    see is the same as one source, and showing both is what makes "neither is
+    load-bearing" legible rather than a claim in a design document.
+
+    `citations` arrives already ordered best-first within each platform.
+    """
+    by_platform = {}
+    for c in citations:
+        by_platform.setdefault(c['platform'], []).append(c)
+
+    picked = []
+    while len(picked) < limit and any(by_platform.values()):
+        for p in list(by_platform):
+            if not by_platform[p]:
+                continue
+            picked.append(by_platform[p].pop(0))
+            if len(picked) >= limit:
+                break
+    return picked
 
 
 # ------------------------------------------------------------ source health

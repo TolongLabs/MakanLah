@@ -49,11 +49,24 @@ def review_url(venue_name, city='Kuala Lumpur'):
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
-def pending_venues(con, limit=None, only_missing_coords=True):
+def pending_venues(con, limit=None, only_missing=True):
+    """Venues that have no Google Maps evidence yet.
+
+    'Missing coordinates' was the original predicate and is now the wrong one:
+    Nominatim had already geocoded some venues, so those were never offered to
+    Maps and ended up with a single source each. The point of this stage is
+    evidence as much as coordinates, and a venue cited by one platform is
+    exactly the load-bearing case AGENTS.md forbids.
+
+    Best-evidenced venues first, so a run cut short covers what matters most.
+    """
     sql = """select id, name, area from venue
              where exists (select 1 from mention m where m.venue_id = venue.id)"""
-    if only_missing_coords:
-        sql += ' and lat is null'
+    if only_missing:
+        sql += """ and not exists (
+                     select 1 from mention m
+                     join source_post p on p.id = m.post_id
+                     where m.venue_id = venue.id and p.platform = 'google_maps')"""
     sql += ' order by (select count(*) from mention m where m.venue_id = venue.id) desc'
     if limit:
         sql += f' limit {int(limit)}'
@@ -132,11 +145,11 @@ def _apply_records(con, records, stats):
     return stats
 
 
-async def run(limit=None, want_reviews=True, only_missing_coords=True):
+async def run(limit=None, want_reviews=True, only_missing=True):
     if not cdp.alive():
         raise SystemExit('CDP is not up. Run: scripts/chrome-session.sh start')
     with db.connect(direct=True) as con:
-        venues = pending_venues(con, limit, only_missing_coords)
+        venues = pending_venues(con, limit, only_missing)
         print(f'{len(venues)} venues to enrich', flush=True)
         if not venues:
             return {}

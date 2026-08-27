@@ -232,3 +232,51 @@ class TestSourceHealth:
             assert '_' not in r, r
             assert r[0].islower(), r
             assert not r.endswith('.'), r
+
+
+class TestCitationDiversity:
+    """Two sources the user cannot see is the same as one source.
+
+    Ordering citations purely by confidence handed every slot to whichever
+    source the extractor was most sure about, which was RedNote across the whole
+    corpus. Google Maps evidence existed and never appeared.
+    """
+
+    def _c(self, platform, n):
+        return [{'platform': platform, 'post_url': f'{platform}-{i}'} for i in range(n)]
+
+    def test_each_platform_gets_a_slot_before_any_gets_a_second(self):
+        from makanlah.db import diverse_citations
+
+        got = diverse_citations(self._c('rednote', 5) + self._c('google_maps', 8), 3)
+        assert [c['platform'] for c in got] == ['rednote', 'google_maps', 'rednote']
+
+    def test_a_single_platform_still_fills_every_slot(self):
+        from makanlah.db import diverse_citations
+
+        got = diverse_citations(self._c('rednote', 5), 3)
+        assert len(got) == 3
+        assert {c['platform'] for c in got} == {'rednote'}
+
+    def test_best_first_order_is_preserved_within_a_platform(self):
+        from makanlah.db import diverse_citations
+
+        got = diverse_citations(self._c('rednote', 5) + self._c('google_maps', 8), 4)
+        rednote = [c['post_url'] for c in got if c['platform'] == 'rednote']
+        assert rednote == ['rednote-0', 'rednote-1']
+
+    def test_fewer_citations_than_the_limit_is_not_padded(self):
+        from makanlah.db import diverse_citations
+
+        assert len(diverse_citations(self._c('rednote', 1), 3)) == 1
+
+    def test_no_citations_yields_none_rather_than_a_placeholder(self):
+        from makanlah.db import diverse_citations
+
+        assert diverse_citations([], 3) == []
+
+    def test_three_platforms_each_appear_before_any_repeats(self):
+        from makanlah.db import diverse_citations
+
+        got = diverse_citations(self._c('rednote', 3) + self._c('google_maps', 3) + self._c('instagram', 3), 3)
+        assert len({c['platform'] for c in got}) == 3
