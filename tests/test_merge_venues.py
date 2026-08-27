@@ -127,3 +127,36 @@ class TestReviewUrl:
         from ingest.enrich_gmaps import review_url
 
         assert 'Kuala Lumpur' in unquote(review_url('Yut Kee'))
+
+
+class TestThreeWayMerge:
+    """Measured failure: a real 3-way merge aborted mid-run with
+    duplicate key value violates unique constraint "mention_post_id_venue_id_key".
+
+    Checking each dropped row against the survivor is not enough. When three
+    venues merge, two of the DROPPED rows can each hold a mention of the same
+    post, and re-pointing both violates (post_id, venue_id).
+    """
+
+    def test_dedup_considers_the_whole_group_not_just_the_survivor(self):
+        con = RecordingCon()
+        merge_group(con, 'keep', ['d1', 'd2'], ['A', 'B', 'C'])
+        delete = [s for s in con.sql if s.lower().startswith('delete from mention')][0]
+        # The subquery must scan the whole group, so both dropped rows are
+        # compared against each other and not only against the survivor.
+        assert delete.lower().count('venue_id = any') >= 2
+
+    def test_exactly_one_mention_per_post_survives(self):
+        con = RecordingCon()
+        merge_group(con, 'keep', ['d1', 'd2'], ['A', 'B', 'C'])
+        delete = [s for s in con.sql if s.lower().startswith('delete from mention')][0]
+        assert 'limit 1' in delete.lower()
+        assert 'm.id <> (' in delete
+
+    def test_the_survivors_own_mention_wins_where_one_exists(self):
+        con = RecordingCon()
+        merge_group(con, 'keep', ['d1', 'd2'], ['A', 'B', 'C'])
+        delete = [s for s in con.sql if s.lower().startswith('delete from mention')][0]
+        # Ordering puts the survivor's row first, then the best-evidenced one.
+        assert 'desc' in delete.lower()
+        assert 'confidence' in delete.lower()

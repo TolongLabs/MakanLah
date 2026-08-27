@@ -41,14 +41,27 @@ def merge_group(con, keep_id, drop_ids, names):
            ) where id = %s""",
         (names, keep_id),
     )
-    # A mention already pointing at the survivor for the same post would violate
-    # the (post_id, venue_id) unique key, so drop those rather than re-point them.
+    # Keep exactly ONE mention per post across the whole group, then re-point it.
+    #
+    # Checking only against the survivor is not enough: when three venues merge,
+    # two of the DROPPED rows can each hold a mention of the same post, and
+    # re-pointing both violates (post_id, venue_id). Measured on a real 3-way
+    # merge, which failed mid-run. The survivor's own row wins where one exists,
+    # otherwise the best-evidenced duplicate does.
+    group = [keep_id, *drop_ids]
     con.execute(
         """delete from mention m
            where m.venue_id = any(%s)
-             and exists (select 1 from mention k
-                         where k.venue_id = %s and k.post_id = m.post_id)""",
-        (drop_ids, keep_id),
+             and m.id <> (
+               select k.id from mention k
+               where k.venue_id = any(%s) and k.post_id = m.post_id
+               order by (k.venue_id = %s) desc,
+                        k.confidence desc nulls last,
+                        k.excerpt is not null desc,
+                        k.id
+               limit 1
+             )""",
+        (group, group, keep_id),
     )
     con.execute('update mention set venue_id = %s where venue_id = any(%s)', (keep_id, drop_ids))
     # Embeddings are recomputed from the merged document, so stale ones must go.
