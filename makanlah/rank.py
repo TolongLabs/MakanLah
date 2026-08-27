@@ -80,9 +80,10 @@ def maps_url(venue):
 def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50):
     s = config.settings()
     with db.connect() as con:
+        degraded, _, reasons = db.source_health(con)
         candidate_ids = db.filter_candidates(con, lat=lat, lng=lng, radius_m=radius_m)
         if not candidate_ids:
-            return {'results': [], 'degraded': False, 'sources_used': []}
+            return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 
         try:
             qvec = models.embed([query])[0]
@@ -101,7 +102,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     # cited is dropped, never returned with a caveat.
     candidates = dedupe([enriched[v] for v in ordered if v in enriched and enriched[v]['citations']])
     if not candidates:
-        return {'results': [], 'degraded': False, 'sources_used': []}
+        return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 
     picked = models.rerank(query, candidates, limit=limit)
 
@@ -127,4 +128,4 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         )
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
-    return {'results': results, 'degraded': False, 'sources_used': sources}
+    return {'results': results, 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': sources}

@@ -33,6 +33,9 @@ def load_raw(path):
 
 
 def ingest_notes(notes, platform='rednote'):
+    """Records the run so `degraded` can be answered honestly. A run that dies
+    mid-batch leaves ok = null, which reads as 'did not finish' rather than as a
+    pass -- an absent verifier must never look like success."""
     stats = dict(
         posts=0,
         extracted=0,
@@ -44,6 +47,7 @@ def ingest_notes(notes, platform='rednote'):
         excerpt_dropped=0,
     )
     with db.connect(direct=True) as con:
+        run_id = db.start_run(con, platform)
         for n in notes:
             text = '\n'.join(x for x in [n.get('title'), n.get('desc')] if x).strip()
             if not text:
@@ -101,6 +105,14 @@ def ingest_notes(notes, platform='rednote'):
                     stats['mentions'] += 1
             con.commit()
             print(f'  [{stats["posts"]}] {n["note_id"]} -> {len(venues)} venue(s)', flush=True)
+        db.finish_run(
+            con,
+            run_id,
+            ok=stats['extract_failed'] < max(1, stats['posts']),
+            posts_seen=len(notes),
+            posts_kept=stats['posts'],
+            error=f'{stats["extract_failed"]} extraction failures' if stats['extract_failed'] else None,
+        )
     return stats
 
 

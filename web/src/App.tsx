@@ -106,7 +106,11 @@ export default function App() {
         </p>
       )}
       {data?.degraded && (
-        <p className="notice">A source was unreachable at the last refresh, so this may be incomplete.</p>
+        <p className="notice">
+          {data.degraded_reasons?.length
+            ? `Showing what we have: ${data.degraded_reasons.join(', ')}.`
+            : 'A source was unreachable at the last refresh, so this may be incomplete.'}
+        </p>
       )}
       {failed && (
         <p className="notice">

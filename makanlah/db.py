@@ -222,3 +222,61 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 }
             )
     return out
+
+
+# ------------------------------------------------------------ source health
+
+# Platforms the corpus is meant to carry. A platform listed here that has never
+# ingested, or whose last run failed, is a degraded state the UI must state
+# plainly rather than hide (docs/PRD.md FR6).
+EXPECTED_PLATFORMS = ('rednote', 'google_maps')
+
+# How stale the newest capture may get before the corpus counts as degraded.
+# Freshness is a background concern, so this is generous: a day of failed
+# ingestion is meant to be invisible to a user, a week is not.
+STALE_AFTER_HOURS = 168
+
+
+def start_run(con, platform):
+    row = con.execute('insert into ingest_run (platform) values (%s) returning id', (platform,)).fetchone()
+    con.commit()
+    return row['id']
+
+
+def finish_run(con, run_id, *, ok, posts_seen=0, posts_kept=0, error=None):
+    con.execute(
+        """update ingest_run set finished_at = now(), ok = %s, posts_seen = %s,
+               posts_kept = %s, error = %s where id = %s""",
+        (ok, posts_seen, posts_kept, (error or None), run_id),
+    )
+    con.commit()
+
+
+def source_health(con):
+    """Returns (degraded, sources_ok, reasons). Never raises: a health check that
+    fails closed would make every request look degraded."""
+    reasons, ok_sources = [], []
+    try:
+        rows = {r['platform']: r for r in con.execute('select * from source_status').fetchall()}
+    except Exception:
+        return False, list(EXPECTED_PLATFORMS), []
+
+    for p in EXPECTED_PLATFORMS:
+        r = rows.get(p)
+        if r is None:
+            reasons.append(f'{p} has never ingested')
+        elif r['ok'] is False:
+            reasons.append(f'{p} failed at its last run')
+        elif r['ok'] is None:
+            reasons.append(f'{p} did not finish its last run')
+        else:
+            ok_sources.append(p)
+
+    fresh = con.execute(
+        'select max(captured_at) > now() - make_interval(hours => %s) as fresh from source_post',
+        (STALE_AFTER_HOURS,),
+    ).fetchone()
+    if fresh and fresh['fresh'] is False:
+        reasons.append('the corpus has not been refreshed recently')
+
+    return bool(reasons), ok_sources, reasons

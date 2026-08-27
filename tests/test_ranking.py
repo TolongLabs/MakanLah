@@ -144,3 +144,77 @@ class TestAnswerLanguage:
         from makanlah.models import answer_language
 
         assert answer_language('') == 'English'
+
+
+class TestSourceHealth:
+    """docs/PRD.md FR6: the API must say when a source was unreachable.
+
+    Before this existed, `degraded` was hardcoded false, which is worse than
+    omitting the field: the UI promised honesty it could not deliver.
+    """
+
+    class _Cur:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def fetchall(self):
+            return self.rows
+
+        def fetchone(self):
+            return self.rows[0] if self.rows else None
+
+    class _Con:
+        def __init__(self, statuses, fresh=True):
+            self.statuses = statuses
+            self.fresh = fresh
+
+        def execute(self, sql, params=None):
+            from tests.test_ranking import TestSourceHealth as T
+
+            if 'source_status' in sql:
+                return T._Cur(self.statuses)
+            return T._Cur([{'fresh': self.fresh}])
+
+    def test_all_sources_healthy_is_not_degraded(self):
+        from makanlah.db import source_health
+
+        con = self._Con([{'platform': 'rednote', 'ok': True}, {'platform': 'google_maps', 'ok': True}])
+        degraded, ok, reasons = source_health(con)
+        assert degraded is False
+        assert set(ok) == {'rednote', 'google_maps'}
+        assert reasons == []
+
+    def test_a_failed_source_degrades_and_names_itself(self):
+        from makanlah.db import source_health
+
+        con = self._Con([{'platform': 'rednote', 'ok': False}, {'platform': 'google_maps', 'ok': True}])
+        degraded, ok, reasons = source_health(con)
+        assert degraded is True
+        assert ok == ['google_maps']
+        assert any('rednote' in r for r in reasons)
+
+    def test_a_run_that_never_finished_is_not_counted_as_a_pass(self):
+        # ok = null means the run died mid-batch. An absent verifier must never
+        # look like success.
+        from makanlah.db import source_health
+
+        con = self._Con([{'platform': 'rednote', 'ok': None}, {'platform': 'google_maps', 'ok': True}])
+        degraded, _, reasons = source_health(con)
+        assert degraded is True
+        assert any('did not finish' in r for r in reasons)
+
+    def test_a_source_that_never_ran_degrades(self):
+        from makanlah.db import source_health
+
+        con = self._Con([{'platform': 'rednote', 'ok': True}])
+        degraded, _, reasons = source_health(con)
+        assert degraded is True
+        assert any('google_maps' in r for r in reasons)
+
+    def test_a_stale_corpus_degrades_even_when_every_source_passed(self):
+        from makanlah.db import source_health
+
+        con = self._Con([{'platform': 'rednote', 'ok': True}, {'platform': 'google_maps', 'ok': True}], fresh=False)
+        degraded, _, reasons = source_health(con)
+        assert degraded is True
+        assert any('refreshed' in r for r in reasons)

@@ -25,6 +25,8 @@ export type Result = {
 export type RecommendResponse = {
   results: Result[]
   degraded: boolean
+  /** Why it is degraded, in plain language. Shown to the user, not logged. */
+  degraded_reasons?: string[]
   sources_used: string[]
   error?: string
 }

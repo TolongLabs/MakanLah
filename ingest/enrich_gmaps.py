@@ -48,6 +48,7 @@ def pending_venues(con, limit=None, only_missing_coords=True):
 
 def apply(con, records):
     stats = dict(coords=0, no_coords=0, review_posts=0, review_mentions=0, skipped_short=0)
+    run_id = db.start_run(con, 'google_maps')
     for rec in records:
         if rec['coords']:
             lat, lng, address, place_id, _ = rec['coords']
@@ -95,6 +96,14 @@ def apply(con, records):
             ):
                 stats['review_mentions'] += 1
         con.commit()
+    db.finish_run(
+        con,
+        run_id,
+        ok=stats['coords'] > 0 or stats['review_posts'] > 0,
+        posts_seen=len(records),
+        posts_kept=stats['review_posts'],
+        error=f'{stats["no_coords"]} venues unresolved' if stats['no_coords'] else None,
+    )
     return stats
 
 
