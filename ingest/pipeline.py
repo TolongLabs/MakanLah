@@ -37,6 +37,7 @@ def ingest_notes(notes, platform='rednote'):
     mid-batch leaves ok = null, which reads as 'did not finish' rather than as a
     pass -- an absent verifier must never look like success."""
     stats = dict(
+        skipped_extracted=0,
         posts=0,
         extracted=0,
         extract_failed=0,
@@ -66,6 +67,10 @@ def ingest_notes(notes, platform='rednote'):
             )
             con.commit()
             stats['posts'] += 1
+
+            if db.already_extracted(con, post_id, config.settings().extract_model):
+                stats['skipped_extracted'] += 1
+                continue
 
             try:
                 venues, model = models.extract(text)
@@ -103,6 +108,8 @@ def ingest_notes(notes, platform='rednote'):
                     confidence=v.get('confidence'),
                 ):
                     stats['mentions'] += 1
+            con.commit()
+            db.mark_extracted(con, post_id, model)
             con.commit()
             print(f'  [{stats["posts"]}] {n["note_id"]} -> {len(venues)} venue(s)', flush=True)
         db.finish_run(

@@ -290,3 +290,22 @@ def source_health(con):
         reasons.append('nothing new has been collected in a while')
 
     return bool(reasons), ok_sources, reasons
+
+
+def already_extracted(con, post_id, model):
+    """True when this post was last extracted by this exact model.
+
+    "Has no mentions" is not the same as "not extracted": a video-first post
+    that genuinely names no venue is correctly empty, and 16 of the spike's
+    first 50 were exactly that. Without the marker those posts are re-extracted
+    on every run, forever.
+    """
+    row = con.execute('select extracted_with from source_post where id = %s', (post_id,)).fetchone()
+    return bool(row and row['extracted_with'] == model)
+
+
+def mark_extracted(con, post_id, model):
+    con.execute(
+        'update source_post set extracted_with = %s, extracted_at = now() where id = %s',
+        (model, post_id),
+    )
