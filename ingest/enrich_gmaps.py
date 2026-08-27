@@ -60,9 +60,28 @@ def pending_venues(con, limit=None, only_missing_coords=True):
     return [dict(r) for r in con.execute(sql).fetchall()]
 
 
+def apply_one(con, rec, stats):
+    """Persist a single enriched venue. Called as each one resolves so a crash
+    late in a long run does not discard everything before it."""
+    _apply_records(con, [rec], stats)
+
+
 def apply(con, records):
     stats = dict(coords=0, no_coords=0, review_posts=0, review_mentions=0, skipped_short=0)
     run_id = db.start_run(con, 'google_maps')
+    _apply_records(con, records, stats)
+    db.finish_run(
+        con,
+        run_id,
+        ok=stats['coords'] > 0 or stats['review_posts'] > 0,
+        posts_seen=len(records),
+        posts_kept=stats['review_posts'],
+        error=f'{stats["no_coords"]} venues unresolved' if stats['no_coords'] else None,
+    )
+    return stats
+
+
+def _apply_records(con, records, stats):
     for rec in records:
         if rec['coords']:
             lat, lng, address, place_id, _ = rec['coords']
@@ -110,14 +129,6 @@ def apply(con, records):
             ):
                 stats['review_mentions'] += 1
         con.commit()
-    db.finish_run(
-        con,
-        run_id,
-        ok=stats['coords'] > 0 or stats['review_posts'] > 0,
-        posts_seen=len(records),
-        posts_kept=stats['review_posts'],
-        error=f'{stats["no_coords"]} venues unresolved' if stats['no_coords'] else None,
-    )
     return stats
 
 
@@ -126,12 +137,36 @@ async def run(limit=None, want_reviews=True, only_missing_coords=True):
         raise SystemExit('CDP is not up. Run: scripts/chrome-session.sh start')
     with db.connect(direct=True) as con:
         venues = pending_venues(con, limit, only_missing_coords)
-    print(f'{len(venues)} venues to enrich', flush=True)
-    if not venues:
-        return {}
-    records = await gmaps.enrich(venues, want_reviews=want_reviews)
-    with db.connect(direct=True) as con:
-        return apply(con, records)
+        print(f'{len(venues)} venues to enrich', flush=True)
+        if not venues:
+            return {}
+
+        stats = dict(coords=0, no_coords=0, review_posts=0, review_mentions=0, skipped_short=0)
+        run_id = db.start_run(con, 'google_maps')
+        seen = [0]
+
+        def persist(rec):
+            seen[0] += 1
+            apply_one(con, rec, stats)
+
+        try:
+            await gmaps.enrich(venues, want_reviews=want_reviews, on_record=persist)
+            db.finish_run(
+                con,
+                run_id,
+                ok=stats['coords'] > 0 or stats['review_posts'] > 0,
+                posts_seen=seen[0],
+                posts_kept=stats['review_posts'],
+                error=f'{stats["no_coords"]} venues unresolved' if stats['no_coords'] else None,
+            )
+        except Exception as e:
+            # The run failed, and saying so is the point of recording it. What was
+            # already persisted stays: a partial corpus is a result, not a failure.
+            db.finish_run(
+                con, run_id, ok=False, posts_seen=seen[0], posts_kept=stats['review_posts'], error=str(e)[:400]
+            )
+            raise
+        return stats
 
 
 def main():

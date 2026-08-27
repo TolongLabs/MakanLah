@@ -127,11 +127,15 @@ async def reviews(page, limit=8):
     return _json.loads(raw)[:limit]
 
 
-async def enrich(venues, want_reviews=True, tab_every=6):
+async def enrich(venues, want_reviews=True, tab_every=6, on_record=None):
     """venues: [{'id', 'name', 'area'}] -> [{'id', 'coords', 'reviews'}].
 
     The tab is recycled: a long-lived Maps tab accumulates state and starts
     answering navigations that never complete.
+
+    `on_record` is called as each venue resolves, so the caller can persist
+    incrementally. Without it a crash at venue 90 of 93 throws away half an hour
+    of scraping, which is the expensive thing here.
     """
     out = []
     for i in range(0, len(venues), tab_every):
@@ -149,6 +153,11 @@ async def enrich(venues, want_reviews=True, tab_every=6):
                     except Exception as e:
                         print(f'  failed {v["name"]!r}: {str(e)[:80]}', flush=True)
                     out.append(rec)
+                    if on_record:
+                        try:
+                            on_record(rec)
+                        except Exception as e:
+                            print(f'  persist failed {v["name"]!r}: {str(e)[:80]}', flush=True)
                     hit = 'ok' if rec['coords'] else 'miss'
                     print(
                         f'  [{len(out)}/{len(venues)}] {v["name"][:28]!r} {hit} {len(rec["reviews"])} review(s)',
