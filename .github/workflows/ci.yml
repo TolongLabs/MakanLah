@@ -48,6 +48,7 @@ jobs:
         working-directory: web
         run: |
           bun install --frozen-lockfile
+          bun run test
           bun run build
 
       # The three docs gate implementation (AGENTS.md). Warn rather than fail:

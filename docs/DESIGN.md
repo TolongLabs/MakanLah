@@ -56,6 +56,10 @@ warmed toward cream, specifically to avoid the cream-and-terracotta tell.
 | `--enamel-quiet` | `#E3EFEC` | `#15302C` | The accent's tint, for the source chip ground              |
 | `--warn`         | `#8A5A00` | `#D9A441` | Degraded state, stale corpus                               |
 
+**Every token pair above clears WCAG AA (4.5:1) against the ground it sits on**, in both themes. `--ink-faint` was
+originally `#8A8D7E`, which measured **3.39:1** on the input surface: legible-looking and non-compliant. Placeholder
+text is exactly where that goes unnoticed, because a designer reading the mock already knows what the field is for.
+
 **`--enamel` has exactly one job: marking where evidence comes from.** Deep enamel green-blue, the colour of old
 kopitiam signage. If it appears on a button, a border, or a heading, that is a bug — the accent stops meaning "this is
 sourced" the moment it decorates something.
