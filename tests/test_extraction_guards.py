@@ -226,3 +226,42 @@ class TestDishDedupe:
     def test_chinese_dishes_survive_unchanged(self, monkeypatch):
         got = self._batch(monkeypatch, {'reviews': [{'index': 0, 'dishes': ['肉骨茶', '椰浆饭']}]})
         assert got[0] == ['肉骨茶', '椰浆饭']
+
+
+class TestCjkGenerics:
+    """Malaysian-Chinese venue names carry suffixes that are not part of the
+    identity. 茶餐室 and 冰室 were missing from the list, so 华阳 and 华阳冰室 stayed
+    two venue rows for one kopitiam."""
+
+    @pytest.mark.parametrize(
+        'bare,full',
+        [('华阳', '华阳冰室'), ('镒记', '镒记茶餐室'), ('适苑', '适苑酒家'), ('金莲', '金莲记餐厅')],
+    )
+    def test_a_generic_suffix_does_not_split_a_venue(self, bare, full):
+        assert normalize(full).startswith(normalize(bare))
+
+    def test_the_longest_suffix_matches_first(self):
+        # 茶餐室 must match before 餐室, or the leading 茶 survives and the key differs.
+        assert normalize('镒记茶餐室') == normalize('镒记')
+
+    def test_a_dish_in_the_name_is_not_stripped(self):
+        # 兴记 and 兴记肉骨茶 may be one place, but 肉骨茶 is a dish. Stripping
+        # dishes would collapse different businesses sharing a speciality.
+        assert normalize('兴记肉骨茶') != normalize('兴记')
+
+    def test_a_name_that_is_only_a_generic_normalizes_to_nothing(self):
+        assert normalize('茶餐室') == ''
+
+
+class TestPronounsAreNotVenues:
+    """A post says 他们家 ("their place") meaning a venue it named earlier, and
+    the extractor takes the phrase as the name. Found in the live corpus as a
+    real venue row with a mention behind it."""
+
+    @pytest.mark.parametrize('name', ['他们家', '这家', '那家', 'this place', 'That Place'])
+    def test_deictics_are_rejected(self, name):
+        assert normalize(name) in NOT_A_VENUE
+
+    @pytest.mark.parametrize('name', ['Village Park', '华阳', '海脚人', 'Yut Kee'])
+    def test_real_venues_are_not_rejected(self, name):
+        assert normalize(name) not in NOT_A_VENUE
