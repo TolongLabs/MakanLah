@@ -44,71 +44,13 @@
     "raw_text": "🇲🇾来吉隆坡吃这7️家就够了！！！\n都是自己来吉隆坡玩精心挑选吃过的餐厅，放心冲！\n\t\n1️⃣ 华阳冰室（p2-5） ❤️❤️❤️❤️❤️\n我的马来西亚top1，如果只吃一顿必须是华阳冰室，我甚至二刷了，真的巨巨好吃，没有一个是踩雷的！大推椰浆饭、华阳咖喱叻沙、华阳虾面、斑斓咖央、蛋挞、拉茶！能吃的出用料很好也很新鲜！！！\n\t\n2️⃣ 新峰肉骨茶（p6） ❤️❤️❤️❤️\n很不错，药膳的味道很浓郁，汤很好喝最后通通喝光了！唯一就是肉太肥了！\n\t\n3️⃣ 首都茶室（7-9） ❤️❤️❤️❤️\n早餐可以来这家，点一份咖央多士+生鸡蛋+拉茶的传统早餐！我还额外点了一份咖喱叻沙，超级超级超级辣，不能吃辣慎点这个！\n\t\n4️⃣ Taste of Medan（p10）❤️❤️❤️❤️\n在中央艺术坊里面，很好吃的椰浆饭！！！\n\t\n5️⃣ 何九茶室（p11-13） ❤️❤️❤️❤️\n早上可以来吃！必吃他们的招牌咖喱干拌面、咖喱甜酱猪肠粉、咖央多士，拉茶也很好喝！！不知道为什么有人会说他们的猪肠粉很苦...明明咸甜咸甜超好吃！\n\t\n6️⃣ 海脚人（p14-16）❤️❤️❤️❤️❤️\n来吉隆坡一定要吃海鲜料理，我超推这家！！综合海鲜咖喱叻沙超级好吃，海鲜很新鲜的！然后这个咸蛋黄老虎虾必点！！这个酱汁拌啥都很美味！！但是这个是300g起点，一份大概5只，份量蛮多的！\n\t\n7️⃣ 霸王茶姬（p17）\n很多新马限定的品项，真的可以冲一下，谷香焙茶、伯牙知音、金桂龙井都是这边才有的！最近还有这个苹果英早，都很好喝！！\n\t\n8️⃣ 关夫人 Madam Kwan's（p18）👋🏻\n严！肃！避！雷！非常难吃，这个鱼汤和软壳蟹炒米粉都很难吃，鱼汤一点都不鲜而且很油，软壳蟹不酥脆而且咸得要命，米粉也一般，关键还死贵死贵的，服务态度非常恶劣，所有人都一副爱理不理的样子，像你欠他们债一样，那个死男的还把桌上的菜单莫名其妙拿起来又砸在桌子上？？？？纯纯歧视，不想干赶紧滚蛋\n\t\n#马来西亚美食 #吉隆坡 #吉隆坡美食 #华阳冰室 #吉隆坡餐厅 #吉隆坡探店 #马来西亚菜 #东南亚 #跟着吃货不踩雷系列 #美享到我家夏天真冷门",
     "mentions": [
       {
-        "venue_name": "Taste of Medan",
-        "venue_name_normalized": "taste of medan",
-        "aliases": [],
-        "area": null,
-        "lat": 3.1464307,
-        "lng": 101.6953481,
-        "address": "Taste Of Medan, Jalan Benteng, Bukit Bintang, Kuala Lumpur, 50050, Malaysia",
-        "dishes": [
-          "椰浆饭"
-        ],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "4️⃣ Taste of Medan（p10）❤️❤️❤️❤️\n在中央艺术坊里面，很好吃的椰浆饭！！！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 1.0
-      },
-      {
-        "venue_name": "霸王茶姬",
-        "venue_name_normalized": "霸王茶姬",
-        "aliases": [],
-        "area": null,
-        "lat": 3.1426784,
-        "lng": 101.6971151,
-        "address": "Chagee, 10, Jalan Sultan, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
-        "dishes": [
-          "谷香焙茶",
-          "伯牙知音",
-          "金桂龙井",
-          "苹果英早"
-        ],
-        "sentiment": 0.7,
-        "price_band": null,
-        "excerpt": "7️⃣ 霸王茶姬（p17）\n很多新马限定的品项，真的可以冲一下，谷香焙茶、伯牙知音、金桂龙井都是这边才有的！最近还有这个苹果英早，都很好喝！！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 1.0
-      },
-      {
-        "venue_name": "首都茶室",
-        "venue_name_normalized": "首都茶室",
-        "aliases": [
-          "Capitol Cafe"
-        ],
-        "area": null,
-        "lat": 3.1477233,
-        "lng": 101.7114876,
-        "address": "Capitol Cafe, 48&50, Jalan Sultan Ismail, Bukit Bintang, Kuala Lumpur, 55100, Malaysia",
-        "dishes": [
-          "咖央多士",
-          "生鸡蛋",
-          "拉茶",
-          "咖喱叻沙"
-        ],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "3️⃣ 首都茶室（7-9） ❤️❤️❤️❤️\n早餐可以来这家，点一份咖央多士+生鸡蛋+拉茶的传统早餐！我还额外点了一份咖喱叻沙，超级超级超级辣，不能吃辣慎点这个！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 1.0
-      },
-      {
         "venue_name": "华阳冰室",
-        "venue_name_normalized": "华阳冰室",
-        "aliases": [],
+        "venue_name_normalized": "华阳",
+        "aliases": [
+          "Oriental Kopi 華陽",
+          "华阳",
+          "华阳茶室"
+        ],
         "area": null,
         "lat": 3.1489607,
         "lng": 101.7134125,
@@ -129,14 +71,55 @@
         "confidence": 1.0
       },
       {
+        "venue_name": "霸王茶姬",
+        "venue_name_normalized": "霸王茶姬",
+        "aliases": [
+          "霸王茶姬 CHAGEE"
+        ],
+        "area": null,
+        "lat": 3.1489607,
+        "lng": 101.7134125,
+        "address": "Chagee, 10, Jalan Sultan, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
+        "dishes": [
+          "谷香焙茶",
+          "伯牙知音",
+          "金桂龙井",
+          "苹果英早"
+        ],
+        "sentiment": 0.7,
+        "price_band": null,
+        "excerpt": "7️⃣ 霸王茶姬（p17）\n很多新马限定的品项，真的可以冲一下，谷香焙茶、伯牙知音、金桂龙井都是这边才有的！最近还有这个苹果英早，都很好喝！！",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 1.0
+      },
+      {
+        "venue_name": "Taste of Medan",
+        "venue_name_normalized": "taste of medan",
+        "aliases": [],
+        "area": null,
+        "lat": 3.1464307,
+        "lng": 101.6953481,
+        "address": "Taste Of Medan, Jalan Benteng, Bukit Bintang, Kuala Lumpur, 50050, Malaysia",
+        "dishes": [
+          "椰浆饭"
+        ],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "4️⃣ Taste of Medan（p10）❤️❤️❤️❤️\n在中央艺术坊里面，很好吃的椰浆饭！！！",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 1.0
+      },
+      {
         "venue_name": "关夫人 Madam Kwan's",
         "venue_name_normalized": "关夫人 madam kwan s",
         "aliases": [
           "Madam Kwan's"
         ],
         "area": null,
-        "lat": 3.1567627,
-        "lng": 101.7119661,
+        "lat": 3.1485312,
+        "lng": 101.7133177,
         "address": "Madam Kwan's, Lorong Kuda, Kuala Lumpur City Centre, Kampung Cendana, Kuala Lumpur, 50088, Malaysia",
         "dishes": [
           "鱼汤",
@@ -150,82 +133,18 @@
         "confidence": 1.0
       },
       {
-        "venue_name": "海脚人",
-        "venue_name_normalized": "海脚人",
-        "aliases": [
-          "Hai Kah Lang"
-        ],
-        "area": null,
-        "lat": 3.1006724,
-        "lng": 101.7413094,
-        "address": "Hai Kah Lang, 44, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
-        "dishes": [
-          "综合海鲜咖喱叻沙",
-          "咸蛋黄老虎虾"
-        ],
-        "sentiment": 1.0,
-        "price_band": null,
-        "excerpt": "6️⃣ 海脚人（p14-16）❤️❤️❤️❤️❤️\n来吉隆坡一定要吃海鲜料理，我超推这家！！综合海鲜咖喱叻沙超级好吃，海鲜很新鲜的！然后这个咸蛋黄老虎虾必点！！这个酱汁拌啥都很美味！！但是这个是300g起点，一份大概5只，份量蛮多的！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 1.0
-      },
-      {
-        "venue_name": "首都茶室",
-        "venue_name_normalized": "首都",
-        "aliases": [
-          "Capitol Cafe"
-        ],
-        "area": null,
-        "lat": 3.1477233,
-        "lng": 101.7114876,
-        "address": "Capitol Cafe, 48&50, Jalan Sultan Ismail, Bukit Bintang, Kuala Lumpur, 55100, Malaysia",
-        "dishes": [
-          "咖央多士",
-          "生鸡蛋",
-          "拉茶",
-          "咖喱叻沙"
-        ],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "3️⃣ 首都茶室（7-9） ❤️❤️❤️❤️\n早餐可以来这家，点一份咖央多士+生鸡蛋+拉茶的传统早餐！我还额外点了一份咖喱叻沙，超级超级超级辣，不能吃辣慎点这个！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 1.0
-      },
-      {
         "venue_name": "何九茶室",
-        "venue_name_normalized": "何九茶室",
+        "venue_name_normalized": "何九",
         "aliases": [
-          "Ho Kaw Hainan Kopitiam"
+          "Ho Kaw Hainan Kopitiam",
+          "何九海南茶店",
+          "何九海南茶店 Ho Kow Hainam Kopitiam",
+          "何九茶店"
         ],
         "area": null,
         "lat": 3.1413142,
         "lng": 101.697722,
         "address": "1, Jalan Balai Polis, City Centre, 50000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
-        "dishes": [
-          "咖喱干拌面",
-          "咖喱甜酱猪肠粉",
-          "咖央多士",
-          "拉茶"
-        ],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "5️⃣ 何九茶室（p11-13） ❤️❤️❤️❤️\n早上可以来吃！必吃他们的招牌咖喱干拌面、咖喱甜酱猪肠粉、咖央多士，拉茶也很好喝！！不知道为什么有人会说他们的猪肠粉很苦...明明咸甜咸甜超好吃！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 1.0
-      },
-      {
-        "venue_name": "何九茶室",
-        "venue_name_normalized": "何九",
-        "aliases": [
-          "Ho Kaw Hainan Kopitiam"
-        ],
-        "area": null,
-        "lat": null,
-        "lng": null,
-        "address": null,
         "dishes": [
           "咖喱干拌面",
           "咖喱甜酱猪肠粉",
@@ -256,6 +175,52 @@
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
         "confidence": 1.0
+      },
+      {
+        "venue_name": "首都茶室",
+        "venue_name_normalized": "首都",
+        "aliases": [
+          "Capitol Cafe"
+        ],
+        "area": null,
+        "lat": 3.1476893,
+        "lng": 101.7114599,
+        "address": "46, Jln Sultan Ismail, Bukit Bintang, 50250 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
+        "dishes": [
+          "咖央多士",
+          "生鸡蛋",
+          "拉茶",
+          "咖喱叻沙"
+        ],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "3️⃣ 首都茶室（7-9） ❤️❤️❤️❤️\n早餐可以来这家，点一份咖央多士+生鸡蛋+拉茶的传统早餐！我还额外点了一份咖喱叻沙，超级超级超级辣，不能吃辣慎点这个！",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 1.0
+      },
+      {
+        "venue_name": "海脚人",
+        "venue_name_normalized": "海脚人",
+        "aliases": [
+          "Hai Kah Lang",
+          "海脚人Hai Kah Lang",
+          "海脚人海鲜"
+        ],
+        "area": null,
+        "lat": 3.1448405,
+        "lng": 101.7172261,
+        "address": "Hai Kah Lang, 44, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
+        "dishes": [
+          "综合海鲜咖喱叻沙",
+          "咸蛋黄老虎虾"
+        ],
+        "sentiment": 1.0,
+        "price_band": null,
+        "excerpt": "6️⃣ 海脚人（p14-16）❤️❤️❤️❤️❤️\n来吉隆坡一定要吃海鲜料理，我超推这家！！综合海鲜咖喱叻沙超级好吃，海鲜很新鲜的！然后这个咸蛋黄老虎虾必点！！这个酱汁拌啥都很美味！！但是这个是300g起点，一份大概5只，份量蛮多的！",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 1.0
       }
     ]
   },
@@ -272,15 +237,15 @@
     "raw_text": "吉隆坡9️⃣家地道美食合集‼️码住别错过\n来马来西亚🇲🇾一定不能错过吉隆坡的地道美食！\n这篇整理了9️⃣家当地人常去、口碑稳定、不少要排队的老店/人气店👇\n建议避开饭点和周末，体验感会更好～\n💵【现金准备】多数店仅支持现金，电子钱包极少，国内提前预约换汇更划算。\n\t\n👇直接码住收藏不迷路⬇️\n1️⃣兴记肉骨茶 Hing Kee Bakuteh\n🕙3pm-2:30am(周1休)\n👉汤头浓郁，本地人回头率高\n\t\n2️⃣王美记 Restoran Wong Mei Kee\n🕙12pm-3pm (周1休)\n👉老字号小店，饭点必排\n\t\n3️⃣叉烧杨家家来 Char Siew Yoong\n🕙10:30am-4:30pm\n👉天花板叉烧党必去，甜香不腻\n\t\n4️⃣Village Park\n🕙6:30am-5:30pm\n👉椰浆饭天花板，游客+本地人双认证\n\t\n5️⃣华阳 Oriental Kopi\n📍吉隆坡有10多家分行大商场都有 Pavilion, TRX, KLCC, Mid Valley, Sunway Pyramid, KLIA2机场\n👉连锁但稳定，游客友好、第一次来很合适\n\t\n6️⃣何九海南茶店 Ho Kow Hainam Kopitiam\n🕙7:30am-2:30pm(周1休)\n👉海南咖啡+早餐组合，老派茶室氛围\n\t\n7️⃣海脚人Hai Kah Lang\n👉海鲜控可冲，多分店选择灵活\n\t\n8️⃣适苑酒家 Sek Yuen\n🕙11am-2:30pm｜5pm - 9:30pm\n👉78年历史老牌粤餐馆，家庭聚餐友好\n\t\n9️⃣强记炖汤 Keong Kee\n🕙3:30pm-10pm (周2休)\n👉40多年历史炖汤，很马来风味\n\t\n#春节去哪儿 #新年旅行第一站 #吉隆坡旅游 #吉隆坡攻略 #吉隆坡美食 #大声安利本地美食 #我是春节主理人 #道地人美食 #美食攻略 #兜兜钻钻",
     "mentions": [
       {
-        "venue_name": "兴记肉骨茶",
-        "venue_name_normalized": "兴记肉骨茶",
+        "venue_name": "興记肉骨茶",
+        "venue_name_normalized": "興记肉骨茶",
         "aliases": [
-          "Hing Kee Bak Kut Teh",
-          "Hing Kee Bakuteh"
+          "兴记肉骨茶",
+          "甲洞大街 興記肉骨茶"
         ],
         "area": null,
-        "lat": 3.2003094,
-        "lng": 101.6777951,
+        "lat": 3.2126749,
+        "lng": 101.6455527,
         "address": "Bak Kuk Teh Hinkee Jalan Ipoh 4 1/2 Miles, 787, Jalan Ipoh, Taman Impian, Kampung Medan Wira Utama, Kuala Lumpur, 51200, Malaysia",
         "dishes": [],
         "sentiment": 0.8,
@@ -294,7 +259,8 @@
         "venue_name": "兴记肉骨茶 Hing Kee Bakuteh",
         "venue_name_normalized": "兴记肉骨茶 hing kee bakuteh",
         "aliases": [
-          "Hing Kee Bakuteh"
+          "Hing Kee Bakuteh",
+          "兴记"
         ],
         "area": null,
         "lat": 3.2139058,
@@ -314,30 +280,14 @@
         "venue_name": "王美记 Restoran Wong Mei Kee",
         "venue_name_normalized": "王美记 wong mei kee",
         "aliases": [
-          "Restoran Wong Mei Kee"
+          "Restoran Wong Mei Kee",
+          "王美记",
+          "王美记烧肉"
         ],
         "area": null,
-        "lat": 3.1386895,
-        "lng": 101.7116447,
-        "address": "Wong Mei Kee BBQ, Jalan Lengkongan Brunei, Kampung Dollah, Pudu, Kuala Lumpur, 55720, Malaysia",
-        "dishes": [],
-        "sentiment": 0.75,
-        "price_band": null,
-        "excerpt": "2️⃣王美记 Restoran Wong Mei Kee\n🕙12pm-3pm (周1休)\n👉老字号小店，饭点必排",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.97
-      },
-      {
-        "venue_name": "王美记",
-        "venue_name_normalized": "王美记",
-        "aliases": [
-          "Restoran Wong Mei Kee"
-        ],
-        "area": null,
-        "lat": 3.2209775,
-        "lng": 101.7246491,
-        "address": "Pos Malaysia, Jalan Taman Melati 1, Taman Melati, Wangsa Maju, Kuala Lumpur, 53100, Malaysia",
+        "lat": 3.1392208,
+        "lng": 101.7110496,
+        "address": "30, Jalan Nyonya, Pudu, 55100 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.75,
         "price_band": null,
@@ -350,12 +300,13 @@
         "venue_name": "叉烧杨家家来 Char Siew Yoong",
         "venue_name_normalized": "叉烧杨家家来 char siew yoong",
         "aliases": [
-          "Char Siew Yoong"
+          "Char Siew Yoong",
+          "叉烧杨家家来"
         ],
         "area": null,
-        "lat": 3.1206172,
-        "lng": 101.7299668,
-        "address": "Restoran Char Siew Yoong, 23, Jalan Pudu Hulu, Pudu Ulu, Cheras, Kuala Lumpur, 56100, Malaysia",
+        "lat": 3.1206448,
+        "lng": 101.7298934,
+        "address": "23, Jalan Pudu Ulu, Taman Pertama, 56100 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [
           "叉烧"
         ],
@@ -367,69 +318,17 @@
         "confidence": 0.96
       },
       {
-        "venue_name": "适苑酒家",
-        "venue_name_normalized": "适苑",
-        "aliases": [
-          "Sek Yuen"
-        ],
-        "area": null,
-        "lat": 3.1355939,
-        "lng": 101.7121612,
-        "address": "Restoran Sek Yuen, 313, Jalan Pudu, Pudu, Kuala Lumpur, 55100, Malaysia",
-        "dishes": [],
-        "sentiment": 0.85,
-        "price_band": null,
-        "excerpt": "8️⃣适苑酒家 Sek Yuen\n🕙11am-2:30pm｜5pm - 9:30pm\n👉78年历史老牌粤餐馆，家庭聚餐友好",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.96
-      },
-      {
-        "venue_name": "叉烧杨家家来",
-        "venue_name_normalized": "叉烧杨家家来",
-        "aliases": [
-          "Char Siew Yoong"
-        ],
-        "area": null,
-        "lat": 3.1206172,
-        "lng": 101.7299668,
-        "address": "Restoran Char Siew Yoong, 23, Jalan Pudu Hulu, Pudu Ulu, Cheras, Kuala Lumpur, 56100, Malaysia",
-        "dishes": [
-          "叉烧"
-        ],
-        "sentiment": 0.85,
-        "price_band": null,
-        "excerpt": "3️⃣叉烧杨家家来 Char Siew Yoong\n🕙10:30am-4:30pm\n👉天花板叉烧党必去，甜香不腻",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.96
-      },
-      {
-        "venue_name": "适苑酒家 Sek Yuen",
-        "venue_name_normalized": "适苑 sek yuen",
-        "aliases": [],
-        "area": null,
-        "lat": null,
-        "lng": null,
-        "address": null,
-        "dishes": [],
-        "sentiment": 0.85,
-        "price_band": null,
-        "excerpt": "8️⃣适苑酒家 Sek Yuen\n🕙11am-2:30pm｜5pm - 9:30pm\n👉78年历史老牌粤餐馆，家庭聚餐友好",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.96
-      },
-      {
-        "venue_name": "华阳",
+        "venue_name": "华阳冰室",
         "venue_name_normalized": "华阳",
         "aliases": [
-          "Oriental Kopi"
+          "Oriental Kopi 華陽",
+          "华阳",
+          "华阳茶室"
         ],
         "area": null,
-        "lat": 3.1474491,
-        "lng": 101.6941717,
-        "address": "Oriental Kopi, Jalan Raja, Bukit Bintang, Kuala Lumpur, 50050, Malaysia",
+        "lat": 3.1489607,
+        "lng": 101.7134125,
+        "address": null,
         "dishes": [],
         "sentiment": 0.7,
         "price_band": null,
@@ -441,11 +340,14 @@
       {
         "venue_name": "Village Park",
         "venue_name_normalized": "village park",
-        "aliases": [],
+        "aliases": [
+          "Village Park Nasi Lemak",
+          "Village Park 椰浆炸鸡饭"
+        ],
         "area": null,
-        "lat": 3.1737547,
-        "lng": 101.6797314,
-        "address": "Taman Tunku Village Green, Kampung Kasipillay, Kuala Lumpur, Malaysia",
+        "lat": 3.1376947,
+        "lng": 101.6233261,
+        "address": "5, Jalan SS 21/37, Damansara Utama, 47400 Petaling Jaya, Selangor ",
         "dishes": [
           "椰浆饭"
         ],
@@ -457,26 +359,6 @@
         "confidence": 0.95
       },
       {
-        "venue_name": "何九海南茶店",
-        "venue_name_normalized": "何九海南茶店",
-        "aliases": [
-          "Ho Kow Hainam Kopitiam"
-        ],
-        "area": null,
-        "lat": 3.1413488,
-        "lng": 101.6976799,
-        "address": "Ho Kow Hainam Kopitiam, 1;1A, Jalan Balai Polis, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
-        "dishes": [
-          "海南咖啡"
-        ],
-        "sentiment": 0.75,
-        "price_band": null,
-        "excerpt": "6️⃣何九海南茶店 Ho Kow Hainam Kopitiam\n🕙7:30am-2:30pm(周1休)\n👉海南咖啡+早餐组合，老派茶室氛围",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.94
-      },
-      {
         "venue_name": "华阳 Oriental Kopi",
         "venue_name_normalized": "华阳 oriental kopi",
         "aliases": [
@@ -484,8 +366,8 @@
           "华阳"
         ],
         "area": null,
-        "lat": 3.1474491,
-        "lng": 101.6941717,
+        "lat": 3.0496823,
+        "lng": 101.6717279,
         "address": "Oriental Kopi, Jalan Raja, Bukit Bintang, Kuala Lumpur, 50050, Malaysia",
         "dishes": [],
         "sentiment": 0.7,
@@ -496,35 +378,18 @@
         "confidence": 0.94
       },
       {
-        "venue_name": "海脚人",
-        "venue_name_normalized": "海脚人",
+        "venue_name": "何九茶室",
+        "venue_name_normalized": "何九",
         "aliases": [
-          "Hai Kah Lang"
+          "Ho Kaw Hainan Kopitiam",
+          "何九海南茶店",
+          "何九海南茶店 Ho Kow Hainam Kopitiam",
+          "何九茶店"
         ],
         "area": null,
-        "lat": 3.1006724,
-        "lng": 101.7413094,
-        "address": "Hai Kah Lang, 44, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
-        "dishes": [
-          "海鲜"
-        ],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "7️⃣海脚人Hai Kah Lang\n👉海鲜控可冲，多分店选择灵活",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.93
-      },
-      {
-        "venue_name": "何九海南茶店 Ho Kow Hainam Kopitiam",
-        "venue_name_normalized": "何九海南茶店 ho kow hainam",
-        "aliases": [
-          "Ho Kow Hainam Kopitiam"
-        ],
-        "area": null,
-        "lat": 3.1413488,
-        "lng": 101.6976799,
-        "address": "Ho Kow Hainam Kopitiam, 1;1A, Jalan Balai Polis, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
+        "lat": 3.1413142,
+        "lng": 101.697722,
+        "address": "1, Jalan Balai Polis, City Centre, 50000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [
           "海南咖啡"
         ],
@@ -533,17 +398,19 @@
         "excerpt": "6️⃣何九海南茶店 Ho Kow Hainam Kopitiam\n🕙7:30am-2:30pm(周1休)\n👉海南咖啡+早餐组合，老派茶室氛围",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
-        "confidence": 0.93
+        "confidence": 0.94
       },
       {
-        "venue_name": "海脚人Hai Kah Lang",
-        "venue_name_normalized": "海脚人hai kah lang",
+        "venue_name": "海脚人",
+        "venue_name_normalized": "海脚人",
         "aliases": [
-          "Hai Kah Lang"
+          "Hai Kah Lang",
+          "海脚人Hai Kah Lang",
+          "海脚人海鲜"
         ],
         "area": null,
-        "lat": 3.1006724,
-        "lng": 101.7413094,
+        "lat": 3.1448405,
+        "lng": 101.7172261,
         "address": "Hai Kah Lang, 44, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
         "dishes": [
           "海鲜"
@@ -553,17 +420,18 @@
         "excerpt": "7️⃣海脚人Hai Kah Lang\n👉海鲜控可冲，多分店选择灵活",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
-        "confidence": 0.92
+        "confidence": 0.93
       },
       {
         "venue_name": "适苑酒家 Sek Yuen",
-        "venue_name_normalized": "适苑酒家 sek yuen",
+        "venue_name_normalized": "适苑 sek yuen",
         "aliases": [
-          "Sek Yuen"
+          "Sek Yuen",
+          "适苑酒家"
         ],
         "area": null,
-        "lat": 3.1322208,
-        "lng": 101.7126147,
+        "lat": 3.1356691,
+        "lng": 101.712014,
         "address": "New Sek Yuen Sg Besi, Jalan Sungai Besi, Pudu, Kuala Lumpur, 55720, Malaysia",
         "dishes": [],
         "sentiment": 0.85,
@@ -608,10 +476,31 @@
     "raw_text": "🇲🇾吉隆坡6️⃣家古早味茶室\n来马来西亚一定要去一次kopitiam（传统咖啡店）\n整理了吉隆坡5家古早味茶室\n下次可以试试👇\n\t\n1️⃣何九茶室 Ho Kaw Hainan Kopitiam\n2️⃣溏记茶室 Thong Kee Kopitiam\n3️⃣美之乡海南咖啡馆 Hometown Hainan Coffee\n4️⃣首都茶室 Capitol Cafe\n5️⃣源昌隆咖啡店 Kafei Dian\n6️⃣镒记茶餐室 Yut Kee Kopitiam\n\t\n#KL古早味茶室 #吉隆坡美食探店 #马来西亚美食 #大马美食攻略 #马来西亚旅游 #吉隆坡旅游 #吉隆坡美食 #马来西亚早餐 #美之乡海南咖啡馆",
     "mentions": [
       {
-        "venue_name": "何九茶室",
-        "venue_name_normalized": "何九茶室",
+        "venue_name": "美之乡海南咖啡馆",
+        "venue_name_normalized": "美之乡海南咖啡馆",
         "aliases": [
-          "Ho Kaw Hainan Kopitiam"
+          "Hometown Hainan Coffee"
+        ],
+        "area": null,
+        "lat": 3.1565021,
+        "lng": 101.7031452,
+        "address": "Hometown Hainan Coffee, 7, Jalan Bintang, Low Yat Bukit Bintang, Bukit Bintang, Kuala Lumpur, 55100, Malaysia",
+        "dishes": [],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "3️⃣美之乡海南咖啡馆 Hometown Hainan Coffee",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.98
+      },
+      {
+        "venue_name": "何九茶室",
+        "venue_name_normalized": "何九",
+        "aliases": [
+          "Ho Kaw Hainan Kopitiam",
+          "何九海南茶店",
+          "何九海南茶店 Ho Kow Hainam Kopitiam",
+          "何九茶店"
         ],
         "area": null,
         "lat": 3.1413142,
@@ -626,44 +515,8 @@
         "confidence": 0.98
       },
       {
-        "venue_name": "首都茶室",
-        "venue_name_normalized": "首都茶室",
-        "aliases": [
-          "Capitol Cafe"
-        ],
-        "area": null,
-        "lat": 3.1477233,
-        "lng": 101.7114876,
-        "address": "Capitol Cafe, 48&50, Jalan Sultan Ismail, Bukit Bintang, Kuala Lumpur, 55100, Malaysia",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "4️⃣首都茶室 Capitol Cafe",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.98
-      },
-      {
-        "venue_name": "镒记茶餐室",
-        "venue_name_normalized": "镒记茶餐室",
-        "aliases": [
-          "Yut Kee Kopitiam"
-        ],
-        "area": null,
-        "lat": 3.1565163,
-        "lng": 101.7003615,
-        "address": "1, Jalan Kamunting, Chow Kit, 50300 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "6️⃣镒记茶餐室 Yut Kee Kopitiam",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.98
-      },
-      {
         "venue_name": "溏记茶室",
-        "venue_name_normalized": "溏记茶室",
+        "venue_name_normalized": "溏记",
         "aliases": [
           "Thong Kee Kopitiam"
         ],
@@ -680,33 +533,15 @@
         "confidence": 0.98
       },
       {
-        "venue_name": "美之乡海南咖啡馆",
-        "venue_name_normalized": "美之乡海南咖啡馆",
-        "aliases": [
-          "Hometown Hainan Coffee"
-        ],
-        "area": null,
-        "lat": 3.1441054,
-        "lng": 101.7095099,
-        "address": "Hometown Hainan Coffee, 7, Jalan Bintang, Low Yat Bukit Bintang, Bukit Bintang, Kuala Lumpur, 55100, Malaysia",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "3️⃣美之乡海南咖啡馆 Hometown Hainan Coffee",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.98
-      },
-      {
         "venue_name": "首都茶室",
         "venue_name_normalized": "首都",
         "aliases": [
           "Capitol Cafe"
         ],
         "area": null,
-        "lat": 3.1477233,
-        "lng": 101.7114876,
-        "address": "Capitol Cafe, 48&50, Jalan Sultan Ismail, Bukit Bintang, Kuala Lumpur, 55100, Malaysia",
+        "lat": 3.1476893,
+        "lng": 101.7114599,
+        "address": "46, Jln Sultan Ismail, Bukit Bintang, 50250 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
@@ -716,22 +551,23 @@
         "confidence": 0.98
       },
       {
-        "venue_name": "何九茶室",
-        "venue_name_normalized": "何九",
+        "venue_name": "镒记茶餐室",
+        "venue_name_normalized": "镒记",
         "aliases": [
-          "Ho Kaw Hainan Kopitiam"
+          "Yut Kee Kopitiam",
+          "镒记"
         ],
         "area": null,
-        "lat": null,
-        "lng": null,
-        "address": null,
+        "lat": 3.1565163,
+        "lng": 101.7003615,
+        "address": "1, Jalan Kamunting, Chow Kit, 50300 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
-        "excerpt": "1️⃣何九茶室 Ho Kaw Hainan Kopitiam",
+        "excerpt": "6️⃣镒记茶餐室 Yut Kee Kopitiam",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
-        "confidence": 0.95
+        "confidence": 0.98
       },
       {
         "venue_name": "源昌隆咖啡店",
@@ -740,8 +576,8 @@
           "Kafei Dian"
         ],
         "area": null,
-        "lat": 3.1416022,
-        "lng": 101.6969755,
+        "lat": 3.1415331,
+        "lng": 101.6970263,
         "address": "Kafei Dian, 15-1, Jalan Balai Polis, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
         "dishes": [],
         "sentiment": 0.8,
@@ -804,9 +640,9 @@
         "venue_name_normalized": "404 club not found kl",
         "aliases": [],
         "area": "Trec",
-        "lat": 3.1412965,
-        "lng": 101.7215909,
-        "address": "404 Club Not Found, Electric Boulevard, TREC KL, Maluri, Pudu, Kuala Lumpur, 55188, Malaysia",
+        "lat": 3.141499,
+        "lng": 101.7216872,
+        "address": "E-1-01 & E-1-02, Electric Boulevard, TREC, 438, Jln Tun Razak, Kelab Golf di Raja Selangor, 50400 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.85,
         "price_band": 4,
@@ -930,17 +766,36 @@
     "raw_text": "吉隆坡的🔟个道地美食合集🔥收藏起来\n这里面的都是很多吉隆坡人从小吃到大的，到现在都是一样的老味道。 可以收藏起来😍\n\t\n📍興记肉骨茶\n📍亚世饭档\n📍何九茶店\n📍海脚人\n📍Village Park\n📍王美记烧肉\n📍颂记牛肉粉\n📍丽丰啦啦米\n📍镒记\n📍强记炖汤\n\t\n#吉隆坡好去处 #吉隆坡美食 #马来西亚旅行 #旅行中的道地美食 #kl美食 #满足中国胃 #本地人才知道的美食 #吉隆坡攻略 #逛吃全攻略 #城市美食探索家 #小红卡探店日记 #马路生活节 #压箱底的宝藏小店",
     "mentions": [
       {
-        "venue_name": "强记炖汤",
-        "venue_name_normalized": "强记炖汤",
-        "aliases": [],
+        "venue_name": "興记肉骨茶",
+        "venue_name_normalized": "興记肉骨茶",
+        "aliases": [
+          "兴记肉骨茶",
+          "甲洞大街 興記肉骨茶"
+        ],
         "area": null,
-        "lat": null,
-        "lng": null,
-        "address": null,
+        "lat": 3.2126749,
+        "lng": 101.6455527,
+        "address": "Bak Kuk Teh Hinkee Jalan Ipoh 4 1/2 Miles, 787, Jalan Ipoh, Taman Impian, Kampung Medan Wira Utama, Kuala Lumpur, 51200, Malaysia",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
-        "excerpt": "📍强记炖汤",
+        "excerpt": "📍興记肉骨茶",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.95
+      },
+      {
+        "venue_name": "颂记牛肉粉",
+        "venue_name_normalized": "颂记牛肉粉",
+        "aliases": [],
+        "area": null,
+        "lat": 3.1472781,
+        "lng": 101.6968023,
+        "address": "86, Jalan Tun H S Lee, City Centre, 50050 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
+        "dishes": [],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "📍颂记牛肉粉",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
         "confidence": 0.95
@@ -969,9 +824,9 @@
         "venue_name_normalized": "亚世饭档",
         "aliases": [],
         "area": null,
-        "lat": 3.1437778,
-        "lng": 101.6981836,
-        "address": "Gerai Makanan Sai Kee, 72, Jalan Sultan, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
+        "lat": 3.1438987,
+        "lng": 101.6982224,
+        "address": "Kuala Lumpur City Centre, 50000 Kuala Lumpur, Federal Territory of Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
@@ -981,115 +836,22 @@
         "confidence": 0.95
       },
       {
-        "venue_name": "何九茶店",
-        "venue_name_normalized": "何九茶店",
-        "aliases": [],
+        "venue_name": "何九茶室",
+        "venue_name_normalized": "何九",
+        "aliases": [
+          "Ho Kaw Hainan Kopitiam",
+          "何九海南茶店",
+          "何九海南茶店 Ho Kow Hainam Kopitiam",
+          "何九茶店"
+        ],
         "area": null,
-        "lat": 3.1413488,
-        "lng": 101.6976799,
-        "address": "Ho Kow Hainam Kopitiam, 1;1A, Jalan Balai Polis, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
+        "lat": 3.1413142,
+        "lng": 101.697722,
+        "address": "1, Jalan Balai Polis, City Centre, 50000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
         "excerpt": "📍何九茶店",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
-        "venue_name": "镒记",
-        "venue_name_normalized": "镒记",
-        "aliases": [],
-        "area": null,
-        "lat": 3.1398132,
-        "lng": 101.6277059,
-        "address": "Fire and Rescue Department of Malaysia - Bomba Malaysia TTDI, Jalan Tun Mohd Fuad 2, Taman Tun Dr Ismail, Kuala Lumpur, 60000, Malaysia",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "📍镒记",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
-        "venue_name": "颂记牛肉粉",
-        "venue_name_normalized": "颂记牛肉粉",
-        "aliases": [],
-        "area": null,
-        "lat": 3.1472781,
-        "lng": 101.6968023,
-        "address": "86, Jalan Tun H S Lee, City Centre, 50050 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "📍颂记牛肉粉",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
-        "venue_name": "興记肉骨茶",
-        "venue_name_normalized": "興记肉骨茶",
-        "aliases": [],
-        "area": null,
-        "lat": 3.2003094,
-        "lng": 101.6777951,
-        "address": "Bak Kuk Teh Hinkee Jalan Ipoh 4 1/2 Miles, 787, Jalan Ipoh, Taman Impian, Kampung Medan Wira Utama, Kuala Lumpur, 51200, Malaysia",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "📍興记肉骨茶",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
-        "venue_name": "海脚人",
-        "venue_name_normalized": "海脚人",
-        "aliases": [
-          "Hai Kah Lang"
-        ],
-        "area": null,
-        "lat": 3.1006724,
-        "lng": 101.7413094,
-        "address": "Hai Kah Lang, 44, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "📍海脚人",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
-        "venue_name": "王美记烧肉",
-        "venue_name_normalized": "王美记烧肉",
-        "aliases": [],
-        "area": null,
-        "lat": 3.1392208,
-        "lng": 101.7110496,
-        "address": "30, Jalan Nyonya, Pudu, 55100 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "📍王美记烧肉",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
-        "venue_name": "Village Park",
-        "venue_name_normalized": "village park",
-        "aliases": [],
-        "area": null,
-        "lat": 3.1737547,
-        "lng": 101.6797314,
-        "address": "Taman Tunku Village Green, Kampung Kasipillay, Kuala Lumpur, Malaysia",
-        "dishes": [],
-        "sentiment": 0.8,
-        "price_band": null,
-        "excerpt": "📍Village Park",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
         "confidence": 0.95
@@ -1109,6 +871,84 @@
         "sentiment": 0.8,
         "price_band": null,
         "excerpt": "📍强记炖汤",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.95
+      },
+      {
+        "venue_name": "Village Park",
+        "venue_name_normalized": "village park",
+        "aliases": [
+          "Village Park Nasi Lemak",
+          "Village Park 椰浆炸鸡饭"
+        ],
+        "area": null,
+        "lat": 3.1376947,
+        "lng": 101.6233261,
+        "address": "5, Jalan SS 21/37, Damansara Utama, 47400 Petaling Jaya, Selangor ",
+        "dishes": [],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "📍Village Park",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.95
+      },
+      {
+        "venue_name": "镒记茶餐室",
+        "venue_name_normalized": "镒记",
+        "aliases": [
+          "Yut Kee Kopitiam",
+          "镒记"
+        ],
+        "area": null,
+        "lat": 3.1565163,
+        "lng": 101.7003615,
+        "address": "1, Jalan Kamunting, Chow Kit, 50300 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
+        "dishes": [],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "📍镒记",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.95
+      },
+      {
+        "venue_name": "王美记 Restoran Wong Mei Kee",
+        "venue_name_normalized": "王美记 wong mei kee",
+        "aliases": [
+          "Restoran Wong Mei Kee",
+          "王美记",
+          "王美记烧肉"
+        ],
+        "area": null,
+        "lat": 3.1392208,
+        "lng": 101.7110496,
+        "address": "30, Jalan Nyonya, Pudu, 55100 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
+        "dishes": [],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "📍王美记烧肉",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.95
+      },
+      {
+        "venue_name": "海脚人",
+        "venue_name_normalized": "海脚人",
+        "aliases": [
+          "Hai Kah Lang",
+          "海脚人Hai Kah Lang",
+          "海脚人海鲜"
+        ],
+        "area": null,
+        "lat": 3.1448405,
+        "lng": 101.7172261,
+        "address": "Hai Kah Lang, 44, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
+        "dishes": [],
+        "sentiment": 0.8,
+        "price_band": null,
+        "excerpt": "📍海脚人",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
         "confidence": 0.95
@@ -1199,9 +1039,9 @@
         "venue_name_normalized": "taiwanese house",
         "aliases": [],
         "area": null,
-        "lat": 3.0995831,
-        "lng": 101.7413259,
-        "address": "Taiwanese House, 6, Jalan Kaskas 2, Taman Cheras, Cheras, Kuala Lumpur, 56100, Malaysia",
+        "lat": 3.2095326,
+        "lng": 101.6505745,
+        "address": "17, Floor G Jalan 2/33b off jalan kepong BT6 1/2, section, Mwe Kepong Commercial Park, 52100 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
@@ -1215,9 +1055,9 @@
         "venue_name_normalized": "oh yeah",
         "aliases": [],
         "area": null,
-        "lat": 3.0814232,
-        "lng": 101.7359819,
-        "address": "Oh Yeah Kopitiam, Jalan Cerdas, Cheras, Kuala Lumpur, 56000, Malaysia",
+        "lat": 3.0814709,
+        "lng": 101.7360134,
+        "address": "100G, Jalan Cerdas, Taman Connaught, 56000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
@@ -1247,9 +1087,9 @@
         "venue_name_normalized": "yorimichi",
         "aliases": [],
         "area": null,
-        "lat": 3.1446966,
-        "lng": 101.6962973,
-        "address": "Yorimichi Cafe, 131, Jalan Tun H.S. Lee, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
+        "lat": 3.1446626,
+        "lng": 101.6962445,
+        "address": "131, Mezzanine Floor, Jalan Tun H S Lee, City Centre, 50000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
@@ -1343,8 +1183,8 @@
         "venue_name_normalized": "kenny hills bakers",
         "aliases": [],
         "area": null,
-        "lat": 3.1597223,
-        "lng": 101.7286992,
+        "lat": 3.1597088,
+        "lng": 101.7287371,
         "address": "Kenny Hills Bakers, 241-B, Lorong Nibong, Taman U-Thant, Kampung Datuk Keramat, Kuala Lumpur, 50450, Malaysia",
         "dishes": [],
         "sentiment": 0.8,
@@ -1359,8 +1199,8 @@
         "venue_name_normalized": "nasi lemak shop",
         "aliases": [],
         "area": null,
-        "lat": 3.1169835,
-        "lng": 101.6773639,
+        "lat": 3.1166268,
+        "lng": 101.6771059,
         "address": "Nasi Lemak Shop, Mid Valley City, Lingkaran Syed Putra, Seputeh, Kuala Lumpur, 59200, Malaysia",
         "dishes": [],
         "sentiment": 0.8,
@@ -1455,9 +1295,9 @@
         "venue_name_normalized": "something bakery",
         "aliases": [],
         "area": null,
-        "lat": 3.142594,
-        "lng": 101.6975981,
-        "address": "Something Bakery, 111, Jalan Petaling, Bukit Bintang, Kuala Lumpur, 50000, Malaysia",
+        "lat": 3.1425608,
+        "lng": 101.6977362,
+        "address": "1st Floor, 111-4, Jalan Petaling, City Centre, 50000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur ",
         "dishes": [],
         "sentiment": 0.8,
         "price_band": null,
@@ -1602,22 +1442,6 @@
         "confidence": 0.96
       },
       {
-        "venue_name": "Takumi Steamboat 匠人火锅 @ SS2",
-        "venue_name_normalized": "takumi steamboat 匠人火锅 ss2",
-        "aliases": [],
-        "area": "SS2",
-        "lat": 3.1192819,
-        "lng": 101.620409,
-        "address": "36, Jalan SS 2/66, SS 2, 47300 Petaling Jaya, Selangor ",
-        "dishes": [],
-        "sentiment": 0.87,
-        "price_band": null,
-        "excerpt": "📍 Takumi Steamboat 匠人火锅 @ SS2\n👉 和搭子聚餐一人一锅！",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.95
-      },
-      {
         "venue_name": "DKing SS2",
         "venue_name_normalized": "dking ss2",
         "aliases": [],
@@ -1632,6 +1456,22 @@
         "sentiment": 0.89,
         "price_band": null,
         "excerpt": "📍 DKing SS2\n👉 榴莲控必冲！猫山王果肉盖在绵密 Cendol 冰上，每一口都超浓郁🍧",
+        "excerpt_is_substring": true,
+        "extractor_model": "qwen-plus",
+        "confidence": 0.95
+      },
+      {
+        "venue_name": "Takumi Steamboat 匠人火锅 @ SS2",
+        "venue_name_normalized": "takumi steamboat 匠人火锅 ss2",
+        "aliases": [],
+        "area": "SS2",
+        "lat": 3.1192819,
+        "lng": 101.620409,
+        "address": "36, Jalan SS 2/66, SS 2, 47300 Petaling Jaya, Selangor ",
+        "dishes": [],
+        "sentiment": 0.87,
+        "price_band": null,
+        "excerpt": "📍 Takumi Steamboat 匠人火锅 @ SS2\n👉 和搭子聚餐一人一锅！",
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
         "confidence": 0.95
@@ -1722,12 +1562,13 @@
         "venue_name": "YDT Dessert 苦中一点甜",
         "venue_name_normalized": "ydt dessert 苦中一点甜",
         "aliases": [
+          "YDT Dessert 苦中一点甜（糖水铺）",
           "糖水铺"
         ],
         "area": null,
-        "lat": 3.0828055,
-        "lng": 101.6733059,
-        "address": "Kitchenart, 62, Jalan Mega Mendung, Bandar Park, Taman OUG, Kuala Lumpur, 58200, Malaysia",
+        "lat": 3.0992904,
+        "lng": 101.644446,
+        "address": "10, Jalan Tengah, Bandar Baru Petaling Jaya, 46200 Petaling Jaya, Selangor ",
         "dishes": [
           "咖喱鸡扒饭",
           "泡面",
@@ -1739,26 +1580,6 @@
         "excerpt_is_substring": true,
         "extractor_model": "qwen-plus",
         "confidence": 0.91
-      },
-      {
-        "venue_name": "YDT Dessert 苦中一点甜（糖水铺）",
-        "venue_name_normalized": "ydt dessert 苦中一点甜 糖水铺",
-        "aliases": [],
-        "area": null,
-        "lat": 3.0992904,
-        "lng": 101.644446,
-        "address": "10, Jalan Tengah, Bandar Baru Petaling Jaya, 46200 Petaling Jaya, Selangor ",
-        "dishes": [
-          "咖喱鸡扒饭",
-          "泡面",
-          "经典糖水"
-        ],
-        "sentiment": 0.82,
-        "price_band": null,
-        "excerpt": "📍 YDT Dessert 苦中一点甜（糖水铺）\n👉 咖喱鸡扒饭 + 泡面 + 经典糖水！大学生的快乐就是这么简单🥰",
-        "excerpt_is_substring": true,
-        "extractor_model": "qwen-plus",
-        "confidence": 0.89
       }
     ]
   },

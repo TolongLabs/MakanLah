@@ -11,16 +11,18 @@ post, answered in the language it was asked in.** Median response **2.51s**, ins
 
 ## The Corpus
 
-Still growing: Google Maps enrichment is mid-run. Numbers as of the last check.
+|                 |                                                                  |
+| --------------- | ---------------------------------------------------------------- |
+| **Posts**       | **1,507** — 1,388 Google Maps, 119 RedNote                       |
+| **Venues**      | **243**, **241 geocoded (99%)**, 240 with a Google `place_id`    |
+| **Mentions**    | **1,705** — all with sentiment and an excerpt, 486 with a dish   |
+| **Excerpts**    | 1,695 verbatim from the model, 10 repaired, **0 fabricated**     |
+| **Two sources** | **175 venues (72%) cited by both.** Neither is load-bearing      |
+| **Invariants**  | 0 uncited venues · 0 non-verbatim excerpts · 0 dangling mentions |
+| **Health**      | `degraded: false` — both sources recorded a passing run          |
 
-|                 |                                                              |
-| --------------- | ------------------------------------------------------------ |
-| **Posts**       | **783** — 664 Google Maps, 119 RedNote                       |
-| **Venues**      | **269**, 154 geocoded, 122 with a Google `place_id`          |
-| **Mentions**    | **989** — all with sentiment and an excerpt, 249 with a dish |
-| **Excerpts**    | 979 verbatim from the model, 10 repaired, **0 fabricated**   |
-| **Two sources** | **83** venues cited by both. Neither is load-bearing         |
-| **Invariants**  | 0 uncited venues · 0 non-verbatim excerpts · 269 embeddings  |
+**Geocoding went 34% → 99%** once Google Maps replaced Nominatim. Latency holds at **median 2.73s** against the 3s
+target in [`PRD.md`](PRD.md).
 
 RedNote languages per post: **84 Chinese only · 14 Chinese+Malay · 13 Chinese+English · 8 all three.**
 
@@ -40,7 +42,7 @@ and also returns the `place_id` that makes venue merging evidence-based rather t
 
 ---
 
-## Fifteen Defects Found And Fixed
+## Sixteen Defects Found And Fixed
 
 Each was found by running something, not by reading code.
 
@@ -62,17 +64,16 @@ Each was found by running something, not by reading code.
     CJK generics
 15. **A dry run reported 0 merges, then the real run merged 7** — it previewed against the stored key rather than the
     recomputed one, which is the shape of a dry run nobody should trust
+16. **A run killed by `timeout` left its record open forever.** SIGTERM becomes `SystemExit`, which is not an
+    `Exception`, so the handler never fired: the source read as permanently broken and `degraded` could never clear
 
 ---
 
 ## Next
 
-- Google Maps enrichment is running over the venues carrying only one source. Incremental, so partial results stick. A
-  dish pass, a venue merge and an embedding rebuild are chained behind it
-- The corpus still holds duplicate venue rows where no shared `place_id` proves they are one place
-- **`degraded` reads `true`, honestly**: the Maps run is mid-flight, so its `ingest_run` row has `ok = null`, which
-  reads as "did not finish" rather than as a pass. It clears when the run completes
-- Dish coverage is the weakest field, 249 of 989 mentions. Reviews name dishes; listicles often give a verdict without
-  naming one
+- **The pipeline is caught up.** Every venue that could be enriched has been; 2 of 243 remain ungeocoded
+- Dish coverage is the weakest field at 486 of 1,705 mentions. Reviews name dishes; listicles often give a verdict
+  without naming one
+- Growing the corpus is now one command: `ingest/capture_rednote.py --target N`, then `ingest/pipeline.py`
 
 **Branches:** `feat/xhs-spike` (PR #3) → `feat/app-scaffold` (PR #5, stacked). **Merge #3 first.**
