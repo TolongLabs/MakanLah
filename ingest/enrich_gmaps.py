@@ -172,11 +172,24 @@ async def run(limit=None, want_reviews=True, only_missing=True):
                 posts_kept=stats['review_posts'],
                 error=f'{stats["no_coords"]} venues unresolved' if stats['no_coords'] else None,
             )
-        except Exception as e:
-            # The run failed, and saying so is the point of recording it. What was
-            # already persisted stays: a partial corpus is a result, not a failure.
+        except BaseException as e:
+            # BaseException, not Exception. `timeout` sends SIGTERM, which becomes
+            # SystemExit, and Ctrl-C becomes KeyboardInterrupt; neither is an
+            # Exception. Catching only Exception left the run row open forever with
+            # ok = null, so the source read as permanently broken and `degraded`
+            # could never clear -- after a run that had done most of its work.
+            #
+            # A cut-off run is a partial result, not a failure of the source, so it
+            # records what it managed and says why it stopped. What was already
+            # persisted stays.
+            stopped_early = isinstance(e, (SystemExit, KeyboardInterrupt))
             db.finish_run(
-                con, run_id, ok=False, posts_seen=seen[0], posts_kept=stats['review_posts'], error=str(e)[:400]
+                con,
+                run_id,
+                ok=stopped_early and stats['coords'] > 0,
+                posts_seen=seen[0],
+                posts_kept=stats['review_posts'],
+                error=(f'stopped early after {seen[0]} venues' if stopped_early else str(e)[:400]),
             )
             raise
         return stats

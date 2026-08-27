@@ -280,3 +280,48 @@ class TestCitationDiversity:
 
         got = diverse_citations(self._c('rednote', 3) + self._c('google_maps', 3) + self._c('instagram', 3), 3)
         assert len({c['platform'] for c in got}) == 3
+
+
+class TestPartialRunIsNotAPermanentFailure:
+    """A run cut off by `timeout` used to leave its ingest_run row open forever
+    with ok = null, so the source read as permanently broken and `degraded` could
+    never clear, after a run that had done most of its work.
+
+    SIGTERM becomes SystemExit and Ctrl-C becomes KeyboardInterrupt. Neither is
+    an Exception, so `except Exception` never saw them.
+    """
+
+    def test_the_handler_catches_baseexception(self):
+        import inspect
+
+        from ingest import enrich_gmaps
+
+        src = inspect.getsource(enrich_gmaps.run)
+        assert 'except BaseException' in src
+        assert 'except Exception as' not in src
+
+    def test_a_partial_run_that_did_work_is_recorded_as_a_pass(self):
+        import inspect
+
+        from ingest import enrich_gmaps
+
+        src = inspect.getsource(enrich_gmaps.run)
+        # ok is True only when it stopped early AND actually resolved something.
+        assert "ok=stopped_early and stats['coords'] > 0" in src
+
+    def test_a_real_error_is_not_recorded_as_a_pass(self):
+        import inspect
+
+        from ingest import enrich_gmaps
+
+        src = inspect.getsource(enrich_gmaps.run)
+        assert 'stopped_early = isinstance(e, (SystemExit, KeyboardInterrupt))' in src
+
+    def test_a_run_that_never_finished_still_reads_as_not_a_pass(self):
+        # The other half of the guarantee: an open row must not look like success.
+        from makanlah.db import source_health
+
+        con = TestSourceHealth._Con([{'platform': 'rednote', 'ok': True}, {'platform': 'google_maps', 'ok': None}])
+        degraded, _, reasons = source_health(con)
+        assert degraded is True
+        assert any('did not finish' in r for r in reasons)
