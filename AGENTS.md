@@ -145,20 +145,24 @@ If reading your message takes longer than doing the thing, you have cost time.
 | **Biome**                            | Lint and format for JS, TS, JSON, CSS, HTML                               |
 | **Prettier**                         | Format for Markdown and YAML, the two Biome does not cover                |
 | **TypeScript**                       | `tsc --noEmit`; strict, `noUncheckedIndexedAccess`                        |
+| **uv**                               | Python runner and dependency resolver. `pyproject.toml` pins the project  |
+| **Ruff**                             | Lint and format for Python. Mirrors Biome: 120 columns, single quotes     |
 | **commitlint + husky + lint-staged** | Conventional Commits on `commit-msg`; staged files linted on `pre-commit` |
 | **GSD**                              | Orchestration. `npm i -g get-shit-done`                                   |
 
 ```bash
 bun install          # dev tooling; also wires husky hooks
-bun run lint         # biome check . && prettier --check .
-bun run format       # biome format --write . && prettier --write .
+bun run lint         # biome + prettier + ruff check + ruff format --check
+bun run format       # biome + prettier + ruff format
 bun run typecheck    # tsc --noEmit, once src/ exists
 ```
 
-**Application framework, database, hosting and scraper stack are not chosen yet.** They get chosen and justified in
-`docs/TRD.md`; this table is an inventory of what is installed. **There is no Python stack yet** — the spike is the
-first thing that creates one, and when it does it lands as `uv` plus `ruff`, added to this table and to `lint-staged` at
-the same time. Do not add Python tooling speculatively before then.
+**Application framework and hosting are not chosen yet.** They get chosen and justified in `docs/TRD.md`; this table is
+an inventory of what is installed. **The Python stack now exists** — the scrape spike created it, as `uv` plus `ruff`,
+wired into `lint-staged` and `bun run lint` at the same time. `pyproject.toml` is its root.
+
+**The scraper stack is settled by the spike**: CDP against a signed-in Chrome for RedNote, Nominatim for geocoding,
+neither needing an API key. Firecrawl stays for open-web fallbacks. See `docs/TRD.md`.
 
 **Prettier owns Markdown and YAML, Biome owns everything else**, split by file extension rather than an ignore file.
 `.prettierrc.json` mirrors every formatter setting `biome.json` states, so both wrap at 120 and neither can undo the
