@@ -13,6 +13,15 @@ set -uo pipefail
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "not a git repository" >&2; exit 1; }
 cd "$root" || exit 1
 
+# A non-interactive shell (ssh cmd, cron, an agent's Bash tool) does not source
+# .profile or .bashrc, so PATH is the bare system default and every user-installed
+# tool reads as missing. Normalise before probing, or this script confidently
+# reports a fully provisioned machine as empty.
+for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/bin"; do
+  [[ -d "$d" && ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
+done
+export PATH
+
 fail=0
 ok()   { printf '  \033[32mok\033[0m    %s\n' "$1"; }
 warn() { printf '  \033[33mwarn\033[0m  %s\n' "$1"; }
@@ -32,7 +41,7 @@ for t in gh graphify rtk devin codex uv timeout; do
   command -v "$t" >/dev/null 2>&1 && ok "$t" || warn "$t — not installed"
 done
 command -v gsd-sdk >/dev/null 2>&1 && ok "gsd-sdk" \
-  || warn "gsd-sdk — \`/gsd-config --profile\` hard-stops without it: npm i -g get-shit-done"
+  || warn "gsd-sdk — \`/gsd-config --profile\` hard-stops without it: bun add -g get-shit-done"
 
 echo
 echo "Repository"

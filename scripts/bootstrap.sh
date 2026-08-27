@@ -16,6 +16,15 @@ set -uo pipefail
 CHECK=0
 [[ "${1:-}" == "--check" ]] && CHECK=1
 
+# A non-interactive shell (ssh cmd, cron, an agent's Bash tool) does not source
+# .profile or .bashrc, so PATH is the bare system default and every user-installed
+# tool reads as missing. Normalise before probing, or this script confidently
+# reports a fully provisioned machine as empty.
+for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/bin"; do
+  [[ -d "$d" && ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
+done
+export PATH
+
 ok()   { printf '  \033[32mok\033[0m    %s\n' "$1"; }
 act()  { printf '  \033[36m..\033[0m    %s\n' "$1"; }
 warn() { printf '  \033[33mwarn\033[0m  %s\n' "$1"; }
@@ -53,18 +62,11 @@ else
 fi
 
 echo
-echo "npm global prefix"
-prefix=$(npm config get prefix 2>/dev/null)
-if [[ -w "$prefix/lib/node_modules" ]] 2>/dev/null; then
-  ok "$prefix is writable"
-elif [[ $CHECK -eq 1 ]]; then
-  bad "$prefix is not writable — would repoint to ~/.npm-global"
+echo "Global package manager"
+if have bun; then
+  ok "bun — global CLIs install with \`bun add -g\` into ~/.bun/install/global"
 else
-  # Cleaner than sudo-installing globals: keeps everything under $HOME.
-  act "repointing npm prefix to ~/.npm-global (avoids sudo for every global)"
-  mkdir -p "$HOME/.npm-global"
-  npm config set prefix "$HOME/.npm-global"
-  ok "npm prefix set — ensure ~/.npm-global/bin is on PATH"
+  warn "bun absent; globals will fall back to npm. Installing bun below fixes that"
 fi
 
 echo
@@ -94,7 +96,7 @@ install_or_report "uv" uv 'curl -LsSf https://astral.sh/uv/install.sh | sh' \
   "the scrape spike needs it; system python is 3.14 and too new for most wheels"
 
 # GSD: the orchestration spine. `/gsd-config --profile` hard-stops without it.
-install_or_report "gsd-sdk" gsd-sdk 'npm i -g get-shit-done' \
+install_or_report "gsd-sdk" gsd-sdk 'bun add -g get-shit-done || npm i -g get-shit-done' \
   "docs/SWARM.md's whole workflow depends on it"
 
 # Optional accelerants. Absence changes nothing about whether the project runs.
@@ -142,5 +144,6 @@ echo
 if [[ $CHECK -eq 1 ]]; then
   echo "Check only, nothing changed. Re-run without --check to provision."
 else
-  echo "Done. Open a new shell (PATH changed), then: scripts/preflight.sh"
+  echo "Done. Open a new LOGIN shell so PATH picks up ~/.bun/bin and ~/.local/bin,"
+  echo "then: scripts/preflight.sh"
 fi
