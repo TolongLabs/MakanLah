@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+.output/
+*.tsbuildinfo
+
+# Caches
+.cache/
+.turbo/
+.vite/
+
+# Python. No Python stack yet; the scrape spike is the first thing that creates one
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Scraped content. The normalized corpus and anything raw stay local: volume,
+# and platform terms. Schemas and fixtures are committed, harvests are not.
+data/raw/
+data/corpus/
+*.session
+
+# Editor and OS
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs
+logs/
+*.log
+
+# Agent local state
+.claude/settings.local.json
+.claude/projects/
+.planning/**/*.local.md
+
+# skills.sh writes this universal tree; we install with -a claude-code only
+/agent/
+
+# Derived
+graphify-out/
+
+# Raw recordings. Transcripts under docs/source/ are committed
+docs/source/*.mp3
+docs/source/*.mp4
+docs/source/*.wav
+docs/source/*.m4a
+docs/source/*.webm
