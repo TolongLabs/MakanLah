@@ -74,9 +74,22 @@ def settings() -> Settings:
         embed_api_key=e('DASHSCOPE_API_KEY'),
         embed_model=e('DASHSCOPE_MODEL_EMBED', 'text-embedding-v3'),
         embed_dim=int(e('EMBEDDING_DIM', '1024')),
-        rerank_base_url=e('HERMES_COPILOT_BASE_URL') or 'https://openrouter.ai/api/v1',
-        rerank_api_key=e('HERMES_API_KEY') or e('OPENROUTER_API_KEY'),
-        rerank_model=e('RERANK_MODEL', 'qwen/qwen3-235b-a22b-2507'),
+        # The re-rank is the interactive lane: a user is waiting, and it is 96%
+        # of request latency. Measured on this corpus, 20 candidates each:
+        #   qwen-turbo (DashScope, Singapore)  1.38s   most results
+        #   qwen-flash (DashScope)             1.13s   fewer results
+        #   qwen3-30b (OpenRouter)             1.13s
+        #   qwen-plus  (DashScope)             2.33s
+        #   qwen3-235b (OpenRouter)            8.97s   the previous default
+        # qwen-turbo wins on results-per-second, and DashScope is nearer KL.
+        rerank_base_url=(
+            e('HERMES_COPILOT_BASE_URL')
+            or (e('DASHSCOPE_BASE_URL') if e('DASHSCOPE_API_KEY') else None)
+            or 'https://openrouter.ai/api/v1'
+        ),
+        rerank_api_key=e('HERMES_API_KEY') or e('DASHSCOPE_API_KEY') or e('OPENROUTER_API_KEY'),
+        rerank_model=e('RERANK_MODEL')
+        or ('qwen-turbo' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
         nominatim_base_url=e('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         nominatim_user_agent=e('NOMINATIM_USER_AGENT', 'MakanLah/0.1'),
         cors_origins=tuple(x for x in (e('CORS_ORIGINS', '') or '').split(',') if x) or ('*',),

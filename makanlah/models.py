@@ -46,13 +46,21 @@ Rules:
   and is better than an invented one.
 - excerpt MUST be a substring of the post text."""
 
+# The word "json" must appear literally: DashScope rejects response_format
+# json_object without it, with InternalError.Algo.InvalidParameter. Because
+# rerank() falls back to retrieval order on any error, the failure was silent --
+# re-ranking simply never happened on that lane and the shortlist still looked
+# plausible.
 RERANK_SYSTEM = """You re-rank candidate restaurants against what a user asked for.
 
 You are given the user's request and numbered candidates, each with its name,
-area, dishes and excerpts from real posts. Return ONLY:
-  {"results": [{"index": <candidate number>, "why": "<one short sentence>"}]}
+area, dishes and excerpts from real posts. Return ONLY a json object:
+  {"results": [{"index": <candidate number>, "why": "<at most 12 words>"}]}
 
 Order best first. Include at most the number asked for; fewer is fine.
+
+"why" is one line in a list someone is skimming while hungry. Twelve words is a
+ceiling, not a target. No preamble, no restating the request.
 
   - "why" must be grounded in the candidate's own excerpts and dishes. Never
     invent a detail that is not there.
@@ -156,18 +164,30 @@ def answer_language(query):
     return 'English'
 
 
+# How much of the retrieved set the re-rank actually sees. Measured: 48
+# candidates with three long excerpts each took 9.0s, which misses the 3s target
+# in docs/PRD.md by a factor of three. The re-rank is 96% of request latency and
+# scales with prompt size, so this is the knob that matters.
+RERANK_CANDIDATES = 16
+RERANK_EXCERPT_CHARS = 260
+RERANK_EXCERPTS_PER_VENUE = 2
+
+
 def rerank(query, candidates, limit=10, retries=1):
-    """Returns [(candidate_index, why)]. Never returns a citation — stage 4 attaches those."""
+    """Returns [(candidate_index, why)]. Never returns a citation: stage 4 attaches those."""
     s = config.settings()
     if not s.rerank_api_key:
         return [(i, '') for i in range(min(limit, len(candidates)))]
+    candidates = candidates[:RERANK_CANDIDATES]
     lines = []
     for i, c in enumerate(candidates):
-        dishes = ', '.join(c.get('dishes') or []) or '—'
-        excerpts = ' / '.join(x['excerpt'] for x in c.get('citations', []) if x.get('excerpt'))[:600]
+        dishes = ', '.join((c.get('dishes') or [])[:4]) or '-'
+        excerpts = ' / '.join(
+            x['excerpt'] for x in c.get('citations', [])[:RERANK_EXCERPTS_PER_VENUE] if x.get('excerpt')
+        )[:RERANK_EXCERPT_CHARS]
         lines.append(
-            f'[{i}] {c["name"]} — {c.get("area") or c.get("city") or ""}\n'
-            f'    dishes: {dishes}\n    posts: {excerpts or "—"}'
+            f'[{i}] {c["name"]} - {c.get("area") or c.get("city") or ""}\n'
+            f'    dishes: {dishes}\n    posts: {excerpts or "-"}'
         )
     # Naming the language in the system prompt is not enough: the model anchors on
     # the language of the excerpts, so an English question came back answered in
