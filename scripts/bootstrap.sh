@@ -20,7 +20,7 @@ CHECK=0
 # .profile or .bashrc, so PATH is the bare system default and every user-installed
 # tool reads as missing. Normalise before probing, or this script confidently
 # reports a fully provisioned machine as empty.
-for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/bin"; do
+for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/.fly/bin" "$HOME/bin"; do
   [[ -d "$d" && ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
 done
 export PATH
@@ -96,7 +96,7 @@ install_or_report "uv" uv 'curl -LsSf https://astral.sh/uv/install.sh | sh' \
   "the scrape spike needs it; system python is 3.14 and too new for most wheels"
 
 # GSD: the orchestration spine. `/gsd-config --profile` hard-stops without it.
-install_or_report "gsd-sdk" gsd-sdk 'bun add -g get-shit-done || npm i -g get-shit-done' \
+install_or_report "gsd" gsd 'bun add -g get-shit-done || npm i -g get-shit-done' \
   "docs/SWARM.md's whole workflow depends on it"
 
 # Optional accelerants. Absence changes nothing about whether the project runs.

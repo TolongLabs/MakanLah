@@ -12,49 +12,60 @@ forever after**.
 
 ## The Xiaohongshu Catch
 
-> **Being signed in to Chrome on the workstation is necessary but not sufficient.** Headless Chromium launches a fresh,
-> empty profile. It cannot see the desktop browser's cookies, and it will hit the login wall as if you had never signed
-> in.
+> **Being signed in to Chrome is necessary but not sufficient, and the obvious workaround is blocked.** Headless
+> Chromium launches an empty profile and hits the login wall as if you had never signed in. Pointing `--user-data-dir`
+> at the real profile does not fix it, because **Chrome 136+ refuses remote debugging against the default profile
+> directory**:
+>
+> ```
+> DevTools remote debugging requires a non-default data directory.
+> Specify this using --user-data-dir.
+> ```
+>
+> Verified on dev1, Chrome 151. It is a deliberate anti-cookie-theft measure with no flag to disable it. The failure is
+> quiet: Chrome starts, serves no debugging port, and every fetch returns a login wall — which reads exactly like an
+> expired session.
 
-The session only reaches automation through one of three routes:
-
-| Route                     | How                                                                                                  | Cost                                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Attach to the profile** | Launch Chrome with `--user-data-dir=$HOME/.config/google-chrome --profile-directory=Default`         | Chrome must not already be running — the profile is locked to a live instance. Needs a display |
-| **CDP attach**            | Start Chrome once with `--remote-debugging-port=9222` on the real profile; automation connects to it | Most robust for long runs. The port is the session — never expose it beyond localhost          |
-| **`claude-in-chrome`**    | Drives the actual browser you are signed into                                                        | Interactive. Right for exploration, wrong for a scheduled ingestion run                        |
-
-**A display is required for the first two.** On dev1 an SSH session has `DISPLAY` unset and `XDG_SESSION_TYPE=tty`, so
-headful Chrome will not start from a terminal. Either run from the Qube's own GUI session, or wrap it:
+**Use `scripts/chrome-session.sh`.** It copies only the session-bearing files to a non-default directory, launches
+Chrome there with CDP, and — importantly — **verifies the session actually carried** rather than assuming it did.
 
 ```bash
-sudo apt-get install -y xvfb
-xvfb-run -a google-chrome --user-data-dir="$HOME/.config/google-chrome" --profile-directory=Default ...
+scripts/chrome-session.sh start     # copy, launch, wait for CDP
+scripts/chrome-session.sh verify    # open xiaohongshu, fail loudly on a login wall
+scripts/chrome-session.sh stop      # kill Chrome and delete the copy
 ```
 
-**Treat the cookie jar as a live credential.** `~/.config/google-chrome/Default/Cookies` is not in the repo and must
-never enter it — `.gitignore` covers `*.session` and the git guard blocks force-adding a corpus, but neither knows about
-a path outside the tree. Point `XHS_SESSION_PATH` at it in `.env`; do not copy it in.
+Three things it handles that are easy to get wrong:
 
-**Sessions expire, and that is a normal outcome, not a failure.** When one does, ingestion falls through to the next
-source and the run continues ([`AUTONOMY.md`](AUTONOMY.md#standing-operational-defaults)). Re-authenticating is a human
-task, queued as an issue, not a reason to stop.
+| Trap                                       | What happens without it                                                                                                                                   |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`Local State` must be copied too**       | On Linux it holds the key the cookie store is encrypted with. Cookies copied alone decrypt to nothing                                                     |
+| **The source profile must not be running** | Chrome holds a lock; copying underneath it yields a torn cookie store that fails like an expired session                                                  |
+| **No display over SSH**                    | `DISPLAY` is unset and `XDG_SESSION_TYPE=tty`, so the script falls back to `xvfb-run`. Headless mode is a different code path that some sites fingerprint |
 
----
+**The copy is a duplicated live credential.** It lives at mode 700 under `~/.cache/`, never inside the repo, and `stop`
+deletes it. Re-run `start` when the session expires — that is a normal outcome, not a failure, and ingestion falls
+through to the next source meanwhile.
+
+**For interactive exploration, the `claude-in-chrome` extension is the better tool** — it drives the browser you are
+actually signed into, with no copy at all. It is wrong for scheduled ingestion because it needs a human in the loop,
+which is the whole reason the CDP path exists.
 
 ## Do These Once, In A Browser
 
 Ordered by what blocks the most if skipped.
 
-| What                   | Why It Is Needed                                                    | After That                                                                                                      |
-| ---------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **Claude Code**        | The orchestrator. **Nothing runs without it**                       | `claude` — OAuth in a browser, once per machine                                                                 |
-| **Xiaohongshu**        | The primary source. Already done on dev1                            | Keep the profile signed in; see the catch above                                                                 |
-| **OpenRouter**         | The GLM-5.3-Flash worker lane, and the primary one after 2026-09-23 | Copy the key to `OPENROUTER_API_KEY`. No further browser                                                        |
-| **Firecrawl**          | Open-web fallback sources. ~20k credits already available           | Copy the key to `FIRECRAWL_API_KEY`. No further browser                                                         |
-| **Hermes Agent**       | Both runtimes — the copilot and ingestion                           | Copy the key to `HERMES_API_KEY`. Confirm the var names against its docs; `.env.example` marks them unconfirmed |
-| **Devin** _(optional)_ | The free SWE-1.7 worker lane, until 2026-09-23                      | `devin` login. Skip it and OpenRouter covers the lane                                                           |
-| **Codex** _(optional)_ | Second-opinion reviews, and image generation Claude Code cannot do  | `codex` login with a ChatGPT account                                                                            |
+| What                   | Why It Is Needed                                                    | After That                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Claude Code**        | The orchestrator. **Nothing runs without it**                       | `claude` — OAuth in a browser, once per machine                                                                              |
+| **Xiaohongshu**        | The primary source. Already done on dev1                            | Keep the profile signed in; see the catch above                                                                              |
+| **Neon**               | The corpus. Nothing reads or writes without it                      | Create a project in a region near KL; copy the pooled and direct strings to `DATABASE_URL` / `DATABASE_URL_UNPOOLED`         |
+| **ModelScope**         | Extraction — the batch lane turning posts into structured fields    | Copy the SDK token to `MODELSCOPE_API_KEY`. Check the same account for a Qwen embedding model before paying another provider |
+| **OpenRouter**         | The GLM-5.3-Flash worker lane, and the primary one after 2026-09-23 | Copy the key to `OPENROUTER_API_KEY`. No further browser                                                                     |
+| **Firecrawl**          | Open-web fallback sources. ~20k credits already available           | Copy the key to `FIRECRAWL_API_KEY`. No further browser                                                                      |
+| **Hermes Agent**       | Both runtimes — the copilot and ingestion                           | Copy the key to `HERMES_API_KEY`. Confirm the var names against its docs; `.env.example` marks them unconfirmed              |
+| **Devin** _(optional)_ | The free SWE-1.7 worker lane, until 2026-09-23                      | `devin` login. Skip it and OpenRouter covers the lane                                                                        |
+| **Codex** _(optional)_ | Second-opinion reviews, and image generation Claude Code cannot do  | `codex` login with a ChatGPT account                                                                                         |
 
 **GitHub needs nothing.** `gh` on dev1 is already authenticated with `ADMIN` on `TolongLabs/MakanLah`, so branches, PRs,
 issues and merges all work headlessly.
@@ -75,6 +86,23 @@ question. **Resolve this when choosing them, not when one goes dark.**
 **Prefer a fallback that needs no session.** A second login-walled source doubles the surface that can expire unattended
 without doubling the resilience — two sessions that both go stale on the same trip is not a fallback, it is the same
 failure twice.
+
+---
+
+## Geocoding, And What It Does Not Need
+
+**Directions need nothing prepared.** The MVP deep-links to Google Maps rather than rendering one, and the URL scheme
+takes no key, no SDK and no billing account. On a phone it opens the native app.
+
+What does need a decision is **geocoding** — Xiaohongshu posts carry a restaurant name and a vague area, not
+coordinates, and the core loop lets a user filter by distance. Start with **Nominatim**: free, no key, no billing, and
+its one-request-per-second limit is irrelevant because geocoding runs at ingestion time, once per restaurant, with
+nobody waiting.
+
+Move to **Google Places** only if Nominatim's match rate on mixed-language Malaysian restaurant names proves poor —
+measure it, do not assume it. That step needs a Cloud project with billing enabled even inside the free tier, so it is
+the one row here that requires a card. Its `place_id` also sharpens the directions link, which matters for a chain with
+twenty branches.
 
 ---
 

@@ -108,8 +108,9 @@ days produce code nobody agreed to.
 | `docs/PRD.md`     | **What.** Requirements, user stories, acceptance criteria, what is out of scope | Scope                                     |
 | `docs/TRD.md`     | **How.** Architecture, API contracts, data models, schemas, decision rationale  | Technical truth. Canonical over this file |
 
-`docs/PRODUCT.md` exists. **`PRD.md` and `TRD.md` do not.** `docs/DESIGN.md` joins them when frontend work starts, and
-owns the design system: palette, type pairing, radius and border treatment, spacing scale.
+`docs/PRODUCT.md` and `docs/TRD.md` exist. **`PRD.md` does not** — write it and proceed; do not stop for it.
+`docs/DESIGN.md` joins them when frontend work starts, and owns the design system: palette, type pairing, radius and
+border treatment, spacing scale.
 
 **The gate is binary, and it is not a stopping point.** If the three are not all present, the answer to "can I start
 building" is no — so **write the missing one, then build**. It is an hour of work against defaults already

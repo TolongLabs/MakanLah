@@ -17,7 +17,7 @@ cd "$root" || exit 1
 # .profile or .bashrc, so PATH is the bare system default and every user-installed
 # tool reads as missing. Normalise before probing, or this script confidently
 # reports a fully provisioned machine as empty.
-for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/bin"; do
+for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/.fly/bin" "$HOME/bin"; do
   [[ -d "$d" && ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
 done
 export PATH
@@ -37,11 +37,11 @@ done
 
 echo
 echo "Optional (absence changes nothing, it is only reported)"
-for t in gh graphify rtk devin codex uv timeout; do
+for t in gh graphify rtk devin codex uv timeout xvfb-run neonctl wrangler flyctl; do
   command -v "$t" >/dev/null 2>&1 && ok "$t" || warn "$t — not installed"
 done
-command -v gsd-sdk >/dev/null 2>&1 && ok "gsd-sdk" \
-  || warn "gsd-sdk — \`/gsd-config --profile\` hard-stops without it: bun add -g get-shit-done"
+command -v gsd >/dev/null 2>&1 && ok "gsd" \
+  || warn "gsd — \`/gsd-config --profile\` hard-stops without it: bun add -g get-shit-done"
 
 echo
 echo "Repository"
@@ -71,7 +71,7 @@ echo
 echo "Credentials (.env is never read, only key presence is checked)"
 if [[ -f .env ]]; then
   ok ".env present"
-  for k in FIRECRAWL_API_KEY OPENROUTER_API_KEY HERMES_API_KEY; do
+  for k in DATABASE_URL MODELSCOPE_API_KEY FIRECRAWL_API_KEY OPENROUTER_API_KEY HERMES_API_KEY; do
     if grep -qE "^${k}=.+" .env 2>/dev/null; then ok "$k set"
     else warn "$k empty — stub the boundary and continue on fixtures (AUTONOMY.md)"; fi
   done
