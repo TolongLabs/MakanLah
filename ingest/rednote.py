@@ -13,7 +13,7 @@ import json
 import re
 import urllib.parse
 
-from cdp import Session
+from ingest.cdp import Session
 
 BASE = 'https://www.rednote.com'
 PAUSE = 2.5

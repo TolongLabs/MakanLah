@@ -152,11 +152,15 @@ makanlah/                the shared library. Both runtimes import it, neither sh
   migrations/            the corpus schema as Postgres
   research/              measurement scripts whose results live in docs/superpowers/research/
 ingest/                  batch, on the workstation. Holds the browser session. Never serves a request
-  pipeline.py            discover -> fetch -> store raw -> extract -> resolve -> geocode -> embed
-  geocode.py             Nominatim, one request per second, ingestion-time only
+  cdp.py                 CDP client. Every call bounded, because a crashed tab hangs silently
+  rednote.py             the primary source. Targets the host, not the brand
+  gmaps.py               the second source. No API key; the place URL carries coordinates
+  capture_rednote.py     fetch to the raw cache. Separate from extraction on purpose
+  pipeline.py            store raw -> extract -> resolve venue -> geocode -> embed
+  enrich_gmaps.py        fill coordinates and take Maps reviews as evidence
+  geocode.py             Nominatim. Kept as fallback; Maps resolves far more of this corpus
 api/main.py              interactive, hosted. Reads the corpus and never scrapes
 web/                     the static client. Vite + React, installable, holds no secret
-spike/                   the day-0 scrape spike, kept as the record of what was proven
 tests/                   pytest, entirely against fixtures. Never touches a live platform
 scripts/
   bootstrap.sh           provision a fresh machine. Idempotent
@@ -175,8 +179,12 @@ scripts/
 processes, separate hosts, separate failure domains. `api/` must never import from `ingest/` — that is where the browser
 session and the scrapers live, and the API host has neither.
 
-`spike/` is kept rather than deleted. It is the record of what the day-0 spike actually proved, and its raw capture is
-what `ingest/` replays without touching a platform.
+**Fetching and extraction are separate commands on purpose.** Fetching is slow, rate-limited and can fail halfway;
+extraction is fast and replayable. Raw captures live on disk, so a schema or prompt change costs nothing to re-run,
+where re-scraping costs a rate limit and possibly a session.
+
+The day-0 spike's own runner has been folded into `ingest/` now that it is the production path. What it proved is
+recorded in [`TRD.md`](TRD.md#what-the-spike-changed), and its redacted capture is in [`source/`](source/).
 
 Skill provenance: [`../.agents/skills/VENDORED.md`](../.agents/skills/VENDORED.md).
 
