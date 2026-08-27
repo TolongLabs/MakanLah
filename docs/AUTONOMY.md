@@ -40,14 +40,24 @@ These close every open row in [`PRODUCT.md`](PRODUCT.md#open-decisions). **Take 
 reversible, and a reversible decision made now beats a correct one made after a conversation that cannot happen because
 nobody is at the keyboard.
 
-| Decision            | Take This                                                                                       | Why, And When To Revisit                                                                                                                                      |
-| ------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Scraper stack**   | Firecrawl first, Scrapling with an authenticated session as fallback, both behind one interface | Firecrawl is cheap and already paid for; Scrapling is the only plausible path through a login wall. Revisit if Firecrawl yields <20% on open-web sources      |
-| **Corpus store**    | **SQLite**, one file, plus JSON-Lines for raw captures                                          | Zero ops, handles MVP volume by orders of magnitude, and swaps out behind a repository interface. Revisit above ~1M records or when concurrent writers appear |
-| **Ranking**         | **Hybrid** — embedding retrieval to top-50, LLM re-rank to top-10                               | Cheap recall, good precision, and the re-rank pass is where citations get attached. Revisit once a metric exists to compare against                           |
-| **Mobile delivery** | **PWA.** Responsive web, installable, no app store                                              | The product promises a decision in under two minutes; an app store install is a five-minute tax before first use. Revisit only if retention data demands push |
-| **App framework**   | Whatever the PWA default is at the time — do not spend a session choosing                       | The corpus and ranking are the asset. The client is the cheapest part to redo                                                                                 |
-| **Hosting**         | Whatever deploys from this repo with one command and a free tier                                | Ops time spent before there are users is ops time wasted                                                                                                      |
+| Decision            | Take This                                                                                       | Why, And When To Revisit                                                                                                                                                                                           |
+| ------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Scraper stack**   | Firecrawl first, Scrapling with an authenticated session as fallback, both behind one interface | Firecrawl is cheap and already paid for; Scrapling is the only plausible path through a login wall. Revisit if Firecrawl yields <20% on open-web sources                                                           |
+| **Corpus store**    | **Neon** — Postgres + pgvector, region near KL. SQLite only for the spike and local fixtures    | One store for rows, full-text and vectors. Chosen over SQLite because the app reads remotely while ingestion writes locally, which is the concurrent-writer case                                                   |
+| **Ranking**         | **Hybrid** — embedding retrieval to top-50, LLM re-rank to top-10                               | Cheap recall, good precision, and the re-rank pass is where citations get attached. Revisit once a metric exists to compare against                                                                                |
+| **Mobile delivery** | **PWA.** Responsive web, installable, no app store                                              | The product promises a decision in under two minutes; an app store install is a five-minute tax before first use. Revisit only if retention data demands push                                                      |
+| **App framework**   | **Vite + React** SPA for the client, **FastAPI** for the API                                    | Ingestion is already Python, so the corpus layer, embedding client and model clients are written once and shared as libraries by two separate processes. Next.js would mean reimplementing all three in TypeScript |
+| **Hosting**         | Static client on Cloudflare Pages or Vercel; API on Fly.io, Singapore region                    | Both free-tier, both near KL. **Never host from the workstation** — see below                                                                                                                                      |
+
+### The Workstation Is Never Publicly Reachable
+
+Ingestion runs on the workstation because that is where the authenticated browser session lives. **It must never accept
+an inbound connection.** With a hosted corpus it does not need to: it makes outbound connections only — to the platforms
+it scrapes, and to Neon to write what it found. Nothing routes back.
+
+That means no port forwarding, no tunnel, no dynamic-DNS entry, and no hostname anywhere in a config that ships. If a
+future change appears to need inbound access to the workstation, it is the change that is wrong. The alternative is
+always to put the thing being reached behind the API instead.
 
 ### Standing Operational Defaults
 

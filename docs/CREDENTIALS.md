@@ -46,15 +46,17 @@ task, queued as an issue, not a reason to stop.
 
 Ordered by what blocks the most if skipped.
 
-| What                   | Why It Is Needed                                                    | After That                                                                                                      |
-| ---------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **Claude Code**        | The orchestrator. **Nothing runs without it**                       | `claude` — OAuth in a browser, once per machine                                                                 |
-| **Xiaohongshu**        | The primary source. Already done on dev1                            | Keep the profile signed in; see the catch above                                                                 |
-| **OpenRouter**         | The GLM-5.3-Flash worker lane, and the primary one after 2026-09-23 | Copy the key to `OPENROUTER_API_KEY`. No further browser                                                        |
-| **Firecrawl**          | Open-web fallback sources. ~20k credits already available           | Copy the key to `FIRECRAWL_API_KEY`. No further browser                                                         |
-| **Hermes Agent**       | Both runtimes — the copilot and ingestion                           | Copy the key to `HERMES_API_KEY`. Confirm the var names against its docs; `.env.example` marks them unconfirmed |
-| **Devin** _(optional)_ | The free SWE-1.7 worker lane, until 2026-09-23                      | `devin` login. Skip it and OpenRouter covers the lane                                                           |
-| **Codex** _(optional)_ | Second-opinion reviews, and image generation Claude Code cannot do  | `codex` login with a ChatGPT account                                                                            |
+| What                   | Why It Is Needed                                                    | After That                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Claude Code**        | The orchestrator. **Nothing runs without it**                       | `claude` — OAuth in a browser, once per machine                                                                              |
+| **Xiaohongshu**        | The primary source. Already done on dev1                            | Keep the profile signed in; see the catch above                                                                              |
+| **Neon**               | The corpus. Nothing reads or writes without it                      | Create a project in a region near KL; copy the pooled and direct strings to `DATABASE_URL` / `DATABASE_URL_UNPOOLED`         |
+| **ModelScope**         | Extraction — the batch lane turning posts into structured fields    | Copy the SDK token to `MODELSCOPE_API_KEY`. Check the same account for a Qwen embedding model before paying another provider |
+| **OpenRouter**         | The GLM-5.3-Flash worker lane, and the primary one after 2026-09-23 | Copy the key to `OPENROUTER_API_KEY`. No further browser                                                                     |
+| **Firecrawl**          | Open-web fallback sources. ~20k credits already available           | Copy the key to `FIRECRAWL_API_KEY`. No further browser                                                                      |
+| **Hermes Agent**       | Both runtimes — the copilot and ingestion                           | Copy the key to `HERMES_API_KEY`. Confirm the var names against its docs; `.env.example` marks them unconfirmed              |
+| **Devin** _(optional)_ | The free SWE-1.7 worker lane, until 2026-09-23                      | `devin` login. Skip it and OpenRouter covers the lane                                                                        |
+| **Codex** _(optional)_ | Second-opinion reviews, and image generation Claude Code cannot do  | `codex` login with a ChatGPT account                                                                                         |
 
 **GitHub needs nothing.** `gh` on dev1 is already authenticated with `ADMIN` on `TolongLabs/MakanLah`, so branches, PRs,
 issues and merges all work headlessly.
@@ -75,6 +77,23 @@ question. **Resolve this when choosing them, not when one goes dark.**
 **Prefer a fallback that needs no session.** A second login-walled source doubles the surface that can expire unattended
 without doubling the resilience — two sessions that both go stale on the same trip is not a fallback, it is the same
 failure twice.
+
+---
+
+## Geocoding, And What It Does Not Need
+
+**Directions need nothing prepared.** The MVP deep-links to Google Maps rather than rendering one, and the URL scheme
+takes no key, no SDK and no billing account. On a phone it opens the native app.
+
+What does need a decision is **geocoding** — Xiaohongshu posts carry a restaurant name and a vague area, not
+coordinates, and the core loop lets a user filter by distance. Start with **Nominatim**: free, no key, no billing, and
+its one-request-per-second limit is irrelevant because geocoding runs at ingestion time, once per restaurant, with
+nobody waiting.
+
+Move to **Google Places** only if Nominatim's match rate on mixed-language Malaysian restaurant names proves poor —
+measure it, do not assume it. That step needs a Cloud project with billing enabled even inside the free tier, so it is
+the one row here that requires a card. Its `place_id` also sharpens the directions link, which matters for a chain with
+twenty branches.
 
 ---
 

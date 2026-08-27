@@ -71,7 +71,7 @@ echo
 echo "Credentials (.env is never read, only key presence is checked)"
 if [[ -f .env ]]; then
   ok ".env present"
-  for k in FIRECRAWL_API_KEY OPENROUTER_API_KEY HERMES_API_KEY; do
+  for k in DATABASE_URL MODELSCOPE_API_KEY FIRECRAWL_API_KEY OPENROUTER_API_KEY HERMES_API_KEY; do
     if grep -qE "^${k}=.+" .env 2>/dev/null; then ok "$k set"
     else warn "$k empty — stub the boundary and continue on fixtures (AUTONOMY.md)"; fi
   done
