@@ -89,7 +89,7 @@ def extract_batch(rows):
 
 
 def run(limit=None):
-    stats = dict(mentions_seen=0, mentions_updated=0, dishes_written=0, batches_failed=0)
+    stats = dict(mentions_seen=0, mentions_updated=0, dishes_written=0, embeddings_invalidated=0, batches_failed=0)
     with db.connect(direct=True) as con:
         rows = pending(con, limit)
         print(f'{len(rows)} maps mentions on venues with no dish', flush=True)
@@ -106,8 +106,19 @@ def run(limit=None):
                 if not dishes:
                     continue
                 con.execute('update mention set dishes = %s where id = %s', (dishes, batch[idx]['id']))
+                # The venue's embedding document is built from its dishes, so the
+                # stored vector now describes text that has changed. Drop it and
+                # let the pipeline rebuild: venue_documents() only embeds venues
+                # that have none, so a stale vector would otherwise survive
+                # forever and rank the venue on what it used to say.
+                con.execute(
+                    """delete from venue_embedding
+                       where venue_id = (select venue_id from mention where id = %s)""",
+                    (batch[idx]['id'],),
+                )
                 stats['mentions_updated'] += 1
                 stats['dishes_written'] += len(dishes)
+                stats['embeddings_invalidated'] += 1
             con.commit()
             print(
                 f'  [{min(i + BATCH, len(rows))}/{len(rows)}] '
