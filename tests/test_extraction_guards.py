@@ -180,3 +180,49 @@ class TestGmapsCoordinateParsing:
         from ingest.gmaps import _place_id_from
 
         assert _place_id_from('/maps/search/x') is None
+
+
+class TestDishDedupe:
+    """Extraction from reviews repeats a dish when the review does
+    ("savoury pork ... so good ... pork"). A duplicated dish inflates the
+    venue's dish list and its embedding document.
+    """
+
+    def _batch(self, monkeypatch, payload):
+        import ingest.enrich_dishes as ed
+
+        monkeypatch.setattr(ed.models, '_post', lambda *a, **k: {})
+        monkeypatch.setattr(ed.models, '_content', lambda body: '')
+        monkeypatch.setattr(ed.models, '_json_object', lambda text: payload)
+        monkeypatch.setattr(
+            ed.config,
+            'settings',
+            lambda: type('S', (), {'extract_model': 'm', 'extract_base_url': 'u', 'extract_api_key': 'k'})(),
+        )
+        return ed.extract_batch([{'excerpt': 'x'}, {'excerpt': 'y'}])
+
+    def test_repeats_are_collapsed(self, monkeypatch):
+        got = self._batch(monkeypatch, {'reviews': [{'index': 0, 'dishes': ['pork', 'noodles', 'pork']}]})
+        assert got[0] == ['pork', 'noodles']
+
+    def test_dedupe_is_case_insensitive_and_keeps_the_first_spelling(self, monkeypatch):
+        got = self._batch(monkeypatch, {'reviews': [{'index': 0, 'dishes': ['Roti Babi', 'roti babi']}]})
+        assert got[0] == ['Roti Babi']
+
+    def test_blank_and_non_string_entries_are_dropped(self, monkeypatch):
+        got = self._batch(monkeypatch, {'reviews': [{'index': 0, 'dishes': ['nasi lemak', '', '  ', None, 7]}]})
+        assert got[0] == ['nasi lemak']
+
+    def test_an_empty_list_is_preserved_rather_than_guessed(self, monkeypatch):
+        # Most reviews are about service or queues. Empty is the correct answer.
+        got = self._batch(monkeypatch, {'reviews': [{'index': 0, 'dishes': []}]})
+        assert got[0] == []
+
+    def test_an_out_of_range_index_is_ignored(self, monkeypatch):
+        got = self._batch(monkeypatch, {'reviews': [{'index': 9, 'dishes': ['x']}, {'index': 1, 'dishes': ['y']}]})
+        assert 9 not in got
+        assert got[1] == ['y']
+
+    def test_chinese_dishes_survive_unchanged(self, monkeypatch):
+        got = self._batch(monkeypatch, {'reviews': [{'index': 0, 'dishes': ['肉骨茶', '椰浆饭']}]})
+        assert got[0] == ['肉骨茶', '椰浆饭']
