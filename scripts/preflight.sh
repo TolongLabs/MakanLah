@@ -17,7 +17,7 @@ cd "$root" || exit 1
 # .profile or .bashrc, so PATH is the bare system default and every user-installed
 # tool reads as missing. Normalise before probing, or this script confidently
 # reports a fully provisioned machine as empty.
-for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/bin"; do
+for d in "$HOME/.bun/bin" "$HOME/.local/bin" "$HOME/.npm-global/bin" "$HOME/.fly/bin" "$HOME/bin"; do
   [[ -d "$d" && ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
 done
 export PATH
@@ -37,11 +37,11 @@ done
 
 echo
 echo "Optional (absence changes nothing, it is only reported)"
-for t in gh graphify rtk devin codex uv timeout; do
+for t in gh graphify rtk devin codex uv timeout xvfb-run neonctl wrangler flyctl; do
   command -v "$t" >/dev/null 2>&1 && ok "$t" || warn "$t — not installed"
 done
-command -v gsd-sdk >/dev/null 2>&1 && ok "gsd-sdk" \
-  || warn "gsd-sdk — \`/gsd-config --profile\` hard-stops without it: bun add -g get-shit-done"
+command -v gsd >/dev/null 2>&1 && ok "gsd" \
+  || warn "gsd — \`/gsd-config --profile\` hard-stops without it: bun add -g get-shit-done"
 
 echo
 echo "Repository"
