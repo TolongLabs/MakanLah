@@ -57,22 +57,44 @@ cp .env.example .env         # then fill in what CREDENTIALS.md says you must
 scripts/preflight.sh         # will an unattended run get stuck on setup?
 ```
 
-Before a long unattended run, `scripts/unattended.sh on` allows self-merge on green CI — without it the run stalls at
-the first PR, because step 4 of **How Work Ships** has nobody to perform it. Turn it off afterwards.
+> **`scripts/unattended.sh on` reports success but does not currently work.** `deny` outranks `allow` in Claude Code, so
+> the `gh pr merge` deny in `.claude/settings.json` cannot be lifted by `settings.local.json`. An unattended run still
+> stalls at the first PR. Tracked in **[#4](https://github.com/TolongLabs/MakanLah/issues/4)**.
 
-| Command             | Does                               |
-| ------------------- | ---------------------------------- |
-| `bun run lint`      | Biome check, then Prettier check   |
-| `bun run format`    | Both formatters, writing in place  |
-| `bun run typecheck` | `tsc --noEmit`, once `src/` exists |
-| `gh issue list`     | The TODO board                     |
+### Running It
+
+```bash
+scripts/chrome-session.sh start && scripts/chrome-session.sh verify   # the signed-in browser
+uv run python ingest/capture_rednote.py --target 200                  # fetch to the raw cache
+uv run python ingest/pipeline.py                                      # extract, resolve, geocode, embed
+uv run python ingest/enrich_gmaps.py                                  # coordinates and Maps reviews
+uv run python ingest/merge_venues.py --dry-run                        # what would merge, and why
+scripts/dev-api.sh                                                    # the API on 127.0.0.1:8000
+cd web && bun install && bun run dev                                  # the client
+```
+
+**Fetching and extraction are separate commands on purpose.** Fetching is slow, rate-limited and can die halfway;
+extraction is fast and replayable against the raw cache. A schema or prompt change costs nothing to re-run, where
+re-scraping costs a rate limit and possibly a session.
+
+| Command             | Does                                            |
+| ------------------- | ----------------------------------------------- |
+| `bun run lint`      | Biome, Prettier and Ruff, all in check mode     |
+| `bun run format`    | All three, writing in place                     |
+| `bun run test`      | The Python suite. `test:all` adds the web suite |
+| `bun run typecheck` | `tsc --noEmit`, once `src/` exists              |
+| `gh issue list`     | The TODO board                                  |
 
 Biome covers JS, TS, JSON, CSS and HTML; Prettier covers the Markdown and YAML it cannot, wrapping prose at 120 to match
 `biome.json`'s `lineWidth`. There is no `.prettierignore`, so every Markdown file is formatted, `docs/source/` and the
 vendored skills included. Only the contents of fenced code blocks are left alone.
 
-**There is no Python stack yet.** The spike is the first thing that creates one. When it does, `uv` and `ruff` are added
-here and to `lint-staged` in the same change.
+**Ruff covers Python**, mirroring `biome.json` so the two cannot disagree about a shared setting: 120 columns, single
+quotes. It is scoped away from `.agents/skills` and `docs/source`, which are vendored and received sources that
+`AGENTS.md` forbids reformatting.
+
+**Every test runs against fixtures.** A suite that hits RedNote or Google Maps fails when a session expires, and a red
+check that means nothing trains everyone to ignore red checks.
 
 ---
 
@@ -95,8 +117,29 @@ open → state preference (cuisine, budget, distance, mood)
      → pick one → directions
 ```
 
-**Application framework, database, hosting and scraper stack are not chosen.** They get chosen and justified in
-`TRD.md`, which does not exist yet. `PRODUCT.md` carries the open-decisions table and when each is due.
+### Three Deployables, One Library
+
+| Deployable | Runs                           | Constraint                             |
+| ---------- | ------------------------------ | -------------------------------------- |
+| `ingest/`  | The workstation, on a schedule | Throughput. **Never serves a request** |
+| `api/`     | Hosted                         | Latency. **Never scrapes**             |
+| `web/`     | Cloudflare Pages, static       | First paint. **Holds no secret**       |
+
+`ingest/` and `api/` share the `makanlah/` library and share nothing at runtime. **Every arrow leaving the workstation
+points away from it** — it makes outbound connections only, accepts none, and so its address is never exposed.
+
+### The Data Layer
+
+**Two sources, neither load-bearing.** RedNote carries long-form posts that often name many venues at once; Google Maps
+carries per-venue reviews plus the coordinates and `place_id`. Maps needs **no API key and no billing** — its place URL
+embeds coordinates inline — which is also why it is the better fallback: a second login-walled source would double the
+surface that can expire unattended without doubling the resilience.
+
+**Every result cites the post it came from, and the excerpt is verbatim.** That is enforced by a database trigger, not
+by convention, because the spike measured the extractor returning quotes that read correctly and were not in the post.
+
+Stack: **Neon** (Postgres + pgvector, `ap-southeast-1`), **DashScope** Qwen for extraction and `text-embedding-v3` for
+retrieval, **FastAPI** for the API and **Vite + React** for the client. The reasoning for each is in [`TRD.md`](TRD.md).
 
 ---
 
