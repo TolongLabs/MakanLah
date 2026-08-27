@@ -231,6 +231,16 @@ def venues_with_citations(con, venue_ids, per_venue=3):
 # plainly rather than hide (docs/PRD.md FR6).
 EXPECTED_PLATFORMS = ('rednote', 'google_maps')
 
+# These strings render straight to a user, so they follow docs/DESIGN.md: plain
+# sentence case, no internal identifiers. "rednote has never ingested" is
+# accurate and is not something anyone outside this repo can read.
+PLATFORM_NAMES = {'rednote': 'RedNote', 'google_maps': 'Google Maps', 'instagram': 'Instagram'}
+
+
+def platform_name(p):
+    return PLATFORM_NAMES.get(p, p.replace('_', ' ').title())
+
+
 # How stale the newest capture may get before the corpus counts as degraded.
 # Freshness is a background concern, so this is generous: a day of failed
 # ingestion is meant to be invisible to a user, a week is not.
@@ -262,13 +272,13 @@ def source_health(con):
         return False, list(EXPECTED_PLATFORMS), []
 
     for p in EXPECTED_PLATFORMS:
-        r = rows.get(p)
+        r, name = rows.get(p), platform_name(p)
         if r is None:
-            reasons.append(f'{p} has never ingested')
+            reasons.append(f'we have no record of a {name} refresh')
         elif r['ok'] is False:
-            reasons.append(f'{p} failed at its last run')
+            reasons.append(f'the last {name} refresh failed')
         elif r['ok'] is None:
-            reasons.append(f'{p} did not finish its last run')
+            reasons.append(f'the last {name} refresh did not finish')
         else:
             ok_sources.append(p)
 
@@ -277,6 +287,6 @@ def source_health(con):
         (STALE_AFTER_HOURS,),
     ).fetchone()
     if fresh and fresh['fresh'] is False:
-        reasons.append('the corpus has not been refreshed recently')
+        reasons.append('nothing new has been collected in a while')
 
     return bool(reasons), ok_sources, reasons

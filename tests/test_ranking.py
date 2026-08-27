@@ -191,7 +191,7 @@ class TestSourceHealth:
         degraded, ok, reasons = source_health(con)
         assert degraded is True
         assert ok == ['google_maps']
-        assert any('rednote' in r for r in reasons)
+        assert any('RedNote' in r for r in reasons)
 
     def test_a_run_that_never_finished_is_not_counted_as_a_pass(self):
         # ok = null means the run died mid-batch. An absent verifier must never
@@ -209,7 +209,7 @@ class TestSourceHealth:
         con = self._Con([{'platform': 'rednote', 'ok': True}])
         degraded, _, reasons = source_health(con)
         assert degraded is True
-        assert any('google_maps' in r for r in reasons)
+        assert any('Google Maps' in r for r in reasons)
 
     def test_a_stale_corpus_degrades_even_when_every_source_passed(self):
         from makanlah.db import source_health
@@ -217,4 +217,18 @@ class TestSourceHealth:
         con = self._Con([{'platform': 'rednote', 'ok': True}, {'platform': 'google_maps', 'ok': True}], fresh=False)
         degraded, _, reasons = source_health(con)
         assert degraded is True
-        assert any('refreshed' in r for r in reasons)
+        assert any('collected' in r for r in reasons)
+
+    def test_reasons_are_user_facing_prose_not_identifiers(self):
+        # These strings render straight to the user. docs/DESIGN.md: sentence
+        # case body copy, plain language, no internal identifiers.
+        from makanlah.db import source_health
+
+        con = self._Con([])
+        _, _, reasons = source_health(con)
+        assert reasons
+        for r in reasons:
+            assert 'google_maps' not in r, r
+            assert '_' not in r, r
+            assert r[0].islower(), r
+            assert not r.endswith('.'), r
