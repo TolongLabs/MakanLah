@@ -113,3 +113,70 @@ class TestLanguageDetection:
     def test_never_returns_empty(self):
         assert detect_langs('') == ['und']
         assert detect_langs('!!!') == ['und']
+
+
+class TestStarSentiment:
+    """Google Maps reviews take sentiment from the star rating, not from a model.
+
+    The rating is the writer's judgement stated numerically, so inferring it from
+    prose would be less accurate and cost a model call per review.
+    """
+
+    def test_five_stars_is_maximum_positive(self):
+        from ingest.enrich_gmaps import star_sentiment
+
+        assert star_sentiment('5 stars') == 1.0
+
+    def test_one_star_is_maximum_negative(self):
+        from ingest.enrich_gmaps import star_sentiment
+
+        assert star_sentiment('1 star') == -1.0
+
+    def test_three_stars_is_neutral(self):
+        from ingest.enrich_gmaps import star_sentiment
+
+        assert star_sentiment('3 stars') == 0.0
+
+    def test_a_label_without_a_rating_is_null_not_neutral(self):
+        # Null means "we do not know". Zero means "the writer was ambivalent".
+        # Collapsing the two would make missing data look like a real judgement.
+        from ingest.enrich_gmaps import star_sentiment
+
+        assert star_sentiment('') is None
+        assert star_sentiment(None) is None
+        assert star_sentiment('Photo of a plate') is None
+
+    def test_every_rating_lands_inside_the_schema_range(self):
+        from ingest.enrich_gmaps import star_sentiment
+
+        for n in range(1, 6):
+            v = star_sentiment(f'{n} stars')
+            assert v is not None and -1.0 <= v <= 1.0
+
+
+class TestGmapsCoordinateParsing:
+    """A Maps place URL embeds coordinates as !3d<lat>!4d<lng>. That is why this
+    source needs no API key and no billing account."""
+
+    def test_coordinates_are_read_out_of_a_place_url(self):
+        from ingest.gmaps import _coords_from
+
+        href = '/maps/place/Village+Park/data=!4m7!3m6!1s0x31cc:0x21aa!8m2!3d3.1376947!4d101.6233261'
+        assert _coords_from(href) == (3.1376947, 101.6233261)
+
+    def test_a_url_without_coordinates_yields_none(self):
+        from ingest.gmaps import _coords_from
+
+        assert _coords_from('/maps/search/nasi+lemak') == (None, None)
+        assert _coords_from('') == (None, None)
+
+    def test_place_id_is_extracted_for_chain_disambiguation(self):
+        from ingest.gmaps import _place_id_from
+
+        href = '/maps/place/X/data=!4m7!3m6!1s0x31cc4931330bf621:0x21aac39e1d6f6f3c!8m2!3d3.1!4d101.6'
+        assert _place_id_from(href) == '0x31cc4931330bf621:0x21aac39e1d6f6f3c'
+
+    def test_no_place_id_yields_none_rather_than_a_guess(self):
+        from ingest.gmaps import _place_id_from
+
+        assert _place_id_from('/maps/search/x') is None
