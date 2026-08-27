@@ -12,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 
-from ingest.pipeline import NOT_A_VENUE, detect_langs, normalize
 from makanlah.models import repair_excerpt
+from makanlah.text import NOT_A_VENUE, detect_langs, normalize
 
 POST = """吉隆坡9️⃣家地道美食合集
 1️⃣兴记肉骨茶 Hing Kee Bakuteh

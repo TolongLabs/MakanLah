@@ -143,9 +143,26 @@ docs/
   agent-tooling.md       rtk and graphify, both optional and per-machine
   source/                captured reference material, append-only
   superpowers/research/  cited findings from exploration
+makanlah/                the shared library. Both runtimes import it, neither shares runtime state
+  config.py              settings from the environment. Names keys, never prints a value
+  text.py                venue normalization and language detection. Used by both runtimes
+  db.py                  the only module that speaks SQL
+  models.py              extract, embed and re-rank clients
+  rank.py                the four ranking stages
+  migrations/            the corpus schema as Postgres
+  research/              measurement scripts whose results live in docs/superpowers/research/
+ingest/                  batch, on the workstation. Holds the browser session. Never serves a request
+  pipeline.py            discover -> fetch -> store raw -> extract -> resolve -> geocode -> embed
+  geocode.py             Nominatim, one request per second, ingestion-time only
+api/main.py              interactive, hosted. Reads the corpus and never scrapes
+web/                     the static client. Vite + React, installable, holds no secret
+spike/                   the day-0 scrape spike, kept as the record of what was proven
+tests/                   pytest, entirely against fixtures. Never touches a live platform
 scripts/
   bootstrap.sh           provision a fresh machine. Idempotent
   preflight.sh           will an unattended run get stuck on setup? Ask before it does
+  chrome-session.sh      CDP-controllable Chrome carrying the signed-in session
+  dev-api.sh             run the API locally against the corpus
   unattended.sh          toggle self-merge-on-green-CI
   dispatch-worker.sh     model-agnostic worker dispatch. SWARM.md §4 as code
 .github/workflows/ci.yml lint, typecheck, and the guards. Unattended, this is the reviewer
@@ -154,8 +171,12 @@ scripts/
 .claude/hooks/           session brief, env drift, git guard, formatter, checkpoint reminder
 ```
 
-`PRD.md`, `TRD.md` and `DESIGN.md` are listed but **not written yet**. Source layout is not decided; add it here when it
-is.
+**Three deployables, one library.** `ingest/` and `api/` share `makanlah/` and share nothing at runtime: separate
+processes, separate hosts, separate failure domains. `api/` must never import from `ingest/` — that is where the browser
+session and the scrapers live, and the API host has neither.
+
+`spike/` is kept rather than deleted. It is the record of what the day-0 spike actually proved, and its raw capture is
+what `ingest/` replays without touching a platform.
 
 Skill provenance: [`../.agents/skills/VENDORED.md`](../.agents/skills/VENDORED.md).
 

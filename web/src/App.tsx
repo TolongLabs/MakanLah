@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { type RecommendResponse, type Result, recommend } from './api'
+import { apiBase, type RecommendResponse, type Result, recommend } from './api'
 import { dishLine, distance, sourceLabel } from './format'
 
 type Geo = { lat: number; lng: number } | null
@@ -108,7 +108,12 @@ export default function App() {
       {data?.degraded && (
         <p className="notice">A source was unreachable at the last refresh, so this may be incomplete.</p>
       )}
-      {failed && <p className="notice">We could not reach the corpus. Nothing is lost — try again in a moment.</p>}
+      {failed && (
+        <p className="notice">
+          We could not reach the API at <code>{apiBase()}</code>. It is not hosted yet, so it needs to be running
+          somewhere this page can reach. Point it at one by adding <code>?api=https://your-api</code> to the URL.
+        </p>
+      )}
 
       {data && data.results.length > 0 && (
         <ol className="results">

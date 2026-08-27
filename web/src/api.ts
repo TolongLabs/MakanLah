@@ -29,7 +29,26 @@ export type RecommendResponse = {
   error?: string
 }
 
-const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://127.0.0.1:8000'
+const DEFAULT_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://127.0.0.1:8000'
+
+/**
+ * The API is not deployed yet, so a hosted page has no backend to talk to and a
+ * browser blocks an https page calling http://127.0.0.1 anyway. `?api=<url>`
+ * repoints it and is remembered, so this page works against a tunnel today and
+ * against the real API the moment one exists — without a rebuild.
+ */
+export function apiBase(): string {
+  try {
+    const fromQuery = new URLSearchParams(window.location.search).get('api')
+    if (fromQuery) {
+      localStorage.setItem('makanlah.api', fromQuery)
+      return fromQuery
+    }
+    return localStorage.getItem('makanlah.api') ?? DEFAULT_BASE
+  } catch {
+    return DEFAULT_BASE
+  }
+}
 
 export async function recommend(body: {
   query: string
@@ -38,7 +57,7 @@ export async function recommend(body: {
   radius_m?: number
   limit?: number
 }): Promise<RecommendResponse> {
-  const res = await fetch(`${BASE}/recommend`, {
+  const res = await fetch(`${apiBase()}/recommend`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)

@@ -59,7 +59,12 @@ Order best first. Include at most the number asked for; fewer is fine.
   - NEVER output a URL, a link, or a citation. Those are attached from the
     database afterwards. A model asked for a URL produces a plausible one.
   - Judge fit to the request, not general fame.
-  - The request may be in English, Malay or Chinese. Treat all three alike."""
+  - The request may be in English, Malay or Chinese. Treat all three alike.
+  - WRITE "why" IN THE SAME LANGUAGE THE REQUEST WAS WRITTEN IN. An English
+    question gets an English answer even when every excerpt is Chinese. Venue
+    names and dish names stay in their original script and are never translated.
+  - Two entries for the same restaurant is a bug. If two candidates are the same
+    place written differently, keep only the better-evidenced one."""
 
 
 def _post(url, payload, key, timeout=120):
@@ -127,6 +132,30 @@ def embed(texts):
     return out
 
 
+CJK_RE = re.compile(r'[\u4e00-\u9fff]')
+# Function words and words with no English reading. Deliberately excludes
+# "best" (English too), "jalan" (appears in English text as a street name) and
+# dish words like "nasi" and "ayam", which English speakers in KL use verbatim.
+# Misrouting an English question to Malay is worse than missing a Malay one:
+# the fallback is English, which every user here can read.
+MS_RE = re.compile(
+    r'\b(yang|nak|mana|dekat|paling|murah|sedap|enak|kedai|makan|sini|boleh|tempat|cari|berdekatan)\b', re.I
+)
+
+
+def answer_language(query):
+    """Which language the user asked in, so the answer comes back in it.
+
+    Chinese first: a query with any CJK is a Chinese query even when it also
+    contains a Latin venue name, which is the normal case here.
+    """
+    if CJK_RE.search(query or ''):
+        return 'Chinese'
+    if MS_RE.search(query or ''):
+        return 'Malay'
+    return 'English'
+
+
 def rerank(query, candidates, limit=10, retries=1):
     """Returns [(candidate_index, why)]. Never returns a citation — stage 4 attaches those."""
     s = config.settings()
@@ -140,11 +169,24 @@ def rerank(query, candidates, limit=10, retries=1):
             f'[{i}] {c["name"]} — {c.get("area") or c.get("city") or ""}\n'
             f'    dishes: {dishes}\n    posts: {excerpts or "—"}'
         )
+    # Naming the language in the system prompt is not enough: the model anchors on
+    # the language of the excerpts, so an English question came back answered in
+    # Chinese because every cited post was Chinese. Detecting it here and stating
+    # it as an instruction makes it deterministic.
+    want = answer_language(query)
     payload = {
         'model': s.rerank_model,
         'messages': [
             {'role': 'system', 'content': RERANK_SYSTEM},
-            {'role': 'user', 'content': f'Request: {query}\nReturn at most {limit}.\n\n' + '\n'.join(lines)},
+            {
+                'role': 'user',
+                'content': (
+                    f'Request: {query}\n'
+                    f'Write every "why" in {want}. The excerpts below may be in another '
+                    f'language; that does not change the language you answer in.\n'
+                    f'Return at most {limit}.\n\n' + '\n'.join(lines)
+                ),
+            },
         ],
         'temperature': 0.2,
         'response_format': {'type': 'json_object'},

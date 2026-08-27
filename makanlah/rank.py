@@ -12,6 +12,7 @@ distance wastes the index and returns a great match forty minutes away.
 import math
 
 from makanlah import config, db, models
+from makanlah.text import normalize
 
 
 def _distance_m(lat1, lng1, lat2, lng2):
@@ -22,6 +23,45 @@ def _distance_m(lat1, lng1, lat2, lng2):
     dp, dl = math.radians(lat2 - lat1), math.radians(lng2 - lng1)
     a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
     return round(r * 2 * math.asin(math.sqrt(a)))
+
+
+def dedupe(candidates):
+    """Collapse near-duplicate venues at presentation time, not in the corpus.
+
+    "Village Park" and "Village Park Nasi Lemak" are one restaurant written two
+    ways, and both reaching a shortlist wastes a slot and reads like a bug. This
+    is deliberately NOT a corpus merge: docs/TRD.md keeps ambiguity as separate
+    rows because merging later is safe and a wrong merge is not recoverable.
+    Collapsing for one response is reversible by definition.
+
+    Containment only — "Village Park" inside "Village Park Nasi Lemak". Two names
+    that merely share a word are left alone.
+    """
+    kept = []
+    for c in candidates:
+        norm = normalize(c['name'])
+        if not norm:
+            continue
+        dup_of = None
+        for i, k in enumerate(kept):
+            kn = normalize(k['name'])
+            if norm == kn or norm.startswith(kn + ' ') or kn.startswith(norm + ' '):
+                dup_of = i
+                break
+        if dup_of is None:
+            kept.append(c)
+            continue
+        # Keep whichever carries more evidence; fold the other's citations in.
+        winner, loser = kept[dup_of], c
+        if len(loser['citations']) > len(winner['citations']):
+            winner, loser = loser, winner
+        seen = {x['post_url'] for x in winner['citations']}
+        winner['citations'].extend(x for x in loser['citations'] if x['post_url'] not in seen)
+        for d in loser.get('dishes', []):
+            if d not in winner['dishes']:
+                winner['dishes'].append(d)
+        kept[dup_of] = winner
+    return kept
 
 
 def maps_url(venue):
@@ -59,7 +99,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
 
     # The invariant, enforced before a response is built: an entry that cannot be
     # cited is dropped, never returned with a caveat.
-    candidates = [enriched[v] for v in ordered if v in enriched and enriched[v]['citations']]
+    candidates = dedupe([enriched[v] for v in ordered if v in enriched and enriched[v]['citations']])
     if not candidates:
         return {'results': [], 'degraded': False, 'sources_used': []}
 

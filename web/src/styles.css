@@ -285,9 +285,18 @@ button:disabled {
 }
 
 @media (max-width: 30rem) {
+  /* The tagline sits beside the wordmark on a wide screen and crowds it on a
+     phone, where it wrapped to two lines against the mark. Stack it instead. */
+  .masthead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s1);
+  }
+
   .result {
     grid-template-columns: 1.5rem 1fr;
   }
+
   .venue {
     font-size: 1.125rem;
   }
