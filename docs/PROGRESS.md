@@ -24,6 +24,29 @@ post, answered in the language it was asked in.** Median response **2.51s**, ins
 **Geocoding went 34% → 99%** once Google Maps replaced Nominatim. Latency holds at **median 2.73s** against the 3s
 target in [`PRD.md`](PRD.md).
 
+## The Spike's Terminal Condition
+
+The question the spike existed to answer, re-measured against the live corpus rather than quoted from memory:
+
+> Can ~50 KL restaurant posts be pulled with **name, location, dish and sentiment** into records matching the
+> `source_post` / `venue` / `mention` schema in [`TRD.md`](TRD.md)?
+
+**119 RedNote posts captured. 87 of them yielded at least one mention, producing 317 mentions:**
+
+| Field                       | Of 317 Mentions |
+| --------------------------- | --------------- |
+| **Venue name**              | **317 (100%)**  |
+| **Location** (lat/lng)      | **315 (99%)**   |
+| **Sentiment**               | **317 (100%)**  |
+| **Dish**                    | **172 (54%)**   |
+| **All four on one mention** | **171 (54%)**   |
+
+**The schema held.** No TRD change was needed for RedNote: every captured post fit `source_post`, and every extracted
+claim fit `venue` + `mention` as written. **Dish is the one weak field** — 46% of RedNote mentions give a verdict on a
+restaurant without naming a dish, which is a property of how people write, not a extraction defect.
+
+---
+
 RedNote languages per post: **84 Chinese only · 14 Chinese+Malay · 13 Chinese+English · 8 all three.**
 
 **Geocoding moved from Nominatim to Google Maps over CDP.** Nominatim managed 34%; OpenStreetMap does not carry
@@ -42,7 +65,7 @@ and also returns the `place_id` that makes venue merging evidence-based rather t
 
 ---
 
-## Sixteen Defects Found And Fixed
+## Eighteen Defects Found And Fixed
 
 Each was found by running something, not by reading code.
 
@@ -66,6 +89,12 @@ Each was found by running something, not by reading code.
     recomputed one, which is the shape of a dry run nobody should trust
 16. **A run killed by `timeout` left its record open forever.** SIGTERM becomes `SystemExit`, which is not an
     `Exception`, so the handler never fired: the source read as permanently broken and `degraded` could never clear
+17. **`chrome-session.sh verify` probed the wrong host.** It opened `xiaohongshu.com` while `ingest/rednote.py` reads
+    `rednote.com` — separate sessions for the same content ([`CREDENTIALS.md`](CREDENTIALS.md)). The gate reported a
+    login wall for a session that was live, which is exactly the false signal it was written to prevent
+18. **`verify` could not assert anything and still exited.** Ambient `python3` has no `websockets`, so it printed a
+    warning and skipped the content check. It now runs under `uv run --with websockets`; asserted **46 note cards, no
+    login wall**
 
 ---
 
