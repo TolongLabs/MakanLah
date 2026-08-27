@@ -10,6 +10,11 @@ forever after**.
 
 ---
 
+> **Read this first: the host is the identity, not the brand.** `xiaohongshu.com` and `rednote.com` serve the same
+> content behind **separate sessions**. On the build machine the first was logged out and the second was signed in, and
+> the scraper works against `rednote.com` for exactly that reason. Signing in to one does not sign you in to the other.
+> If a capture returns nothing, check which host you are actually signed in to before assuming the session expired.
+
 ## The Xiaohongshu Catch
 
 > **Being signed in to Chrome is necessary but not sufficient, and the obvious workaround is blocked.** Headless
@@ -55,17 +60,18 @@ which is the whole reason the CDP path exists.
 
 Ordered by what blocks the most if skipped.
 
-| What                   | Why It Is Needed                                                    | After That                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Claude Code**        | The orchestrator. **Nothing runs without it**                       | `claude` — OAuth in a browser, once per machine                                                                              |
-| **Xiaohongshu**        | The primary source. Already done on dev1                            | Keep the profile signed in; see the catch above                                                                              |
-| **Neon**               | The corpus. Nothing reads or writes without it                      | Create a project in a region near KL; copy the pooled and direct strings to `DATABASE_URL` / `DATABASE_URL_UNPOOLED`         |
-| **ModelScope**         | Extraction — the batch lane turning posts into structured fields    | Copy the SDK token to `MODELSCOPE_API_KEY`. Check the same account for a Qwen embedding model before paying another provider |
-| **OpenRouter**         | The GLM-5.3-Flash worker lane, and the primary one after 2026-09-23 | Copy the key to `OPENROUTER_API_KEY`. No further browser                                                                     |
-| **Firecrawl**          | Open-web fallback sources. ~20k credits already available           | Copy the key to `FIRECRAWL_API_KEY`. No further browser                                                                      |
-| **Hermes Agent**       | Both runtimes — the copilot and ingestion                           | Copy the key to `HERMES_API_KEY`. Confirm the var names against its docs; `.env.example` marks them unconfirmed              |
-| **Devin** _(optional)_ | The free SWE-1.7 worker lane, until 2026-09-23                      | `devin` login. Skip it and OpenRouter covers the lane                                                                        |
-| **Codex** _(optional)_ | Second-opinion reviews, and image generation Claude Code cannot do  | `codex` login with a ChatGPT account                                                                                         |
+| What                   | Why It Is Needed                                                      | After That                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Claude Code**        | The orchestrator. **Nothing runs without it**                         | `claude` — OAuth in a browser, once per machine                                                                                            |
+| **RedNote**            | The primary source. **Sign in at `rednote.com`, not xiaohongshu.com** | Keep the profile signed in, and **quit Chrome** before `chrome-session.sh start`; see the catch above                                      |
+| **Neon**               | The corpus. Nothing reads or writes without it                        | Create a project in a region near KL; copy the pooled and direct strings to `DATABASE_URL` / `DATABASE_URL_UNPOOLED`                       |
+| **DashScope**          | **Extraction, embeddings and re-rank — all three lanes**              | Use the **International/Singapore** console. Copy the key to `DASHSCOPE_API_KEY`. Nearer KL than ModelScope, and one key covers everything |
+| **Google Maps**        | The second source, and the geocoder                                   | **Nothing to do.** No API key, no billing. It runs over the same signed-in Chrome                                                          |
+| **OpenRouter**         | The GLM-5.3-Flash worker lane, and the primary one after 2026-09-23   | Copy the key to `OPENROUTER_API_KEY`. No further browser                                                                                   |
+| **Firecrawl**          | Open-web fallback sources. ~20k credits already available             | Copy the key to `FIRECRAWL_API_KEY`. No further browser                                                                                    |
+| **Hermes Agent**       | Both runtimes — the copilot and ingestion                             | Copy the key to `HERMES_API_KEY`. Confirm the var names against its docs; `.env.example` marks them unconfirmed                            |
+| **Devin** _(optional)_ | The free SWE-1.7 worker lane, until 2026-09-23                        | `devin` login. Skip it and OpenRouter covers the lane                                                                                      |
+| **Codex** _(optional)_ | Second-opinion reviews, and image generation Claude Code cannot do    | `codex` login with a ChatGPT account                                                                                                       |
 
 **GitHub needs nothing.** `gh` on dev1 is already authenticated with `ADMIN` on `TolongLabs/MakanLah`, so branches, PRs,
 issues and merges all work headlessly.
@@ -77,11 +83,11 @@ issues and merges all work headlessly.
 The design rule is that no single source is load-bearing, so fallbacks are not optional — and each carries its own auth
 question. **Resolve this when choosing them, not when one goes dark.**
 
-| Source Type                                     | Auth                                                                           |
-| ----------------------------------------------- | ------------------------------------------------------------------------------ |
-| Open web — blogs, listicles, review aggregators | None. Firecrawl handles these, and they need no session                        |
-| Google Maps / Places reviews                    | An API key, not a browser login. Prefer it for exactly that reason             |
-| Instagram, Facebook, TikTok                     | A logged-in session, with the same catch and the same fragility as Xiaohongshu |
+| Source Type                                     | Auth                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| Open web — blogs, listicles, review aggregators | None. Firecrawl handles these, and they need no session                         |
+| Google Maps reviews                             | **In use, and needs nothing.** Read over CDP; the place URL carries coordinates |
+| Instagram, Facebook, TikTok                     | A logged-in session, with the same catch and the same fragility as Xiaohongshu  |
 
 **Prefer a fallback that needs no session.** A second login-walled source doubles the surface that can expire unattended
 without doubling the resilience — two sessions that both go stale on the same trip is not a fallback, it is the same
@@ -99,10 +105,13 @@ coordinates, and the core loop lets a user filter by distance. Start with **Nomi
 its one-request-per-second limit is irrelevant because geocoding runs at ingestion time, once per restaurant, with
 nobody waiting.
 
-Move to **Google Places** only if Nominatim's match rate on mixed-language Malaysian restaurant names proves poor —
-measure it, do not assume it. That step needs a Cloud project with billing enabled even inside the free tier, so it is
-the one row here that requires a card. Its `place_id` also sharpens the directions link, which matters for a chain with
-twenty branches.
+**Measured, and Nominatim lost: 34%.** OpenStreetMap does not carry Chinese-only restaurant names for KL, and those were
+most of the misses. Geocoding now runs over **Google Maps via CDP**, which needs no key and no billing because it reads
+the place page rather than the Places API: the URL embeds coordinates as `!3d<lat>!4d<lng>`, and the `place_id` it
+returns both sharpens the directions link and is the only evidence accepted for merging two venue rows.
+
+Nominatim stays as the fallback. **Google Places, the paid API, was never needed** — which is why nothing here requires
+a card.
 
 ---
 
