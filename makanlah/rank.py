@@ -91,9 +91,9 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
             scores = {h['venue_id']: h['score'] for h in hits}
             ordered = [h['venue_id'] for h in hits]
         except Exception:
-            # Retrieval degrades to the filtered set rather than failing the request.
-            # A shortlist ranked only by the re-rank is worse than nothing? No — it is
-            # still cited, which is what the user is promised.
+            # Embedding or pgvector is unavailable. Fall back to the filtered set
+            # and let the re-rank do the ordering: worse ranking, but every entry
+            # is still cited, which is the thing the product actually promises.
             ordered, scores = candidate_ids[:retrieve_k], {}
 
         enriched = db.venues_with_citations(con, ordered)
