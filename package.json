@@ -7,7 +7,7 @@
     "lint": "biome check . && prettier --check \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest check . && uv tool run ruff@latest format --check .",
     "format": "biome format --write . && prettier --write \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest format .",
     "typecheck": "if [ -d src ]; then tsc --noEmit; else echo 'no src/ yet, nothing to typecheck'; fi",
-    "test": "uv run --with pytest --with \"psycopg[binary]\" python -m pytest tests/ -q",
+    "test": "uv run --with pytest --with \"psycopg[binary]\" --with fastapi --with httpx python -m pytest tests/ -q",
     "test:all": "bun run test && cd web && bun install && bun run test"
   },
   "lint-staged": {
