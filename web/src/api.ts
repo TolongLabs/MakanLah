@@ -31,6 +31,9 @@ export type RecommendResponse = {
   error?: string
 }
 
+/** The re-rank is one model call, so a slow answer is normal and a silent one is not. */
+const TIMEOUT_MS = 30_000
+
 const DEFAULT_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://127.0.0.1:8000'
 
 /**
@@ -59,11 +62,21 @@ export async function recommend(body: {
   radius_m?: number
   limit?: number
 }): Promise<RecommendResponse> {
-  const res = await fetch(`${apiBase()}/recommend`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  if (!res.ok) throw new Error(`api ${res.status}`)
-  return (await res.json()) as RecommendResponse
+  // A request with no deadline leaves the user on "Finding..." forever. Observed
+  // on the hosted page, where the browser neither completes nor rejects a call
+  // to an API it cannot reach. A visible failure beats an invisible wait.
+  const abort = new AbortController()
+  const timer = setTimeout(() => abort.abort(), TIMEOUT_MS)
+  try {
+    const res = await fetch(`${apiBase()}/recommend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: abort.signal
+    })
+    if (!res.ok) throw new Error(`api ${res.status}`)
+    return (await res.json()) as RecommendResponse
+  } finally {
+    clearTimeout(timer)
+  }
 }

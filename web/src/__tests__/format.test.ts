@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { dishLine, distance, sourceLabel } from '../format'
 
 describe('distance', () => {
@@ -46,5 +46,29 @@ describe('sourceLabel', () => {
 
   it('passes an unknown platform through rather than hiding it', () => {
     expect(sourceLabel('instagram', null)).toBe('instagram')
+  })
+})
+
+describe('recommend', () => {
+  it('aborts rather than hanging forever', async () => {
+    // Observed on the hosted page: the browser neither completed nor rejected a
+    // call to an API it could not reach, and the button sat on "Finding..."
+    // indefinitely. A visible failure beats an invisible wait.
+    vi.useFakeTimers()
+    const { recommend } = await import('../api')
+    let signal: AbortSignal | undefined
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, init: RequestInit) => {
+        signal = init.signal as AbortSignal
+        return new Promise(() => {}) // never settles
+      })
+    )
+    const call = recommend({ query: 'x' })
+    void call.catch(() => {})
+    await vi.advanceTimersByTimeAsync(31_000)
+    expect(signal?.aborted).toBe(true)
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
   })
 })
