@@ -238,13 +238,45 @@ discover → fetch → store raw → extract → resolve venue → geocode → e
 Each stage is **resumable and idempotent**, keyed on `(platform, platform_post_id)`. A stage that fails records the
 failure and continues the batch — never aborts it ([`AUTONOMY.md`](AUTONOMY.md#standing-operational-defaults)).
 
-| Stage             | Notes                                                                                                                 |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Fetch**         | Firecrawl for open web; CDP against the signed-in Chrome profile for Xiaohongshu                                      |
-| **Store raw**     | Before extraction, always. A schema change must never require re-scraping                                             |
-| **Extract**       | One prompt handling all three languages. Never a per-language path                                                    |
-| **Resolve venue** | Match on `name_normalized` and proximity. Ambiguity creates a new venue — merging is safe later, a wrong merge is not |
-| **Geocode**       | Nominatim, one request per second, contact address in the User-Agent per its usage policy                             |
+| Stage             | Notes                                                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fetch**         | CDP against the signed-in Chrome for RedNote and for Google Maps. Firecrawl stays for open-web fallbacks                                                      |
+| **Store raw**     | Before extraction, always. A schema change must never require re-scraping                                                                                     |
+| **Extract**       | One prompt handling all three languages. Never a per-language path                                                                                            |
+| **Resolve venue** | Match on `name_normalized` and proximity. Ambiguity creates a new venue — merging is safe later, a wrong merge is not                                         |
+| **Geocode**       | **Google Maps over CDP**, which needs no key. Nominatim is the fallback, one request per second with a contact address in the User-Agent per its usage policy |
+| **Merge**         | Venues sharing a Google `place_id` are merged. Nothing else is accepted as evidence                                                                           |
+
+### Two Sources, Neither Load-Bearing
+
+| Source          | Carries                                           | Auth                                 |
+| --------------- | ------------------------------------------------- | ------------------------------------ |
+| **RedNote**     | Long-form posts, often naming many venues at once | A signed-in Chrome profile, over CDP |
+| **Google Maps** | Per-venue reviews, coordinates, `place_id`        | **None.** No API key, no billing     |
+
+This is [`PRODUCT.md`](PRODUCT.md#data-sources)'s design rule made real, and it is about uptime rather than legal cover.
+**Prefer a fallback that needs no session**: a second login-walled source doubles the surface that can expire unattended
+without doubling the resilience.
+
+**Maps review sentiment comes from the star rating, not from a model.** The rating is the writer's judgement stated
+numerically, so inferring it from prose would be less accurate and cost a call per review. A review with no readable
+rating stores `null`, never `0` — null means unknown, zero means the writer was ambivalent, and collapsing the two makes
+missing data look like a judgement.
+
+### Merging Venues
+
+`venue` deliberately creates a new row on ambiguity, because merging later is safe and a wrong merge is not. **A shared
+Google `place_id` is the only accepted evidence** for the merge — it is not a guess, it is Google stating two names
+resolve to one establishment.
+
+**Name similarity is explicitly not evidence.** `Village Park` and `Village Park Nasi Lemak` look mergeable and may be
+two businesses at one address. Those are collapsed by the ranking layer for a single response, which is reversible,
+rather than in the corpus, which is not.
+
+The merge order matters and is pinned by tests: conflicting mentions are deleted before re-pointing, or the
+`(post_id, venue_id)` unique key aborts the merge; the venue row is dropped last, or its mentions cascade away before
+they can be moved; and embeddings are dropped on both sides, because the survivor's document changed and a stale vector
+would rank it on pre-merge text.
 
 **Rate limiting and caching are the durable answers, not evasion** ([`AGENTS.md`](../AGENTS.md#critical-do-nots)).
 Collect modestly, cache hard, and keep the whole thing easy to turn off.
@@ -323,6 +355,19 @@ retrieval stack weak on Chinese would fail on 100% of this corpus, and one weak 
 | Added the **excerpt substring invariant**             | Measured: the extractor returned excerpts that were not in the post                                                                                                                                   |
 | **`venue_embedding` is keyed on `(venue_id, model)`** | Embeddings from two models never compare. One column keyed only by venue silently mixes incomparable vectors                                                                                          |
 | **DashScope replaces ModelScope**                     | No ModelScope key exists; the owner has an International/Singapore DashScope key. Nearer KL, and OpenAI-compatible so only the base URL changed                                                       |
+
+### Source Health
+
+`ingest_run` records one row per platform per attempt and `source_status` is the last outcome per platform. Without it
+`degraded` can only be hardcoded `false`, **which is worse than omitting the field** — the UI then promises an honesty
+it cannot deliver.
+
+A run that dies mid-batch leaves `ok` null and reads as "did not finish", never as a pass. This is the same rule
+[`AUTONOMY.md`](AUTONOMY.md#verification-replaces-the-human) states about CI: an absent verifier must not look like
+success.
+
+`source_health()` never raises. A health check that failed closed would mark every request degraded, which is the same
+lie in the other direction.
 
 `media_urls` stays in the schema but is **empty in practice**: RedNote image URLs carry per-request signatures that
 expire, so storing them would persist a credential and a dead link. `raw_payload` keeps the image count instead.
