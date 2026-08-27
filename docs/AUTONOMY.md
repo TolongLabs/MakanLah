@@ -98,6 +98,11 @@ The reviewer is not there. **CI is what stands in for them**, and it is the only
 `.github/workflows/ci.yml` runs lint and typecheck on every PR. Treat a red check exactly as you would treat a human
 saying no.
 
+> **"No checks reported" is not "green".** GitHub registers a workflow only once it exists on the default branch, so a
+> repo that has not yet merged one reports nothing at all — and to a caller that only looks for failures, nothing looks
+> exactly like success. **Confirm a check actually ran before treating it as a pass:** `gh pr checks <n> --watch`. An
+> absent verifier is the one case where self-merge is not authorized.
+
 Three rules that make this hold:
 
 1. **Never claim something works without having run it and read the output.** The `verification-before-completion` skill

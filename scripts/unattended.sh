@@ -33,6 +33,17 @@ case "${1:-status}" in
     echo "unattended: ON — self-merge allowed, gated on green CI."
     echo "  Every change still branches and opens a PR. A red check is a human saying no."
     echo "  Turn off after the run: scripts/unattended.sh off"
+    echo
+    # "No checks reported" is not "green". GitHub only registers a workflow once
+    # it exists on the default branch, so a repo that has never merged one reports
+    # nothing at all — and nothing is indistinguishable from passing to a caller
+    # that only checks for failures.
+    if ! gh api "repos/{owner}/{repo}/actions/workflows" --jq '.total_count' 2>/dev/null | grep -qvx 0; then
+      echo "  WARNING: this repo has no registered workflow. \`gh pr checks\` will report"
+      echo "  nothing, which is NOT the same as passing. Merge the workflow to the default"
+      echo "  branch first, then verify with:  gh pr checks <n> --watch"
+      echo "  Until a check actually runs, do not self-merge."
+    fi
     ;;
   off)
     if [[ -f "$LOCAL" ]]; then
