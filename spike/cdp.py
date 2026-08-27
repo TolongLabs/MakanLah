@@ -29,18 +29,32 @@ class Page:
         self.ws = ws
         self._n = 0
 
-    async def send(self, method, **params):
+    async def send(self, method, timeout=30.0, **params):
+        """Every call is bounded.
+
+        CDP interleaves events with responses, so the reply is matched by id. If
+        that reply never arrives -- the page navigated out from under the
+        execution context, or the target died -- an unbounded recv() loop wedges
+        the run silently. Measured: one note froze a 50-note batch for 20 minutes
+        with the tab stuck on it and no error anywhere.
+        """
         self._n += 1
-        await self.ws.send(json.dumps({'id': self._n, 'method': method, 'params': params}))
-        while True:
-            msg = json.loads(await self.ws.recv())
-            if msg.get('id') == self._n:
-                if 'error' in msg:
-                    raise RuntimeError(f'{method}: {msg["error"]}')
-                return msg.get('result', {})
+        want = self._n
+        await self.ws.send(json.dumps({'id': want, 'method': method, 'params': params}))
+
+        async def _reply():
+            while True:
+                msg = json.loads(await self.ws.recv())
+                if msg.get('id') == want:
+                    return msg
+
+        msg = await asyncio.wait_for(_reply(), timeout=timeout)
+        if 'error' in msg:
+            raise RuntimeError(f'{method}: {msg["error"]}')
+        return msg.get('result', {})
 
     async def goto(self, url, settle=6.0):
-        await self.send('Page.navigate', url=url)
+        await self.send('Page.navigate', url=url, timeout=45.0)
         await asyncio.sleep(settle)
 
     async def js(self, expression):

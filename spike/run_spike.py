@@ -87,7 +87,7 @@ async def gather(limit):
             fh.write(json.dumps(d, ensure_ascii=False) + '\n')
             fh.flush()
 
-    await rednote.collect(KEYWORDS, limit - len(have), on_note=on_note)
+    await rednote.collect(KEYWORDS, limit - len(have), on_note=on_note, skip=set(have))
     fh.close()
     return list(have.values())[:limit]
 
