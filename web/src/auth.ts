@@ -66,6 +66,16 @@ export const signUp = (email: string, password: string) => post('/auth/signup', 
 export const signIn = (email: string, password: string) => post('/auth/login', { email, password })
 export const signInAsGuest = () => post('/auth/guest', {})
 
+/** Best effort. The local session is cleared either way: a sign-out that fails
+    because the network is down must still sign the person out of this browser. */
+export async function signOut(token: string): Promise<void> {
+  try {
+    await apiFetch('/auth/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+  } catch {
+    // Already expired, or unreachable. Nothing here changes what the caller does next.
+  }
+}
+
 export function putPrefs(token: string, prefs: Prefs): Promise<{ prefs: Prefs }> {
   return apiFetch<{ prefs: Prefs }>('/auth/prefs', {
     method: 'PUT',

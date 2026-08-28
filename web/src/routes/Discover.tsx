@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiBase, type Prefs, type RecommendResponse, recommend } from '../api'
 import { Mascot } from '../components/Mascot'
 import { ResultRow } from '../components/ResultRow'
-import { evidenceOf, moodFor } from '../evidence'
+import { evidenceOf, listBasisLine, moodFor, sharedBasis } from '../evidence'
 import { count } from '../format'
 import { loadPrefs, queryFrom, summarise } from '../prefs'
 import { RANGE } from '../taste/options'
@@ -77,6 +77,9 @@ export function Discover() {
   }
 
   const results = data?.results ?? []
+  // One caveat about the list beats the same sentence on every row.
+  const common = sharedBasis(results)
+  const commonLine = listBasisLine(common)
   const best = results[0]
   const mood = moodFor(best ? evidenceOf(best) : null, data?.degraded ?? false)
 
@@ -182,9 +185,10 @@ export function Discover() {
         {!loading && results.length > 0 && (
           <>
             <p className="result-count">{count(results.length, 'pick')}</p>
+            {commonLine && <p className="basis list-basis">{commonLine}</p>}
             <ol className="results">
               {results.map((r, i) => (
-                <ResultRow key={r.venue.id} result={r} rank={i + 1} />
+                <ResultRow key={r.venue.id} result={r} rank={i + 1} showBasis={!common} />
               ))}
             </ol>
           </>

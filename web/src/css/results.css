@@ -50,6 +50,9 @@
 
 .venue-name a {
   text-decoration: none;
+  /* An inline box is its content area, so line-height does not grow the hit target.
+     Vertical padding does, without touching the line box or the layout. */
+  padding-block: 3px;
 }
 
 .venue-name a:hover {
@@ -452,4 +455,9 @@
     padding-top: var(--s5);
     border-top: 1px solid var(--rule);
   }
+}
+
+.list-basis {
+  margin-top: var(--s1);
+  max-width: 54ch;
 }

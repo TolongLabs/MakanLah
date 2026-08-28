@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Citation, Result } from '../api'
-import { basisLine, citable, evidenceOf, leadPair, moodFor } from '../evidence'
+import { basisLine, citable, evidenceOf, leadPair, listBasisLine, moodFor, sharedBasis } from '../evidence'
 
 function c(over: Partial<Citation> = {}): Citation {
   return {
@@ -84,5 +84,24 @@ describe('basisLine', () => {
 
   it('says nothing when the API reports no basis', () => {
     expect(basisLine(undefined)).toBeNull()
+  })
+})
+
+describe('sharedBasis', () => {
+  it('finds the basis when every entry agrees', () => {
+    expect(sharedBasis([{ match: { basis: 'semantic' } }, { match: { basis: 'semantic' } }])).toBe('semantic')
+  })
+
+  it('is undefined when they differ, so each row says its own', () => {
+    expect(sharedBasis([{ match: { basis: 'dish' } }, { match: { basis: 'semantic' } }])).toBeUndefined()
+  })
+
+  it('is undefined when the API reports no basis at all', () => {
+    expect(sharedBasis([{}, {}])).toBeUndefined()
+  })
+
+  it('still admits the whole list is a semantic match', () => {
+    // The honest caveat has to survive being hoisted, or hoisting it lost the point.
+    expect(listBasisLine('semantic')).toMatch(/none of these match your words exactly/i)
   })
 })

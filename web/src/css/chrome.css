@@ -113,3 +113,29 @@
 .foot p {
   max-width: 44ch;
 }
+
+.nav-account {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The shared guest reads in --warn, the token for "this is not the normal state".
+   It is the same register as a stale corpus, and for the same reason: the user is
+   looking at something they should not assume is private. */
+.nav-account-shared {
+  color: var(--warn);
+  max-width: none;
+}
+
+.nav-signout {
+  font: inherit;
+  font-size: var(--t-ms);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}

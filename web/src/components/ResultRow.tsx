@@ -11,7 +11,7 @@ import { Testimony } from './Testimony'
  * When two platforms carry the venue, both excerpts render side by side, each under
  * its own source chip. The layout is the evidence claim, so nothing has to assert it.
  */
-export function ResultRow({ result, rank }: { result: Result; rank: number }) {
+export function ResultRow({ result, rank, showBasis = true }: { result: Result; rank: number; showBasis?: boolean }) {
   const { venue, why } = result
   const pair = leadPair(result.citations)
 
@@ -21,7 +21,7 @@ export function ResultRow({ result, rank }: { result: Result; rank: number }) {
 
   const dist = distance(result.distance_m)
   const dishes = dishLine(venue.dishes)
-  const basis = basisLine(result.match?.basis)
+  const basis = showBasis ? basisLine(result.match?.basis) : null
 
   return (
     <li className="result">

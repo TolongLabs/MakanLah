@@ -51,6 +51,32 @@ export function basisLine(basis: string | undefined): string | null {
   }
 }
 
+/**
+ * The basis shared by every entry, if they share one. A list where all ten rows say
+ * "here because it is close in meaning" has printed the same sentence ten times and
+ * told the reader nothing they could not get from one. Hoisted, it is a real caveat
+ * about the whole list; repeated, it is furniture.
+ */
+export function sharedBasis(results: { match?: { basis?: string } }[]): string | undefined {
+  const bases = results.map((r) => r.match?.basis)
+  const first = bases[0]
+  if (!first || bases.some((b) => b !== first)) return undefined
+  return first
+}
+
+export function listBasisLine(basis: string | undefined): string | null {
+  switch (basis) {
+    case 'dish':
+      return 'Every one of these is a post naming that dish.'
+    case 'text':
+      return 'Every one of these has your words in a post.'
+    case 'semantic':
+      return 'None of these match your words exactly. They are the closest in meaning the corpus has.'
+    default:
+      return null
+  }
+}
+
 export type MascotMood = 'curious' | 'pleased' | 'skeptical' | 'concerned'
 
 /**

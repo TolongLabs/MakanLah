@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { ApiError } from '../api'
-import { MIN_PASSWORD, messageFor } from '../auth'
+import { MIN_PASSWORD, messageFor, saveSession } from '../auth'
+import { Shell } from '../components/Shell'
 import { SignIn } from '../routes/SignIn'
 
 const signIn = () =>
@@ -71,5 +72,39 @@ describe('auth error copy', () => {
 
   it('matches the password minimum the API enforces', () => {
     expect(MIN_PASSWORD).toBe(8)
+  })
+})
+
+describe('the nav while signed in', () => {
+  afterEach(() => localStorage.clear())
+
+  function shell() {
+    return render(
+      <MemoryRouter>
+        <Shell>
+          <p>body</p>
+        </Shell>
+      </MemoryRouter>
+    )
+  }
+
+  it('keeps saying the guest account is shared, not just at sign-in', () => {
+    // Disclosing once and never again lets somebody forget mid-session that every
+    // other guest can see what they are doing.
+    saveSession({ token: 't', user: { is_guest: true, shared: true } })
+    shell()
+    expect(screen.getByText(/Guest, Shared/i)).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull()
+  })
+
+  it('names a real account by its email', () => {
+    saveSession({ token: 't', user: { email: 'someone@example.com', is_guest: false, shared: false } })
+    shell()
+    expect(screen.getByText('someone@example.com')).toBeTruthy()
+  })
+
+  it('offers sign-in when there is no session', () => {
+    shell()
+    expect(screen.getByRole('link', { name: 'Sign In' })).toBeTruthy()
   })
 })
