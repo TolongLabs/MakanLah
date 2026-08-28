@@ -299,11 +299,12 @@ honest about.
 
 Three enforcements, none of which trust the model:
 
-| Enforcement                                            | Why                                                                                    |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| A `covered` answer with no excerpt is downgraded       | The model does not get to assert grounding it did not use                              |
-| Excerpt indices outside the supplied range are dropped | An invented index is a hallucinated citation by another name                           |
-| Citations are built from database rows                 | A model asked for a URL produces a plausible one. It is never parsed out of the answer |
+| Enforcement                                              | Why                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| A `covered` answer with no excerpt is downgraded         | The model does not get to assert grounding it did not use                              |
+| Excerpt indices outside the supplied range are dropped   | An invented index is a hallucinated citation by another name                           |
+| Citations are built from database rows                   | A model asked for a URL produces a plausible one. It is never parsed out of the answer |
+| `covered: false` **always** carries an empty `citations` | So a client renders the two states from one field, rather than inspecting both         |
 
 Like `/recommend`, `/ask` is **not gated by auth**. Its lane is configured separately from the re-rank
 (`COPILOT_MODEL`): re-rank is tuned for "pick 10 and write 12 words", while getting a citation wrong is worse than
