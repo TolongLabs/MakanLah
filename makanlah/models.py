@@ -10,6 +10,7 @@ differ between them.
 
 import json
 import re
+import time
 import urllib.error
 import urllib.request
 
@@ -215,9 +216,13 @@ def rerank(query, candidates, limit=10, retries=1):
     # the field outright, and the default for every non-qwen3 lane is already off.
     if not s.rerank_thinking:
         payload['enable_thinking'] = False
+    deadline = time.monotonic() + s.rerank_timeout
     for _ in range(retries + 1):
+        left = deadline - time.monotonic()
+        if left <= 0:
+            break
         try:
-            body = _post(f'{s.rerank_base_url}/chat/completions', payload, s.rerank_api_key, timeout=60)
+            body = _post(f'{s.rerank_base_url}/chat/completions', payload, s.rerank_api_key, timeout=left)
             got = _json_object(_content(body)).get('results', [])
             picked = []
             for r in got:
@@ -227,6 +232,8 @@ def rerank(query, candidates, limit=10, retries=1):
             if picked:
                 return picked[:limit]
         except Exception:
+            # The budget covers the retry too. Retrying against a fresh full
+            # timeout is how a "4 second" bound becomes eight.
             continue
     # Re-ranking is an enhancement, not a gate. Retrieval order is a valid answer.
     return [(i, '') for i in range(min(limit, len(candidates)))]

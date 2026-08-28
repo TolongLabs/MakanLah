@@ -1,30 +1,31 @@
 query                      lang           p@5   fp@5   wd@5   top1       n    sec
 ----------------------------------------------------------------------------------
-bak kut teh                en      1.00 ±0.00   0.00   0.00 3/3    8-10     5.30
-肉骨茶                        zh      1.00 ±0.00   0.00   0.00 3/3    7-7      3.34
-nasi lemak                 en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.74
-椰浆饭                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.74
-char kway teow             en      1.00 ±0.00   0.00   0.00 3/3    8-10     3.10
-炒粿条                        zh      1.00 ±0.00   0.00   0.00 3/3    6-10     4.85
-laksa                      en      1.00 ±0.00   0.00   0.00 3/3    5-5      2.73
-叻沙                         zh      1.00 ±0.00   0.00   0.00 3/3    4-4      3.20
-kaya toast                 en      0.87 ±0.20   0.00   0.00 3/3    4-5      2.44
-satay                      en      1.00 ±0.00   0.00   0.00 3/3    2-3      2.41
-roti canai                 en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.70
-curry mee                  en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.87
-pasta                      en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.79
-pizza                      en      0.93 ±0.20   0.00   0.00 3/3    7-7      7.16
-steak                      en      1.00 ±0.00   0.00   0.00 3/3    4-4      3.58
-tiramisu                   en      1.00 ±0.00   0.00   0.00 3/3    8-8      3.10
-matcha                     en      0.80 ±0.00   0.00   0.00 3/3    10-10     3.60
+bak kut teh                en      1.00 ±0.00   0.00   0.00 3/3    8-8      3.26
+肉骨茶                        zh      1.00 ±0.00   0.00   0.00 3/3    7-8      3.24
+nasi lemak                 en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.35
+椰浆饭                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.95
+char kway teow             en      1.00 ±0.00   0.00   0.00 3/3    7-7      3.11
+炒粿条                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.64
+laksa                      en      1.00 ±0.00   0.00   0.00 3/3    5-5      2.74
+叻沙                         zh      1.00 ±0.00   0.00   0.00 3/3    5-5      3.42
+kaya toast                 en      1.00 ±0.00   0.00   0.00 3/3    4-4      2.34
+satay                      en      1.00 ±0.00   0.00   0.00 3/3    3-3      2.19
+roti canai                 en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.88
+curry mee                  en      0.87 ±0.40   0.00   0.00 3/3    2-10     2.85
+pasta                      en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.94
+pizza                      en      0.87 ±0.20   0.00   0.00 3/3    7-7      3.19
+steak                      en      1.00 ±0.00   0.00   0.00 3/3    4-10     3.02
+tiramisu                   en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.83
+matcha                     en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.12
 ----------------------------------------------------------------------------------
-with lexical lane (dish alias hits ahead of vector):
-  mean p@5  0.976
+rerank bounded to a 4s interactive budget:
+  mean p@5  0.984
   mean fp@5 0.000  (opposite cuisine -- blind to the reported bug)
   mean wd@5 0.000  (tagged, but not with the dish asked for)
-  top1 correct 51/51   median 3.19s
+  top1 correct 51/51
+  latency median 3.12s  p95 4.66s  max 4.74s
 
 unscored (no dish ground truth; reported so a regression in shape is visible):
-  somewhere light for breakfast        n= 6   3.13s
-  想吃辣的东西                               n= 5   3.17s
-  tempat makan yang sedap dan murah    n= 8   2.83s
+  somewhere light for breakfast        n= 7   2.64s
+  想吃辣的东西                               n=10   4.60s
+  tempat makan yang sedap dan murah    n=10   4.42s

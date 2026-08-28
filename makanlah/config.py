@@ -46,6 +46,7 @@ class Settings:
     rerank_api_key: str | None
     rerank_model: str
     rerank_thinking: bool
+    rerank_timeout: float
     copilot_base_url: str | None
     copilot_api_key: str | None
     copilot_model: str
@@ -104,6 +105,12 @@ def settings() -> Settings:
         # 4.06/15.48/20.75s with it on and 1.04/2.02/2.26s with it off, same prompts.
         # A user is waiting on this lane, so it is off unless explicitly re-enabled.
         rerank_thinking=e('RERANK_THINKING', '').lower() in ('1', 'true', 'yes'),
+        # The interactive budget, not a generous ceiling. Re-rank is 94% of p95
+        # and its tail is upstream variance: measured p95 1.64s in one window and
+        # 8.87s in another, same prompts, same lane. A 60s timeout let a single
+        # slow call blow a 3s target by 4x. Past this the retrieval order ships
+        # instead -- worse ranking, still cited, still fast.
+        rerank_timeout=float(e('RERANK_TIMEOUT', '4.0')),
         # The copilot is its own lane, not a reuse of the re-rank one. Re-rank is
         # tuned for "pick 10 and write 12 words"; the copilot answers a question
         # from evidence, where getting a citation wrong is worse than getting an
