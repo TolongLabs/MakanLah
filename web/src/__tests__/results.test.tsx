@@ -160,3 +160,13 @@ describe('the rank numeral', () => {
     expect(container.querySelector('.rank')?.textContent).toBe('2')
   })
 })
+
+describe('the landing page never puts an image near evidence', () => {
+  it('has no img inside a result row', async () => {
+    // docs/DESIGN.md: a generated image beside a cited pick is a fabricated image on
+    // the one surface claiming nothing is fabricated. The closing band is the only
+    // photograph on the site and it names no venue.
+    const { container } = renderRow(result())
+    expect(container.querySelectorAll('img')).toHaveLength(0)
+  })
+})
