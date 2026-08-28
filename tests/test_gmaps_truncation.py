@@ -14,7 +14,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 GMAPS = (pathlib.Path(__file__).resolve().parents[1] / 'ingest' / 'gmaps.py').read_text()
 
-MARKER = re.compile(r'(?:…|\.\.\.)\s*More\s*$')
+MARKER = re.compile(r'(?:\s*(?:…|\.\.\.)\s*|\s+)More\s*$')
 
 
 class TestTheScraperExpandsBeforeReading:
@@ -34,15 +34,58 @@ class TestTheScraperExpandsBeforeReading:
 
 class TestTheMarkerPattern:
     """The pattern used to backfill, asserted directly so a future change to it
-    cannot silently start eating real words."""
+    cannot silently start eating real words.
 
-    def test_it_matches_the_real_shapes(self):
-        for s in ['great food … More', 'great food... More', 'great food …  More  ']:
+    The first version required an ellipsis and left 295 excerpts marked -- and
+    reported success, because it counted with the same pattern it stripped with.
+    Google Maps emits the control after an ellipsis, after a full stop, and after
+    a bare word with no punctuation at all.
+    """
+
+    def test_it_matches_every_shape_the_platform_emits(self):
+        for s in [
+            'great food … More',
+            'great food... More',
+            'great food …  More  ',
+            'perfect flavour. More',
+            'Atmosphere is ok. More',
+            'Pricing ok More',
+            'the broths are flavorful More',
+            'Will come back again More',
+        ]:
             assert MARKER.search(s), s
 
     def test_it_leaves_ordinary_sentences_alone(self):
-        for s in ['I want more', 'More salt needed', 'nothing more to say', 'the More the merrier']:
+        for s in ['I want more', 'nothing more to say', 'give me more']:
+            assert not MARKER.search(s), s
+
+    def test_it_is_case_sensitive(self):
+        """One excerpt in the corpus genuinely ends in lower-case "more"."""
+        assert not MARKER.search('I would like some more')
+
+    def test_a_capitalised_more_carrying_punctuation_is_a_real_word(self):
+        """The control never carries punctuation; a real word at a sentence end does."""
+        for s in ['Would I go again? More!', 'Give me More.', 'and then some More?']:
             assert not MARKER.search(s), s
 
     def test_stripping_preserves_the_writers_words(self):
         assert MARKER.sub('', 'The pizza was excellent … More').strip() == 'The pizza was excellent'
+        assert MARKER.sub('', 'Pricing ok More').strip() == 'Pricing ok'
+
+
+class TestTheBackfillVerifiesWithADifferentPattern:
+    """Counting with the pattern you strip with proves nothing.
+
+    The first pass reported "0 markers left" while 295 excerpts still ended in
+    the marker, because both numbers came from the same too-narrow regex.
+    """
+
+    def test_the_script_does_not_verify_with_its_own_strip_pattern(self):
+        src = (pathlib.Path(__file__).resolve().parents[1] / 'ingest' / 'strip_truncation.py').read_text()
+        after = src[src.index('remaining marked excerpts') - 1200 :]
+        assert "'[[:space:]]More[[:space:]]*$'" in after, 'the completeness check reuses PATTERN'
+
+    def test_the_backfill_is_scoped_to_the_platform_that_emits_the_marker(self):
+        src = (pathlib.Path(__file__).resolve().parents[1] / 'ingest' / 'strip_truncation.py').read_text()
+        assert "PLATFORM = 'google_maps'" in src
+        assert src.count('platform = %s') >= 2, 'raw_text or excerpt updates are not platform-scoped'
