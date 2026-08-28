@@ -211,6 +211,10 @@ def rerank(query, candidates, limit=10, retries=1):
         'temperature': 0.2,
         'response_format': {'type': 'json_object'},
     }
+    # Only sent when it is being turned OFF: a model with no thinking mode rejects
+    # the field outright, and the default for every non-qwen3 lane is already off.
+    if not s.rerank_thinking:
+        payload['enable_thinking'] = False
     for _ in range(retries + 1):
         try:
             body = _post(f'{s.rerank_base_url}/chat/completions', payload, s.rerank_api_key, timeout=60)

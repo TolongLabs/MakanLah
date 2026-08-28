@@ -184,9 +184,30 @@ Split along the same seam as the runtimes, for the same reason.
 
 | Job         | Where                                       | Why                                                                                                                                                                                                                                                 |
 | ----------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Extract** | **DashScope** (Qwen), Singapore             | Batch, high volume, latency-tolerant. Qwen is strong on Chinese, and the corpus is RedNote. **ModelScope was the pre-spike assumption and no key for it exists**; the owner holds an International/Singapore DashScope key, which is also nearer KL |
+| **Extract** | **DashScope `qwen-plus-2025-07-28`**        | Batch, high volume, latency-tolerant. Qwen is strong on Chinese, and the corpus is RedNote. **ModelScope was the pre-spike assumption and no key for it exists**; the owner holds an International/Singapore DashScope key, which is also nearer KL |
 | **Embed**   | **DashScope `text-embedding-v3`**, 1024-dim | Decided by measurement, not argument. Free under the same key. See below                                                                                                                                                                            |
-| **Re-rank** | Hermes, interactive lane                    | A user is waiting. Never ModelScope: the latency that is free in batch is disqualifying here                                                                                                                                                        |
+| **Re-rank** | **DashScope `qwen3.8-flash`**, thinking off | A user is waiting, and this lane is ~96% of request latency                                                                                                                                                                                         |
+
+### Every Lane Is Pinned To A Dated Snapshot
+
+**The rolling aliases carry no free quota.** Measured against the ModelStudio console on 2026-08-28: `qwen-plus`,
+`qwen-turbo`, `qwen-flash` and `qwen3.7-flash` all read **No Free Quota / Not Supported**, while the dated snapshots
+carry **1,000,000 tokens each, expiring 2026-10-13**. An unpinned alias therefore moves onto a paid tier without
+anything in the repo changing, which is why each lane names a date.
+
+**`enable_thinking: false` is worth 9x on the interactive lane.** `qwen3.8-flash`, same prompts, same candidates:
+
+| Thinking | Latency, three queries    |
+| -------- | ------------------------- |
+| On       | 4.06s / 15.48s / 20.75s   |
+| **Off**  | **1.04s / 2.02s / 2.26s** |
+
+The qwen3 tier is not slow, it reasons by default. `RERANK_THINKING=1` re-enables it; nothing should, on a lane with a
+user waiting. Free-quota alternatives measured the same way: `qwen-plus-2025-07-28` 0.97/1.59/2.39s, `qwen-max`
+1.68/7.72/4.83s, `qwen3.5-122b-a10b` 30-38s and unusable.
+
+**Enable Stop-on-Exhaust in the console** so an exhausted lane returns `403 AllocationQuota.FreeTierOnly` rather than
+billing silently.
 
 ### The Embedding Decision
 
@@ -209,14 +230,41 @@ poorly in Malay has failed, not partly passed. Write the result to `superpowers/
 
 ```
 POST /recommend
-  { query, lat, lng, radius_m, budget?, cuisine?, limit? }
-→ { results: [ { venue: {id, name, area, lat, lng, maps_url},
-                 score, why,
+  { query, lat, lng, radius_m, prefs?, budget?, cuisine?, limit? }
+→ { results: [ { venue: {id, name, area, lat, lng, maps_url, dishes},
+                 rank, why, match: {basis, dish_hit, lexical, vector},
+                 distance_m,
                  citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] } ],
-    degraded: bool, sources_used: [string] }
+    degraded: bool, degraded_reasons: [string], sources_used: [string] }
 
-GET /health → { ok, corpus_size, oldest_capture, newest_capture }
+GET  /health → { ok, corpus_size, oldest_capture, newest_capture }
+
+POST /auth/signup { email, password }  → { token, user }
+POST /auth/login  { email, password }  → { token, user }
+POST /auth/guest  {}                   → { token, user }   user.is_guest, user.shared
+GET  /auth/me                          → { user, prefs }
+PUT  /auth/prefs  { prefs }            → { prefs }
 ```
+
+`prefs` is the `/taste` wizard's output and is **optional on every call** — a bare `query` must keep working, because
+auth never gates `/recommend`:
+
+```
+prefs: { craving: [string], company: 'solo'|'couple'|'family'|'group',
+         range_m: int, mood: 'adventurous'|'comfort', budget: 'cheap'|'mid'|'splurge' }
+```
+
+**`results` may be shorter than `limit`, including empty.** Returning a venue that does not match, with prose conceding
+it does not match, is worse than returning nothing — see [`Ranking`](#ranking).
+
+`rank` is the position the re-rank assigned. It replaces the old `score`, which reported retrieval cosine while ordering
+came from the re-rank, so a higher number could appear below a lower one. `match.basis` is one of `dish` (an alias hit
+on `mention.dishes`), `text` (lexical hit in an excerpt) or `semantic` (vector only), so the UI can say _why_ an entry
+is present rather than asserting a number.
+
+**The guest account is shared.** `/auth/guest` returns a session on a single row that every caller shares, so `user`
+carries `is_guest` and `shared: true` and the client must disclose that activity is visible to other guests **before**
+the sign-in, not after.
 
 `citations` is **never empty**. An entry that cannot be cited is dropped before the response is built, not returned with
 a caveat.

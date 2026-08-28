@@ -45,6 +45,7 @@ class Settings:
     rerank_base_url: str | None
     rerank_api_key: str | None
     rerank_model: str
+    rerank_thinking: bool
     nominatim_base_url: str
     nominatim_user_agent: str
     cors_origins: tuple[str, ...]
@@ -57,9 +58,14 @@ def settings() -> Settings:
     # DashScope is the extraction lane; OpenRouter is the fallback so a missing
     # DashScope quota degrades rather than stops. Both are OpenAI-compatible, so
     # only the base URL, key and model differ.
+    # Model pinning, measured against the ModelStudio free-quota console 2026-08-28.
+    # The ROLLING aliases carry no free quota -- qwen-plus, qwen-turbo and qwen-flash
+    # are all "No Free Quota / Not Supported". The DATED snapshots do, 1M tokens each
+    # expiring 2026-10-13, so every lane below is pinned to a date rather than a name
+    # that silently moves onto a paid tier. Re-check the console before repinning.
     if e('DASHSCOPE_API_KEY'):
         x_base = e('DASHSCOPE_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1')
-        x_key, x_model = e('DASHSCOPE_API_KEY'), e('DASHSCOPE_MODEL_EXTRACT', 'qwen-plus')
+        x_key, x_model = e('DASHSCOPE_API_KEY'), e('DASHSCOPE_MODEL_EXTRACT', 'qwen-plus-2025-07-28')
     else:
         x_base, x_key = 'https://openrouter.ai/api/v1', e('OPENROUTER_API_KEY')
         x_model = e('OPENROUTER_MODEL_EXTRACT', 'qwen/qwen3-235b-a22b-2507')
@@ -89,7 +95,11 @@ def settings() -> Settings:
         ),
         rerank_api_key=e('HERMES_API_KEY') or e('DASHSCOPE_API_KEY') or e('OPENROUTER_API_KEY'),
         rerank_model=e('RERANK_MODEL')
-        or ('qwen-turbo' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
+        or ('qwen3.8-flash' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
+        # qwen3.x thinks by default, and thinking costs 9x here: qwen3.8-flash ran
+        # 4.06/15.48/20.75s with it on and 1.04/2.02/2.26s with it off, same prompts.
+        # A user is waiting on this lane, so it is off unless explicitly re-enabled.
+        rerank_thinking=e('RERANK_THINKING', '').lower() in ('1', 'true', 'yes'),
         nominatim_base_url=e('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         nominatim_user_agent=e('NOMINATIM_USER_AGENT', 'MakanLah/0.1'),
         cors_origins=tuple(x for x in (e('CORS_ORIGINS', '') or '').split(',') if x) or ('*',),
