@@ -13,8 +13,8 @@ import contextlib
 import json
 import pathlib
 
-from makanlah.dishes import MALAYSIAN, WESTERN, canonical
 from makanlah import db
+from makanlah.dishes import MALAYSIAN, WESTERN, canonical
 
 OUT = pathlib.Path(__file__).parent / 'truth.json'
 
