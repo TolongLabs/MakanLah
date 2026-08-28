@@ -7,7 +7,7 @@
     "lint": "biome check . && prettier --check \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest check . && uv tool run ruff@latest format --check .",
     "format": "biome format --write . && prettier --write \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest format .",
     "typecheck": "if [ -d src ]; then tsc --noEmit; else echo 'no src/ yet, nothing to typecheck'; fi",
-    "test": "uv run --group dev python -m pytest tests/ -q",
+    "test": "bash tests/test_merge_guard.sh && uv run --group dev python -m pytest tests/ -q",
     "test:all": "bun run test && cd web && bun install && bun run test"
   },
   "devDependencies": {

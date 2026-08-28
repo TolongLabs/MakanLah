@@ -323,8 +323,9 @@ rather than hand-writing a prompt.
    single imperative sentence, lowercase, no trailing period. Allowed types: `feat`, `fix`, `refactor`, `docs`, `test`,
    `chore`, `style`, `perf`
 3. **Push the branch** and open a PR with `gh pr create`
-4. **A human merges** with `gh pr merge --squash --delete-branch`. Merging is denied to agents in
-   `.claude/settings.json`
+4. **Merge is gated on green CI, not on a person.** `.claude/hooks/guard-merge.sh` allows `gh pr merge` only when the PR
+   is open, its checks have reported, all of them passed and the merge state is clean. It refuses `--admin` and **fails
+   closed**. A red or absent check is a reviewer saying no — treat it that way
 
 Small fixes still go through a branch. The overhead is one command; the alternative is a `main` nobody can review or
 revert cleanly. **This matters more with workers than without them** — an ungated `main` is exactly where
@@ -376,7 +377,8 @@ gh issue close <n>                     # done
   is a live credential ([`docs/CREDENTIALS.md`](docs/CREDENTIALS.md))
 - **Do not** commit directly to `main`, force-push, rewrite published history, or delete a branch other than a merged
   feature branch
-- **Do not** merge your own PR. Propose it; a human merges
+- **Do not** merge a PR whose CI is red, absent or still running. `guard-merge.sh` enforces this, and narrowing the
+  change is always available where silencing the check is not
 - **Do not** merge a worker's output on its self-report. Assert the artifact, run the hidden test
 - **Do not** hand-roll worker dispatch around GSD, or hardcode `devin -p` as the only lane
 - **Do not** track TODOs in a markdown file

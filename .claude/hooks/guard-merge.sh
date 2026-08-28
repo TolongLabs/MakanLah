@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# PreToolUse(Bash): allow `gh pr merge` ONLY when CI is verifiably green.
+#
+# This implements issue #4. The blanket `Bash(gh pr merge:*)` deny was correct
+# in intent -- an agent must not merge unreviewed work -- and wrong in effect:
+# deny outranks allow, so `scripts/unattended.sh on` could report success while
+# doing nothing, and every unattended run stalled at its first PR.
+#
+# UNLIKE THE OTHER HOOKS IN THIS REPO, THIS ONE FAILS CLOSED. The others exit 0
+# on internal failure so a broken guard never wedges a session. Here, failing
+# open would permit exactly the merge the guard exists to prevent, and the
+# fallback -- a human merges -- is the status quo rather than a broken session.
+set -uo pipefail
+
+deny() { echo "BLOCKED: $1" >&2; exit 2; }
+
+command -v jq >/dev/null 2>&1 || deny "jq is unavailable, so CI state cannot be verified."
+cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null) || deny "could not read the command."
+[[ -n "$cmd" ]] || exit 0
+
+# Not a merge: nothing to say.
+grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge\b' <<<"$cmd" || exit 0
+
+command -v gh >/dev/null 2>&1 || deny "gh is unavailable, so CI state cannot be verified."
+
+pr=$(grep -Eo 'gh[[:space:]]+pr[[:space:]]+merge[[:space:]]+[0-9]+' <<<"$cmd" | grep -Eo '[0-9]+$' || true)
+[[ -n "$pr" ]] || deny "name the PR number explicitly (gh pr merge <n>), so its checks can be verified."
+
+# --admin bypasses branch protection. Never from an agent.
+grep -Eq '(^|[[:space:]])--admin([[:space:]]|$)' <<<"$cmd" \
+  && deny "--admin bypasses branch protection. A human does that, not an agent."
+
+state=$(gh pr view "$pr" --json mergeStateStatus,state \
+  --jq '"\(.state) \(.mergeStateStatus)"' 2>/dev/null) || deny "could not read PR #$pr from GitHub."
+
+read -r pr_state merge_state <<<"$state"
+[[ "$pr_state" == "OPEN" ]] || deny "PR #$pr is $pr_state, not OPEN."
+
+# The rollup, counted rather than trusted. AUTONOMY.md: "No checks reported" is
+# not "green" -- to a caller that only looks for failures, nothing looks exactly
+# like success, so an absent verifier must block.
+checks=$(gh pr checks "$pr" --json state --jq '.[].state' 2>/dev/null || true)
+if [[ -z "$checks" ]]; then
+  # gh pr checks needs a token scope this repo's CI does not always grant; fall
+  # back to the run list for the PR's head branch before concluding anything.
+  branch=$(gh pr view "$pr" --json headRefName --jq '.headRefName' 2>/dev/null) \
+    || deny "no checks reported for #$pr and its branch could not be read."
+  checks=$(gh run list --branch "$branch" --limit 1 --json conclusion --jq '.[].conclusion' 2>/dev/null || true)
+fi
+
+[[ -n "$checks" ]] || deny "no checks reported for #$pr. An absent verifier is not a pass (AUTONOMY.md)."
+
+while read -r c; do
+  [[ -z "$c" ]] && continue
+  case "$c" in
+    SUCCESS | success | SKIPPED | skipped | NEUTRAL | neutral) ;;
+    *) deny "#$pr has a check in state '$c'. Green CI is the only gate that stands in for a reviewer." ;;
+  esac
+done <<<"$checks"
+
+case "$merge_state" in
+  CLEAN | HAS_HOOKS) ;;
+  UNSTABLE) deny "#$pr is UNSTABLE — checks are still running. Wait for them." ;;
+  *) deny "#$pr mergeStateStatus is $merge_state, not CLEAN." ;;
+esac
+
+exit 0
