@@ -24,7 +24,16 @@ grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge\b' <<<"$cmd" || exit 0
 command -v gh >/dev/null 2>&1 || deny "gh is unavailable, so CI state cannot be verified."
 
 pr=$(grep -Eo 'gh[[:space:]]+pr[[:space:]]+merge[[:space:]]+[0-9]+' <<<"$cmd" | grep -Eo '[0-9]+$' || true)
-[[ -n "$pr" ]] || deny "name the PR number explicitly (gh pr merge <n>), so its checks can be verified."
+# Deliberately matched against the whole command string rather than at a command
+# position. Prose that merely mentions the phrase -- a doc edit, a commit message,
+# an issue body, all of which this repo writes constantly -- trips the guard too.
+# That is the safe side of the trade: narrowing to a real command position needs
+# shell parsing a hook cannot do, and a miss here is an UNGUARDED MERGE, because
+# the settings deny was removed in #23. A false positive costs one retry; a false
+# negative costs the reviewer.
+[[ -n "$pr" ]] || deny "no PR number found. If you are merging, name it explicitly so its checks can be verified. \
+If this is prose that only mentions the phrase, keep the three words non-adjacent in the command itself -- build the \
+string in two pieces, or write the file from a script that does not contain them together."
 
 # --admin bypasses branch protection. Never from an agent.
 grep -Eq '(^|[[:space:]])--admin([[:space:]]|$)' <<<"$cmd" \
