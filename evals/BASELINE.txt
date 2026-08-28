@@ -1,31 +1,40 @@
 query                      lang           p@5   fp@5   wd@5   top1       n    sec
 ----------------------------------------------------------------------------------
-bak kut teh                en      1.00 ±0.00   0.00   0.00 3/3    8-8      3.26
-肉骨茶                        zh      1.00 ±0.00   0.00   0.00 3/3    7-8      3.24
-nasi lemak                 en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.35
-椰浆饭                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.95
-char kway teow             en      1.00 ±0.00   0.00   0.00 3/3    7-7      3.11
-炒粿条                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.64
-laksa                      en      1.00 ±0.00   0.00   0.00 3/3    5-5      2.74
-叻沙                         zh      1.00 ±0.00   0.00   0.00 3/3    5-5      3.42
-kaya toast                 en      1.00 ±0.00   0.00   0.00 3/3    4-4      2.34
-satay                      en      1.00 ±0.00   0.00   0.00 3/3    3-3      2.19
-roti canai                 en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.88
-curry mee                  en      0.87 ±0.40   0.00   0.00 3/3    2-10     2.85
-pasta                      en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.94
-pizza                      en      0.87 ±0.20   0.00   0.00 3/3    7-7      3.19
-steak                      en      1.00 ±0.00   0.00   0.00 3/3    4-10     3.02
-tiramisu                   en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.83
-matcha                     en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.12
+bak kut teh                en      1.00 ±0.00   0.00   0.00 3/3    9-9      3.48
+肉骨茶                        zh      1.00 ±0.00   0.00   0.00 3/3    8-8      2.94
+nasi lemak                 en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.31
+椰浆饭                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.68
+char kway teow             en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.26
+炒粿条                        zh      1.00 ±0.00   0.00   0.00 3/3    8-10     3.58
+laksa                      en      1.00 ±0.00   0.00   0.00 3/3    4-10     3.49
+叻沙                         zh      1.00 ±0.00   0.00   0.00 3/3    4-4      2.35
+kaya toast                 en      1.00 ±0.00   0.00   0.00 3/3    3-3      2.02
+satay                      en      1.00 ±0.00   0.00   0.00 3/3    2-2      2.60
+roti canai                 en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.67
+curry mee                  en      0.89 ±0.33   0.00   0.00 3/3    2-3      2.02
+pasta                      en      1.00 ±0.00   0.00   0.00 3/3    9-9      3.22
+pizza                      en      0.93 ±0.20   0.00   0.00 3/3    7-7      2.84
+steak                      en      1.00 ±0.00   0.00   0.00 3/3    3-3      2.06
+tiramisu                   en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.40
+matcha                     en      0.87 ±0.20   0.00   0.00 1/3    10-10     4.09
 ----------------------------------------------------------------------------------
-rerank bounded to a 4s interactive budget:
-  mean p@5  0.984
+lead-with-testimony (citations ordered by what the excerpt says, not by extractor confidence):
+  mean p@5  0.982
   mean fp@5 0.000  (opposite cuisine -- blind to the reported bug)
   mean wd@5 0.000  (tagged, but not with the dish asked for)
-  top1 correct 51/51
-  latency median 3.12s  p95 4.66s  max 4.74s
+  top1 correct 49/51
+  latency median 3.04s  p95 4.36s  max 4.72s
 
 unscored (no dish ground truth; reported so a regression in shape is visible):
-  somewhere light for breakfast        n= 7   2.64s
-  想吃辣的东西                               n=10   4.60s
-  tempat makan yang sedap dan murah    n=10   4.42s
+  somewhere light for breakfast        n= 6   2.56s
+  想吃辣的东西                               n= 6   2.60s
+  tempat makan yang sedap dan murah    n= 7   3.05s
+
+previous, for comparison -- "rerank bounded to a 4s interactive budget" (2026-08-28):
+  mean p@5 0.984   top1 51/51   median 3.12s   p95 4.66s
+  The whole difference is `matcha`, which fell from 1.00 +/-0.00 and 3/3 to
+  0.87 +/-0.20 and 1/3. Under the old ordering the re-rank was shown the
+  highest-confidence excerpts, which are disproportionately pin lines and
+  addresses -- text that names the venue and its dish and so matches a keyword
+  query well while telling a reader nothing. Ranking was leaning on that.
+  Tracked as #26.
