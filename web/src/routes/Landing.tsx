@@ -4,12 +4,7 @@ import { type Health, health } from '../api'
 import { Testimony } from '../components/Testimony'
 import { leadPair } from '../evidence'
 import { dishLine } from '../format'
-import { SPECIMEN } from './landingSpecimen'
-
-/** The excerpt this page is built around. Chinese, Malay and English in one sentence,
-    exactly as the writer typed it, because that is the thing an English-only pipeline
-    silently loses. */
-const MIXED = SPECIMEN.citations[0]
+import { MIXED_SCRIPT, SPECIMEN } from './landingSpecimen'
 
 export function Landing() {
   return (
@@ -109,13 +104,21 @@ function MixedLanguage() {
           drops the best posts.
         </p>
       </div>
-      {MIXED && (
-        <div className="feature-quote">
-          <Testimony citation={MIXED} large />
-        </div>
-      )}
+      <div className="feature-quote">
+        <Testimony citation={MIXED_SCRIPT} large />
+      </div>
     </section>
   )
+}
+
+/** Freshness in the coarsest honest unit. "3 days" is useful; "3.04 days" is noise,
+    and a precise figure implies a precision the capture schedule does not have. */
+function sinceCapture(iso: string | null): string {
+  if (!iso) return 'Unknown'
+  const days = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000)
+  if (Number.isNaN(days)) return 'Unknown'
+  if (days < 1) return 'Today'
+  return days === 1 ? '1 day' : `${days} days`
 }
 
 function Corpus() {
@@ -154,8 +157,8 @@ function Corpus() {
             <dt className="stat-label">Places somebody wrote about</dt>
           </div>
           <div className="stat">
-            <dd className="stat-figure">2</dd>
-            <dt className="stat-label">Platforms, so one going dark is survivable</dt>
+            <dd className="stat-figure">{sinceCapture(data.newest_capture)}</dd>
+            <dt className="stat-label">Since the newest post was captured</dt>
           </div>
         </dl>
       )}

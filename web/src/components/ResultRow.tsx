@@ -32,7 +32,7 @@ export function ResultRow({ result, rank, showBasis = true }: { result: Result; 
       <div className="rank" aria-hidden="true">
         {rank}
       </div>
-      <div>
+      <div className="result-body">
         <h3 className="venue-name" lang="und">
           <Link to={`/r/${venue.id}`}>
             <span className="sr-only">{`Rank ${rank}. `}</span>

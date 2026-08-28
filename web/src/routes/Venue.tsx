@@ -56,7 +56,7 @@ export function Venue() {
 
   return (
     <div className="page">
-      <p className="section-lede">
+      <p className="venue-back">
         <Link className="link" to="/discover">
           Back To Results
         </Link>
@@ -95,7 +95,7 @@ export function Venue() {
             ? 'Two platforms carry this place, written by different people.'
             : 'One platform carries this place so far.'}
         </p>
-        <ul className="section-lede">
+        <ul className="trail-list">
           {cited.map((c) => (
             <li className="trail-item" key={`${c.platform}:${c.post_url}`}>
               <div className="trail-source">

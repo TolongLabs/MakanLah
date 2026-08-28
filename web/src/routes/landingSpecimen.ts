@@ -1,4 +1,4 @@
-import type { Result } from '../api'
+import type { Citation, Result } from '../api'
 
 /**
  * One real pick, frozen so the landing page renders it on first paint instead of
@@ -48,4 +48,20 @@ export const SPECIMEN: Result = {
       posted_at: 'a month ago'
     }
   ]
+}
+
+/**
+ * A second real capture, used by the landing page's language section. Same treatment
+ * as SPECIMEN: verbatim, handle dropped to null, platform and date kept.
+ *
+ * It is here rather than reusing SPECIMEN's excerpt because that one is Chinese only.
+ * This one puts Chinese, the Malay word sambal and an English venue name in a single
+ * sentence, which is the phenomenon the section is about.
+ */
+export const MIXED_SCRIPT: Citation = {
+  post_url: 'https://www.rednote.com/explore/6941419f000000000d03fe99',
+  excerpt: '2️⃣ Village Park Nasi Lemak\n排队也值得！椰香米饭搭配香脆炸鸡和微辣sambal，早午晚都适合吃！',
+  platform: 'rednote',
+  author_handle: null,
+  posted_at: '12/26/2025'
 }
