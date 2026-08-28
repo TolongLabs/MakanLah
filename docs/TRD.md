@@ -242,6 +242,10 @@ POST /ask
 → { covered: bool, answer, venue,
     citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] }
 
+GET  /venue/{id}?lat&lng
+→ one entry, same shape as a /recommend result. rank/why/match are null: nothing was ranked.
+  404 when the venue has no citations -- an entry that cannot be cited is not a result.
+
 GET  /health → { ok, corpus_size, oldest_capture, newest_capture }
 
 POST /auth/signup { email, password }  → { token, user }        409 if taken

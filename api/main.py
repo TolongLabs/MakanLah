@@ -244,3 +244,21 @@ def ask(req: AskRequest):
     if out['covered'] and not out['citations']:
         out['covered'] = False
     return out
+
+
+@app.get('/venue/{venue_id}')
+def venue(venue_id: str, lat: float | None = None, lng: float | None = None):
+    """One venue and its citation trail. Not gated by auth.
+
+    404 rather than an empty entry when the venue has no citations: an entry
+    that cannot be cited is not a result, and the deep link should say so.
+    """
+    try:
+        out = rank.one(venue_id, lat=lat, lng=lng)
+    except CORPUS_UNREACHABLE as e:
+        return {'venue': None, 'degraded': True, 'error': type(e).__name__}
+    except ValueError:
+        raise HTTPException(status_code=422, detail='That venue id is not valid.') from None
+    if not out:
+        raise HTTPException(status_code=404, detail='We have no posts for that place.')
+    return out

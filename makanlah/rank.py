@@ -158,3 +158,40 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
     return {'results': results, 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': sources}
+
+
+def one(venue_id, *, lat=None, lng=None):
+    """A single venue with its citation trail, for a deep link.
+
+    The venue page is the page the whole product points at, and it must not
+    depend on a search having happened in the same tab. Same entry shape as a
+    /recommend result so the client renders one component.
+
+    `rank`, `why` and `match.basis` are null here by construction: nothing was
+    ranked and nothing was matched. Reporting them as null is honest; inventing
+    a rank of 1 for a direct lookup would not be.
+    """
+    with db.connect() as con:
+        v = db.venue_by_id(con, venue_id)
+        if not v:
+            return None
+        enriched = db.venues_with_citations(con, [v['id']])
+    entry = enriched.get(v['id'])
+    if not entry or not entry['citations']:
+        return None
+    return {
+        'venue': {
+            'id': str(entry['id']),
+            'name': entry['name'],
+            'area': entry['area'],
+            'lat': entry['lat'],
+            'lng': entry['lng'],
+            'maps_url': maps_url(entry),
+            'dishes': entry['dishes'][:6],
+        },
+        'rank': None,
+        'match': {'basis': None, 'dish': None, 'similarity': None},
+        'why': None,
+        'distance_m': _distance_m(lat, lng, entry['lat'], entry['lng']),
+        'citations': entry['citations'],
+    }

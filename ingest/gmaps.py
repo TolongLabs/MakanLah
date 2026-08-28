@@ -40,13 +40,26 @@ PLACE_JS = """JSON.stringify((() => {
   };
 })())"""
 
+# Google Maps collapses a long review and appends its own "… More" control.
+# Reading innerText without clicking that captures the platform's chrome AND
+# loses the rest of the review: 1008 of 1388 captured posts were truncated this
+# way, and the marker reached users inside a verbatim citation.
+EXPAND_JS = """(() => {
+  const buttons = [...document.querySelectorAll(
+    'button[aria-label="See more"], button[jsaction*="review.expandReview"], .w8nwRe'
+  )];
+  buttons.forEach((b) => { try { b.click() } catch (e) {} });
+  return buttons.length;
+})()"""
+
 REVIEWS_JS = """JSON.stringify((() => {
   const seen = {};
   for (const n of document.querySelectorAll('div[data-review-id]')) {
     const id = n.getAttribute('data-review-id');
     const body = n.querySelector('.MyEned, span[class*="wiI7pd"]');
     if (!id || !body) continue;
-    const txt = (body.innerText || '').trim();
+    // Defence in depth: strip the control's label if a click did not land.
+    const txt = (body.innerText || '').replace(/\s*(?:…|\.\.\.)\s*More\s*$/, '').trim();
     if (txt.length < 25) continue;
     const stars = n.querySelector('span[role="img"][aria-label*="star"]');
     seen[id] = {
@@ -119,6 +132,12 @@ async def reviews(page, limit=8):
           if (d.length) d[d.length - 1].scrollTop = d[d.length - 1].scrollHeight;
         })()""")
         await asyncio.sleep(3)
+    # Expand every collapsed review BEFORE reading, then let the DOM settle.
+    # Without this the capture keeps Google's own "… More" control and loses
+    # everything after it.
+    await page.js(EXPAND_JS)
+    await asyncio.sleep(2)
+
     raw = await page.js(REVIEWS_JS)
     if not raw:
         return []
