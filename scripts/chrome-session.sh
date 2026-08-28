@@ -61,42 +61,84 @@ do_status() {
 # Proves the session actually carried over. Without this the script can report
 # success while every fetch quietly returns a login wall — which is the exact
 # failure this whole file exists to prevent.
+#
+# It asserts CONTENT, not the absence of a keyword. Xiaohongshu keeps the title
+# "小红书" and overlays a login modal on a logged-out session, so a title/URL
+# keyword check passes while zero notes are readable. The only honest signal is
+# whether search returns note cards.
 do_verify() {
   do_status >/dev/null || { bad "CDP is not up; run: $0 start"; return 1; }
 
-  local target
-  target=$(cdp /json/new?https://www.xiaohongshu.com/explore)
-  [[ -z "$target" ]] && target=$(curl -s -m 5 -X PUT \
-      "http://127.0.0.1:$PORT/json/new?https://www.xiaohongshu.com/explore" 2>/dev/null)
-  sleep 8
+  # Chrome 111+ answers GET /json/new with "Using unsafe HTTP verb GET" rather
+  # than an empty body, so a GET-first fallback never fires. PUT is the only verb.
+  # rednote.com, not xiaohongshu.com. The two hosts serve the same content behind
+  # SEPARATE sessions (docs/CREDENTIALS.md), and ingest/rednote.py targets .com.
+  # Probing the other host reports "logged out" for a session ingestion never uses.
+  local probe='https://www.rednote.com/search_result?keyword=%E5%90%89%E9%9A%86%E5%9D%A1%E7%BE%8E%E9%A3%9F'
+  local tab
+  tab=$(curl -s -m 10 -X PUT "http://127.0.0.1:$PORT/json/new?$probe" 2>/dev/null)
+  local tid; tid=$(echo "$tab" | grep -o '"id": *"[^"]*"' | head -1 | cut -d'"' -f4)
+  sleep 10
 
   local tabs; tabs=$(cdp /json)
   if [[ -z "$tabs" ]]; then bad "CDP stopped responding"; return 1; fi
 
-  python3 - "$tabs" <<'PY'
-import json, sys
+  # Ambient python3 has no websockets, which made verify warn and assert nothing —
+  # the same silent-pass failure the content check exists to prevent. Prefer uv.
+  local -a runner
+  if command -v uv >/dev/null 2>&1; then runner=(uv run --quiet --with websockets python -)
+  else runner=(python3 -); fi
+
+  "${runner[@]}" "$tabs" "$PORT" <<'PY_INNER'
+import json, sys, urllib.request
+
 try:
     tabs = json.loads(sys.argv[1])
 except Exception:
     print("  \033[31mfail\033[0m  could not parse the CDP tab list"); raise SystemExit(1)
+port = sys.argv[2]
 
-hits = [t for t in tabs if "xiaohongshu" in (t.get("url") or "")]
+hits = [t for t in tabs if "rednote.com/search_result" in (t.get("url") or "")]
 if not hits:
-    print("  \033[31mfail\033[0m  no xiaohongshu tab opened"); raise SystemExit(1)
-
+    print("  \033[31mfail\033[0m  no rednote search tab opened"); raise SystemExit(1)
 t = hits[0]
-title, url = (t.get("title") or ""), (t.get("url") or "")
-print(f"  title: {title[:90]}")
-print(f"  url:   {url[:90]}")
+print(f"  title: {(t.get('title') or '')[:90]}")
 
-# A redirect to a login path, or a login-shaped title, means the copy did not
-# carry the session. Treat an ambiguous result as unverified, never as a pass.
-lowered = (title + " " + url).lower()
-if any(k in lowered for k in ("login", "signin", "sign-in", "登录", "扫码")):
-    print("  \033[31mfail\033[0m  landed on a login wall — the session did not carry over")
+# Read the rendered page over the DevTools websocket. A title check is not
+# enough: the modal sits on top of a page whose title never changes.
+try:
+    from websockets.sync.client import connect
+except ModuleNotFoundError:
+    print("  \033[33mwarn\033[0m  websockets not installed; cannot assert content")
+    print("        install with: uv run --with websockets  (or pip install websockets)")
     raise SystemExit(1)
-print("  \033[32mok\033[0m    no login wall; session appears to have carried")
-PY
+
+expr = """JSON.stringify({
+  cards: document.querySelectorAll('section.note-item, div.note-item, a.cover').length,
+  wall: /登录后查看|登录后推荐|扫码登录|手机号登录/.test(document.body.innerText),
+  len: document.body.innerText.length
+})"""
+with connect(t["webSocketDebuggerUrl"], max_size=50_000_000) as ws:
+    ws.send(json.dumps({"id": 1, "method": "Runtime.evaluate",
+                        "params": {"expression": expr, "returnByValue": True}}))
+    while True:
+        m = json.loads(ws.recv())
+        if m.get("id") == 1:
+            break
+r = json.loads(m["result"]["result"]["value"])
+print(f"  note cards: {r['cards']}   login wall text: {r['wall']}")
+
+if r["cards"] > 0 and not r["wall"]:
+    print("  \033[32mok\033[0m    session carried — search returned readable notes")
+    raise SystemExit(0)
+
+print("  \033[31mfail\033[0m  logged out. The cookie may copy and decrypt and still be")
+print("        rejected server-side. Re-login in Chrome, QUIT Chrome, then re-run start.")
+raise SystemExit(1)
+PY_INNER
+  local rc=$?
+  [[ -n "$tid" ]] && curl -s -m 5 "http://127.0.0.1:$PORT/json/close/$tid" >/dev/null 2>&1
+  return $rc
 }
 
 do_start() {

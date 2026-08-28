@@ -25,6 +25,11 @@ jobs:
         with:
           bun-version: latest
 
+      # bun run lint shells out to ruff via uv, so uv must exist before it runs.
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - run: bun install --frozen-lockfile
 
       - name: Lint and format check
@@ -32,6 +37,19 @@ jobs:
 
       - name: Typecheck
         run: bun run typecheck
+
+      # Every test runs against fixtures. A suite that hits a live platform fails
+      # when a session expires, and a red check that means nothing trains everyone
+      # to ignore red checks (docs/TRD.md).
+      - name: Python tests
+        run: bun run test
+
+      - name: Web build and tests
+        working-directory: web
+        run: |
+          bun install --frozen-lockfile
+          bun run test
+          bun run build
 
       # The three docs gate implementation (AGENTS.md). Warn rather than fail:
       # a branch that adds src/ before TRD.md exists should be visible, not blocked

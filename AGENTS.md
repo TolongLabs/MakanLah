@@ -17,35 +17,29 @@ are still open.
 drawing on real recommendations Malaysians actually write. Primarily Xiaohongshu / RedNote, plus other social platforms.
 Repo: `github.com/TolongLabs/MakanLah`.
 
-**Status: pre-scaffold.** No application code exists. What exists is this instruction file, the tooling around it, and
-three documents stating intent.
+**Status: the spike has returned and the app runs.** Corpus on Neon, two sources, an API and a deployed client. What
+remains is in GitHub Issues and [`docs/PROGRESS.md`](docs/PROGRESS.md).
 
 The differentiator is **showing the evidence**. A pick that cites the post it came from is trustworthy in a way a
 generated blurb is not. Anything that breaks the citation trail breaks the product.
 
 ---
 
-## The Spike Gates Everything
+## The Spike Has Returned. Do Not Re-Run It
 
-> **Nothing gets built until the Xiaohongshu spike returns.** RedNote gates content behind login, fingerprints devices
-> and rate-limits hard. If structured data cannot be pulled at usable volume, MakanLah has no product — and every hour
-> of scaffolding spent before that is proven is wasted.
+> **Resolved 2026-08-27.** 50 posts, 137 venues, 150 mentions. Name 137/137, sentiment 150/150, excerpt 150/150, dish
+> 93/150, location 45/137. Extraction 50/50 with zero failures. **The premise holds.**
 
-The question it answers, and the only one:
+The gate is closed and the corpus is real. What the spike changed about the schema, and why, is in
+[`docs/TRD.md`](docs/TRD.md#what-the-spike-changed). Its redacted capture is in [`docs/source/`](docs/source/).
 
-> Can we pull ~50 KL restaurant posts with structured fields — name, location, dish, sentiment — into a normalized
-> record?
+**One finding worth carrying forward: the host is the identity, not the brand.** `xiaohongshu.com` was logged out on the
+build machine while `rednote.com` — same content — was signed in. An adapter written against the brand would have
+concluded the source was dead.
 
-One orchestrator session, timeboxed, no workers. Exploratory work fails in ways no test anticipates, which is exactly
-the case where fan-out is wrong ([`docs/SWARM.md`](docs/SWARM.md#which-phases-actually-fan-out)).
-
-**If application work is requested while the spike is unresolved, run the spike first and say that you did.** Do not
-ask, and do not build on an unproven corpus. The spike is short by design; running it is always cheaper than scaffolding
-around an assumption.
-
-**A partial result resolves the gate.** 30 of 50 posts with three of four fields is a pass — write the numbers into
-`docs/PROGRESS.md` and proceed. Only a total failure across every source is a stop, and that case is
-[`docs/AUTONOMY.md`](docs/AUTONOMY.md#what-still-stops-you) #4.
+**Re-capturing is normal; re-running the spike is not.** `ingest/capture_rednote.py` grows the corpus, and
+`ingest/pipeline.py` re-extracts from the raw cache without touching a platform. A schema or prompt change costs nothing
+to replay; re-scraping costs a rate limit and possibly a session.
 
 ---
 
@@ -95,6 +89,11 @@ never the second.
 final. If you are behind, cut scope, not the quality of what ships. **Never claim it works without having run it and
 read the output** — nobody is checking behind you.
 
+**And never verify a fix with the fix's own definition.** A check that decides its own success agrees with itself
+perfectly and proves nothing. This is the failure that actually recurs — three instances on 2026-08-28, each reporting
+clean, each wrong — so confirm against something the check does not own. Worked examples and the shape to watch for:
+[`docs/AUTONOMY.md`](docs/AUTONOMY.md#a-check-that-owns-its-own-definition-of-success).
+
 ---
 
 ## The Gate Before Implementation
@@ -108,9 +107,10 @@ days produce code nobody agreed to.
 | `docs/PRD.md`     | **What.** Requirements, user stories, acceptance criteria, what is out of scope | Scope                                     |
 | `docs/TRD.md`     | **How.** Architecture, API contracts, data models, schemas, decision rationale  | Technical truth. Canonical over this file |
 
-`docs/PRODUCT.md` and `docs/TRD.md` exist. **`PRD.md` does not** — write it and proceed; do not stop for it.
-`docs/DESIGN.md` joins them when frontend work starts, and owns the design system: palette, type pairing, radius and
-border treatment, spacing scale.
+All three exist, and `docs/DESIGN.md` joined them when frontend work started. **The gate is closed.** Keep them current
+rather than treating them as written: `TRD.md` is canonical on anything technical, and a change that contradicts it
+should change it in the same PR. `docs/DESIGN.md` joins them when frontend work starts, and owns the design system:
+palette, type pairing, radius and border treatment, spacing scale.
 
 **The gate is binary, and it is not a stopping point.** If the three are not all present, the answer to "can I start
 building" is no — so **write the missing one, then build**. It is an hour of work against defaults already
@@ -145,20 +145,24 @@ If reading your message takes longer than doing the thing, you have cost time.
 | **Biome**                            | Lint and format for JS, TS, JSON, CSS, HTML                               |
 | **Prettier**                         | Format for Markdown and YAML, the two Biome does not cover                |
 | **TypeScript**                       | `tsc --noEmit`; strict, `noUncheckedIndexedAccess`                        |
+| **uv**                               | Python runner and dependency resolver. `pyproject.toml` pins the project  |
+| **Ruff**                             | Lint and format for Python. Mirrors Biome: 120 columns, single quotes     |
 | **commitlint + husky + lint-staged** | Conventional Commits on `commit-msg`; staged files linted on `pre-commit` |
 | **GSD**                              | Orchestration. `npm i -g get-shit-done`                                   |
 
 ```bash
 bun install          # dev tooling; also wires husky hooks
-bun run lint         # biome check . && prettier --check .
-bun run format       # biome format --write . && prettier --write .
+bun run lint         # biome + prettier + ruff check + ruff format --check
+bun run format       # biome + prettier + ruff format
 bun run typecheck    # tsc --noEmit, once src/ exists
 ```
 
-**Application framework, database, hosting and scraper stack are not chosen yet.** They get chosen and justified in
-`docs/TRD.md`; this table is an inventory of what is installed. **There is no Python stack yet** — the spike is the
-first thing that creates one, and when it does it lands as `uv` plus `ruff`, added to this table and to `lint-staged` at
-the same time. Do not add Python tooling speculatively before then.
+**Application framework and hosting are not chosen yet.** They get chosen and justified in `docs/TRD.md`; this table is
+an inventory of what is installed. **The Python stack now exists** — the scrape spike created it, as `uv` plus `ruff`,
+wired into `lint-staged` and `bun run lint` at the same time. `pyproject.toml` is its root.
+
+**The scraper stack is settled by the spike**: CDP against a signed-in Chrome for RedNote, Nominatim for geocoding,
+neither needing an API key. Firecrawl stays for open-web fallbacks. See `docs/TRD.md`.
 
 **Prettier owns Markdown and YAML, Biome owns everything else**, split by file extension rather than an ignore file.
 `.prettierrc.json` mirrors every formatter setting `biome.json` states, so both wrap at 120 and neither can undo the
@@ -358,7 +362,7 @@ gh issue close <n>                     # done
 - **Do not** disable, skip or narrow a check to make CI green. Narrow the _change_ instead — unattended, CI is the only
   reviewer there is
 - **Do not** end a session without rewriting `docs/PROGRESS.md`. The next session starts with none of your context
-- **Do not** start application work before the spike resolves. It gates the project
+- **Do not** re-run the spike. It resolved on 2026-08-27; re-capturing to grow the corpus is a different thing
 - **Do not** make one data source load-bearing, or fetch from a platform on the request path
 - **Do not** couple the copilot and ingestion runtimes
 - **Do not** return a recommendation without the post it came from

@@ -4,13 +4,11 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
-    "lint": "biome check . && prettier --check \"**/*.{md,markdown,yaml,yml}\"",
-    "format": "biome format --write . && prettier --write \"**/*.{md,markdown,yaml,yml}\"",
-    "typecheck": "if [ -d src ]; then tsc --noEmit; else echo 'no src/ yet, nothing to typecheck'; fi"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css,html}": "biome check --write --no-errors-on-unmatched",
-    "*.{md,yaml,yml}": "prettier --write"
+    "lint": "biome check . && prettier --check \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest check . && uv tool run ruff@latest format --check .",
+    "format": "biome format --write . && prettier --write \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest format .",
+    "typecheck": "if [ -d src ]; then tsc --noEmit; else echo 'no src/ yet, nothing to typecheck'; fi",
+    "test": "uv run --group dev python -m pytest tests/ -q",
+    "test:all": "bun run test && cd web && bun install && bun run test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.10",
