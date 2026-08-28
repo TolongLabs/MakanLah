@@ -119,6 +119,26 @@ def venue_dishes(con, venue_ids):
     return {r['venue_id']: r['dishes'] for r in rows}
 
 
+# Which excerpt leads, and why not confidence.
+#
+# Confidence measures how easy the text was to extract, which is close to the
+# opposite of whether it is worth reading. Measured on this corpus: the >=0.95 band
+# averages 75 characters against 180 for the band below it, and is nearly twice as
+# likely to carry no opinion at all. A postal address is trivially extractable, so
+# it wins every time -- 82 of 243 venues led with one.
+#
+# So rank on what the excerpt says. First, does it argue anything: an opinion with
+# enough text to be a sentence. Then, is it representative -- closest to what this
+# venue's own mentions average, so the lead is neither the angriest review nor the
+# most flattering one. Ties break on id so the same query returns the same excerpt
+# twice running.
+EXCERPT_ORDER = """
+  (m.sentiment <> 0 and length(m.excerpt) >= 60) desc,
+  abs(m.sentiment - avg(m.sentiment) over (partition by m.venue_id)) asc,
+  m.id
+"""
+
+
 def venue_evidence(con, venue_id, limit=40):
     """Everything the corpus actually says about one venue.
 
@@ -131,7 +151,9 @@ def venue_evidence(con, venue_id, limit=40):
                   p.url as post_url, p.platform, p.author_handle, p.posted_at_raw
            from mention m join source_post p on p.id = m.post_id
            where m.venue_id = %s and m.excerpt is not null
-           order by m.confidence desc nulls last
+           order by """
+        + EXCERPT_ORDER
+        + """
            limit %s""",
         (venue_id, limit),
     ).fetchall()
@@ -247,7 +269,9 @@ def venues_with_citations(con, venue_ids, per_venue=3):
            join mention m on m.venue_id = v.id
            join source_post p on p.id = m.post_id
            where v.id = any(%s)
-           order by v.id, m.confidence desc nulls last""",
+           order by v.id, """
+        + EXCERPT_ORDER
+        + """""",
         (list(venue_ids),),
     ).fetchall()
     out, pool = {}, {}

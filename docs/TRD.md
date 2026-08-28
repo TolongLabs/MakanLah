@@ -176,6 +176,36 @@ produce a URL will produce a plausible one. The re-rank returns venue ids and a 
 **Venues with null coordinates are excluded from distance-filtered queries, not deleted.** They stay rankable by
 preference once geocoding catches up.
 
+### Which Excerpt Leads
+
+`db.EXCERPT_ORDER` is the single definition, used by both `venues_with_citations` (stage 4) and `venue_evidence` (the
+copilot). It orders on **what the excerpt says**, not on `mention.confidence`.
+
+**Confidence is an anti-signal for readability.** It measures how easy the text was to extract, which is close to the
+opposite of whether it is worth reading. Measured on the corpus of 2026-08-28:
+
+| Confidence Band | Mentions | Mean Excerpt | Carries No Opinion |
+| --------------- | -------- | ------------ | ------------------ |
+| **≥ 0.95**      | 150      | 75.2 chars   | 14.0%              |
+| **0.80 – 0.95** | 1553     | 180.0 chars  | 8.2%               |
+
+A postal address is trivially extractable, so it scored highest and led. **82 of 243 venues (33.7%) led with an
+address-shaped excerpt**, and 160 of 243 (65.8%) led with under 60 characters. Reordering cut those to **28 (11.5%)**
+and **47 (19.3%)**; the remainder are venues where the corpus holds nothing better, which is
+[#25](https://github.com/TolongLabs/MakanLah/issues/25), not an ordering problem.
+
+The order is: does it argue anything (non-zero sentiment, ≥60 characters), then how close its sentiment sits to that
+venue's own mean, then `mention.id`. **Representative rather than flattering** — the lead is neither the angriest review
+nor the most glowing one, which is the only defensible answer to "why this excerpt and not another". The final key makes
+it total, so the same query returns the same excerpt twice running; the old ordering left ties to whatever Postgres
+returned.
+
+**This cost ranking a little, and the trade is deliberate.** The re-rank prompt embeds excerpts, so changing them
+changes what the model sees. Full eval, 3 repeats, against the previous baseline: **p@5 0.984 → 0.982**, **p95 4.66s →
+4.36s**, **top1 51/51 → 49/51**. The entire top1 loss is `matcha`. Pin lines name the venue and its dish, so they match
+a keyword query well while telling a reader nothing, and ranking was quietly leaning on that. Tracked as
+[#26](https://github.com/TolongLabs/MakanLah/issues/26).
+
 ---
 
 ## Model Lanes

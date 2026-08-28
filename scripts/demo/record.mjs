@@ -3,20 +3,41 @@
 //
 // Deliberately slow. Default automation types and clicks instantly, which reads
 // as fake, and the pauses on cited posts are the point of the product.
+//
+// Writes beats.json alongside the capture: the wall-clock offset of every moment
+// worth narrating. narrate.sh reads it, so narration lands on the beat even when
+// a page gets slower. Hand-tuned millisecond offsets drift the moment anything
+// upstream changes, and a narration that contradicts the picture is worse than
+// silence.
 
-import { mkdirSync, rmSync } from 'node:fs'
-import { chromium } from 'playwright'
+import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
-const WEB = 'http://localhost:5188'
-const API = 'http://127.0.0.1:8000'
-const OUT =
-  '/tmp/claude-1000/-home-user-Documents-TolongLabs-MakanLah/4964dd32-db7a-44dc-bbfa-966c1ec73068/scratchpad/capture'
+const DIR = process.env.DEMO_DIR || join(tmpdir(), 'makanlah-demo')
+const WEB = process.env.DEMO_WEB || 'http://localhost:5188'
+const API = process.env.DEMO_API || 'http://127.0.0.1:8000'
+const OUT = join(DIR, 'capture')
+
+// Playwright is installed into DEMO_DIR, not the repo -- it pulls a browser and has
+// no business in the app's dependency tree. Resolve it from there rather than
+// relying on this file's own location.
+const { chromium } = createRequire(join(DIR, 'resolve-from-here.cjs'))('playwright')
 
 rmSync(OUT, { recursive: true, force: true })
 mkdirSync(OUT, { recursive: true })
 
+const started = Date.now()
+const beats = []
+// A beat is a name and the offset it happened at. Recorded after the wait that
+// settles the frame, so it points at what the viewer is looking at.
+const mark = (name) => {
+  const ms = Date.now() - started
+  beats.push({ name, ms })
+  console.log(`  ${String(ms).padStart(6)}ms  ${name}`)
+}
 const beat = (page, ms) => page.waitForTimeout(ms)
-const log = (m) => console.log(`  ${m}`)
 
 const browser = await chromium.launch({ channel: 'chrome' })
 const ctx = await browser.newContext({
@@ -31,23 +52,25 @@ const errors = []
 page.on('pageerror', (e) => errors.push(String(e).slice(0, 120)))
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text().slice(0, 120)))
 
+let pairs = 0
+
 try {
   // 1. Landing. The ?api= is how this client is pointed at a backend; it is
   //    stored, so later navigations do not need it.
-  log('landing')
   await page.goto(`${WEB}/?api=${encodeURIComponent(API)}`, { waitUntil: 'networkidle' })
-  await beat(page, 2500)
+  await beat(page, 2200)
+  mark('landing')
   await page.mouse.wheel(0, 700)
-  await beat(page, 2000)
+  await beat(page, 2200)
   await page.mouse.wheel(0, 900)
-  await beat(page, 2000)
+  await beat(page, 2200)
   await page.mouse.wheel(0, -1600)
   await beat(page, 1200)
 
   // 2. The taste wizard. This is the thing that makes it not a search box.
-  log('taste wizard')
   await page.goto(`${WEB}/taste`, { waitUntil: 'networkidle' })
-  await beat(page, 2000)
+  await beat(page, 1800)
+  mark('taste')
 
   for (let step = 0; step < 6; step++) {
     // Options are <label class="option"> wrapping an sr-only checkbox or radio.
@@ -56,52 +79,73 @@ try {
     const n = await options.count()
     if (n > 0) {
       await options.nth(0).click()
-      await beat(page, 1000)
+      await beat(page, 900)
       // A second pick, but never the "Say It In My Own Words" escape hatch,
       // which opens a text field and stalls the flow.
       if (n > 2) {
         await options.nth(1).click()
-        await beat(page, 1000)
+        await beat(page, 900)
       }
     }
     const next = page.getByRole('button', { name: /Continue|Find Food/ })
     if (!(await next.isVisible().catch(() => false))) break
     const label = (await next.textContent())?.trim()
-    await beat(page, 800)
+    await beat(page, 700)
     await next.click()
-    await beat(page, 1200)
+    await beat(page, 1100)
     if (label === 'Find Food') break
   }
 
   // 3. Results. Hold on the evidence -- the cited post IS the product.
-  log('discover')
   await page.waitForURL(/discover/, { timeout: 20000 }).catch(() => {})
   await page.waitForLoadState('networkidle')
-  await beat(page, 3500)
+  await beat(page, 3200)
+  mark('discover')
   await page.mouse.wheel(0, 500)
   await beat(page, 3000)
   await page.mouse.wheel(0, 500)
   await beat(page, 3000)
 
-  // 4. A venue page and its citation trail.
-  log('venue')
+  // 4. Two platforms carrying the same venue, side by side. This is the single
+  //    strongest frame in the product and it did not render until #20 was fixed,
+  //    so assert it rather than assuming: a silent one-column fallback is exactly
+  //    the failure that shipped last time.
+  const twoUp = page.locator('.evidence-pair').filter({ has: page.locator('.testimony:nth-child(2)') })
+  pairs = await twoUp.count()
+  if (pairs > 0) {
+    await twoUp.first().scrollIntoViewIfNeeded()
+    await beat(page, 900)
+    mark('corroboration')
+    await beat(page, 4200)
+  }
+
+  // 5. A venue page and its citation trail.
   const firstResult = page.locator('a[href^="/r/"]').first()
   if (await firstResult.isVisible().catch(() => false)) {
     await firstResult.click()
     await page.waitForLoadState('networkidle')
-    await beat(page, 3500)
+    await beat(page, 2800)
+    mark('venue')
     await page.mouse.wheel(0, 600)
-    await beat(page, 3500)
-  } else {
-    log('  no venue link found, skipping')
+    await beat(page, 4000)
+    // The closing line is read over this. Scrolling through the rest of the trail
+    // keeps it moving rather than holding a dead frame under the narration.
+    await page.mouse.wheel(0, 500)
+    await beat(page, 5500)
   }
+  mark('end')
 } catch (e) {
   console.log(`  FAILED: ${String(e).slice(0, 200)}`)
 } finally {
   const video = page.video()
   await ctx.close()
   await browser.close()
-  if (video) console.log(`video: ${await video.path()}`)
+  if (video) {
+    renameSync(await video.path(), join(DIR, 'capture.webm'))
+    console.log(`video: ${join(DIR, 'capture.webm')}`)
+  }
+  writeFileSync(join(DIR, 'beats.json'), `${JSON.stringify(beats, null, 2)}\n`)
+  console.log(`corroboration pairs on screen: ${pairs}`)
   console.log(`console errors: ${errors.length}`)
   for (const e of errors.slice(0, 5)) {
     console.log(`  ! ${e}`)

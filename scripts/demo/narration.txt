@@ -1,9 +1,15 @@
-MakanLah recommends restaurants in Kuala Lumpur. Every pick shows the post it came from.
+# Narration, keyed to the beats record.mjs measures rather than to fixed
+# timestamps. Each line is: beat | offset_ms | text
+#
+# The offset is from that beat, so a page that gets slower moves the narration
+# with it. Hand-tuned absolute offsets drift the moment anything upstream
+# changes, and narration that contradicts the picture is worse than silence.
+#
+# Beats: landing, taste, discover, corroboration, venue, end.
 
-It doesn't start with a search box. It asks what you're craving, who you're with, and how far you're willing to go.
-
-Then it reads what people actually wrote. Real posts, from RedNote and Google Maps, in English, Malay and Chinese, often in the same sentence.
-
-Every result carries the words someone wrote. Not a generated summary. The post itself, quoted, with a link back to it.
-
-That's the difference. A recommendation you can check.
+landing       |  300 | MakanLah recommends restaurants in Kuala Lumpur. Every pick shows the post it came from.
+taste         |  200 | It doesn't start with a search box. It asks what you're craving, who you're with, and how far you're willing to go.
+discover      |  200 | Then it reads what people actually wrote. Real posts, from RedNote and Google Maps, in English, Malay and Chinese.
+corroboration |  400 | When two platforms carry the same place, both posts sit side by side. Nothing has to claim the sources agree. You can read them.
+venue         |  200 | Every result carries the words someone wrote. Not a generated summary. The post itself, with a link back to it.
+venue         | 5200 | That's the difference. A recommendation you can check.
