@@ -135,3 +135,14 @@ export function recommend(body: RecommendBody): Promise<RecommendResponse> {
 export function health(): Promise<Health> {
   return apiFetch<Health>('/health')
 }
+
+/**
+ * One venue's full citation trail. `rank`, `why` and `match` come back null by
+ * construction: nothing was ranked and nothing was matched, so the API declines to
+ * invent a position for a direct lookup. 404 means the venue carries no citations,
+ * which is not a result.
+ */
+export function venue(id: string, at?: { lat: number; lng: number }): Promise<Result> {
+  const q = at ? `?lat=${encodeURIComponent(at.lat)}&lng=${encodeURIComponent(at.lng)}` : ''
+  return apiFetch<Result>(`/venue/${encodeURIComponent(id)}${q}`)
+}

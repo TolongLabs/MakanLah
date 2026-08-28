@@ -65,6 +65,10 @@
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  /* WCAG 2.2 target size. A 21px tall nav link is a miss on a phone. */
+  min-height: 24px;
   text-decoration: none;
   color: var(--ink-soft);
   font-weight: 500;

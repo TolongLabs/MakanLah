@@ -72,7 +72,7 @@ Both themes are defined on tokens. Light is the base; dark redefines only the to
 
 | Role          | Face                               | Why                                                                                      |
 | ------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Chrome**    | Instrument Sans → system sans      | Ours: nav, labels, buttons, venue names, metadata. Has character; not Inter, not Grotesk |
+| **Chrome**    | Archivo → system sans              | Ours: nav, labels, buttons, venue names, metadata. Has character; not Inter, not Grotesk |
 | **Testimony** | Newsreader → Noto Serif SC → serif | Theirs: post excerpts, and nothing else                                                  |
 | **Numerals**  | Instrument Sans, tabular           | Distances and ranks must not shift width as they change                                  |
 
@@ -80,8 +80,13 @@ Both themes are defined on tokens. Light is the base; dark redefines only the to
 style sets `line-height: 1.75` — loose enough that a mixed EN/MS/ZH sentence does not crowd — and never sets
 `letter-spacing`, which mangles CJK.
 
-Scale, in `rem`: `0.75 · 0.8125 · 0.875 · 1 · 1.25 · 1.625 · 2.25`. Venue name at `1.25`, excerpt at `1`, metadata at
-`0.8125`.
+Scale, in `rem`: `0.75 · 0.8125 · 0.875 · 1 · 1.25 · 1.625 · 2.25 · 3.25`, then a fluid display step of
+`clamp(2.25, 6.4vw, 4.5)`. Venue name at `1.25`, excerpt at `1`, metadata at `0.8125`.
+
+**The two steps above `2.25` were added when the landing page was built**, because a hero set at the old ceiling reads
+as a paragraph rather than a headline, and scale contrast is most of what separates a designed page from a competent
+one. Neither adds a value between existing steps. The display step is capped at `4.5rem`: past roughly `6rem` a page is
+shouting rather than designing.
 
 ---
 
@@ -90,12 +95,18 @@ Scale, in `rem`: `0.75 · 0.8125 · 0.875 · 1 · 1.25 · 1.625 · 2.25`. Venue 
 **Hairlines, not cards.** Results are separated by a 1px `--rule`, not by shadow, radius or a filled panel. This is what
 stops it looking like every other recommendation app, and it puts the ink budget on the words.
 
-**Radius is near-zero and varies by role**, so it carries information instead of being a uniform coat: `0` on rules and
-result rows, `2px` on the search field, `999px` on the source chip only. Never one radius on every surface.
+**Radius is near-zero and varies by role**, so it carries information instead of being a uniform coat: `0` on rules,
+result rows and floating chrome, `2px` on anything you can type in or select, `999px` on the source chip only. Never one
+radius on every surface.
+
+The pill is the source chip's alone, and that is a rule with teeth: the wizard's floating island is the obvious second
+place a rounded shape wants to appear, and it stays square. The moment a pill means "floating panel" as well as "this
+came from somewhere", the accent shape stops carrying information.
 
 **Alignment is left.** Centre alignment is reserved for genuinely symmetric moments — the empty state and nothing else.
 
-**Spacing scale**, in `px`: `4 · 8 · 12 · 16 · 24 · 32 · 48 · 72`. Nothing between.
+**Spacing scale**, in `px`: `4 · 8 · 12 · 16 · 24 · 32 · 48 · 72 · 96 · 144`. Nothing between. The last two are section
+rhythm at desktop and are not used inside a component.
 
 ### Anatomy Of A Result
 
@@ -107,7 +118,27 @@ Ordered by visual weight, top to bottom:
 4. **The excerpt** — serif, `--ink`, the largest block on the row. **This is the row's centre of gravity**
 5. **Source chip** — `--enamel` on `--enamel-quiet`, naming the platform and author, linking to the live post
 
-**Why sits between 3 and 4**, one line, in chrome type. It is our claim, so it must not be dressed as testimony.
+**Why sits between 3 and 4**, one line, in chrome type. It is our claim, so it must not be dressed as testimony. When
+the API reports `match.basis`, a second faint line follows it saying why the entry is present at all. `semantic` is the
+one that earns its place: it means nothing the user typed appears anywhere in the post, and admitting that is worth a
+line.
+
+### Corroboration Is A Layout, Not A Label
+
+**When two platforms carry the same venue, both excerpts render side by side, each under its own source chip.** One
+platform, and the single excerpt runs full width.
+
+Nothing writes the words "two sources agree", because the reader can see it. This is the one place the design makes an
+argument Google Maps structurally cannot: two strangers, two platforms, often two languages, the same verdict. A caption
+asserting it would be weaker than the thing itself.
+
+Two posts from **one** platform is not corroboration. It is one source saying it twice, and it renders as one excerpt.
+`evidenceOf()` in `web/src/evidence.ts` is the single derivation, shared by the row, the venue page and the mascot, so
+the face and the layout can never disagree about what the corpus holds.
+
+The columns are keyed to the **container**, not the viewport. The same pair renders inside a full-width result row and
+inside the landing page's specimen, which is half as wide; a viewport query splits the specimen into two columns too
+narrow to read Chinese in.
 
 ---
 
@@ -143,6 +174,17 @@ Nothing visual is done until all four hold, and they get stated in the report:
 2. The `design-taste-frontend` pre-flight check passes
 3. Viewed at **360px**, not only in a wide editor pane
 4. TitleCase checked against **rendered** text, not source
+
+**Three and four are measurable, so measure them.** Driving headless Chrome over every route and reading back the
+computed styles catches what a screenshot does not: contrast against the actual composited background, tap targets under
+24px, and horizontal overflow. It found a real one that reading the CSS would not have. A source chip refuses to wrap,
+grid and flex items default to `min-width: auto`, and one long author handle was therefore setting the minimum width of
+the whole result row: at 390px the document measured 399.
+
+**A measuring script is code and can be wrong.** The same pass first reported the light theme failing contrast at
+1.16:1, which would have been invisible text. It was the checker: `color-mix()` serializes as `color(srgb 0.96 …)`, and
+the parser read 0-to-1 floats as 0-to-255. Confirm a finding against the rendered page before changing a token to
+satisfy it.
 
 **Test every string-bearing surface with all three languages, never lorem ipsum.** A Malay place name runs longer than
 its English gloss and Chinese glyphs have different metrics; a layout proven only in English is not proven.

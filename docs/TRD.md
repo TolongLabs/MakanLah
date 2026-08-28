@@ -237,6 +237,15 @@ POST /recommend
                  citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] } ],
     degraded: bool, degraded_reasons: [string], sources_used: [string] }
 
+POST /ask
+  { venue_id, question }
+→ { covered: bool, answer, venue,
+    citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] }
+
+GET  /venue/{id}?lat&lng
+→ one entry, same shape as a /recommend result. rank/why/match are null: nothing was ranked.
+  404 when the venue has no citations -- an entry that cannot be cited is not a result.
+
 GET  /health → { ok, corpus_size, oldest_capture, newest_capture }
 
 POST /auth/signup { email, password }  → { token, user }        409 if taken
@@ -282,6 +291,28 @@ it does not match, is worse than returning nothing — see [`Ranking`](#ranking)
 came from the re-rank, so a higher number could appear below a lower one. `match.basis` is one of `dish` (an alias hit
 on `mention.dishes`), `text` (lexical hit in an excerpt) or `semantic` (vector only), so the UI can say _why_ an entry
 is present rather than asserting a number.
+
+### The Copilot Never Introduces A Fact
+
+`/ask` answers one question about one venue **from that venue's stored excerpts, or not at all**. It routes, quotes and
+admits gaps.
+
+**`covered: false` is a correct answer, not a failure.** Saying the posts do not cover something is the honesty the
+citation trail exists to support, and it is the thing a maps product cannot do because it has no evidence trail to be
+honest about.
+
+Three enforcements, none of which trust the model:
+
+| Enforcement                                              | Why                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| A `covered` answer with no excerpt is downgraded         | The model does not get to assert grounding it did not use                              |
+| Excerpt indices outside the supplied range are dropped   | An invented index is a hallucinated citation by another name                           |
+| Citations are built from database rows                   | A model asked for a URL produces a plausible one. It is never parsed out of the answer |
+| `covered: false` **always** carries an empty `citations` | So a client renders the two states from one field, rather than inspecting both         |
+
+Like `/recommend`, `/ask` is **not gated by auth**. Its lane is configured separately from the re-rank
+(`COPILOT_MODEL`): re-rank is tuned for "pick 10 and write 12 words", while getting a citation wrong is worse than
+getting an ordering wrong.
 
 **The guest account is shared.** `/auth/guest` returns a session on a single row that every caller shares, so `user`
 carries `is_guest` and `shared: true` and the client must disclose that activity is visible to other guests **before**

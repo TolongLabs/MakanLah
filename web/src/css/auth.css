@@ -16,6 +16,9 @@
 .auth-alt {
   margin-top: var(--s5);
   font-size: var(--t-ms);
+  /* Loose, so the inline link inside the sentence is a comfortable target. WCAG 2.2
+     exempts links in a sentence from the 24px minimum; 15px is still mean on a phone. */
+  line-height: 1.9;
   color: var(--ink-soft);
 }
 

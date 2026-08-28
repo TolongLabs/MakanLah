@@ -46,6 +46,10 @@ class Settings:
     rerank_api_key: str | None
     rerank_model: str
     rerank_thinking: bool
+    copilot_base_url: str | None
+    copilot_api_key: str | None
+    copilot_model: str
+    copilot_thinking: bool
     nominatim_base_url: str
     nominatim_user_agent: str
     cors_origins: tuple[str, ...]
@@ -100,6 +104,23 @@ def settings() -> Settings:
         # 4.06/15.48/20.75s with it on and 1.04/2.02/2.26s with it off, same prompts.
         # A user is waiting on this lane, so it is off unless explicitly re-enabled.
         rerank_thinking=e('RERANK_THINKING', '').lower() in ('1', 'true', 'yes'),
+        # The copilot is its own lane, not a reuse of the re-rank one. Re-rank is
+        # tuned for "pick 10 and write 12 words"; the copilot answers a question
+        # from evidence, where getting a citation wrong is worse than getting an
+        # ordering wrong. Same free-quota snapshot, separately overridable.
+        copilot_base_url=(
+            e('HERMES_COPILOT_BASE_URL')
+            or (
+                e('DASHSCOPE_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1')
+                if e('DASHSCOPE_API_KEY')
+                else None
+            )
+            or 'https://openrouter.ai/api/v1'
+        ),
+        copilot_api_key=e('HERMES_API_KEY') or e('DASHSCOPE_API_KEY') or e('OPENROUTER_API_KEY'),
+        copilot_model=e('COPILOT_MODEL')
+        or ('qwen3.8-flash' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
+        copilot_thinking=e('COPILOT_THINKING', '').lower() in ('1', 'true', 'yes'),
         nominatim_base_url=e('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         nominatim_user_agent=e('NOMINATIM_USER_AGENT', 'MakanLah/0.1'),
         cors_origins=tuple(x for x in (e('CORS_ORIGINS', '') or '').split(',') if x) or ('*',),
