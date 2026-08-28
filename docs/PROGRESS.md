@@ -1,9 +1,9 @@
-# Progress — 2026-08-28 · agents can merge; citations now lead with testimony
+# Progress — 2026-08-28 · agents can merge; citations now carry testimony
 
-**`main` is at `5e48e98`.** Eight PRs merged today — #3, #5, #14, #17, #18, #23, #24, #27 — and no feature branches
-remain. **228 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather than on a branch:
-`/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the corpus and
-admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `4eafe26`.** Eleven PRs merged today — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30 — and no
+feature branches remain. **239 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather
+than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers
+from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
 **fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
@@ -161,8 +161,53 @@ Each was found by running something, not by reading code.
   without naming one
 - Growing the corpus is now one command: `ingest/capture_rednote.py --target N`, then `ingest/pipeline.py`
 
-**No open PRs, no feature branches.** Open issues: **#25** RedNote excerpts are pin lines · **#26** ranking leans on
-address text · **#16** p95 · **#15** 1,008 posts missing text · **#6** deploy.
+**No open PRs, no feature branches.** Open issues: **#25** RedNote pin-line excerpts · **#26** ranking leans on address
+text · **#31** two branches read as a duplicate · **#16** p95 · **#15** 1,008 posts missing text · **#6** deploy.
+
+**#6 is not a technical blocker.** `wrangler` is installed and already authenticated to the account hosting the Pages
+site. It stops on a **platform-terms question**, which `AUTONOMY.md` names as one of the four things that end a run:
+deploying means serving cached third-party excerpts publicly, and putting a live Neon credential into Cloudflare. Both
+are the owner's call. **This also blocks the LinkedIn post** — the demo points at `127.0.0.1:8000`, so a reader who
+clicks through today reaches a client with no backend.
+
+## The Citation Quality Pass, 2026-08-28 Evening
+
+Found by re-recording the demo. The corroboration pair #24 had just fixed put its first frame on camera, and the frame
+cited **a postal address against that venue's single most negative review**. Three PRs, each measured:
+
+| PR      | What                                                | Effect                                                  |
+| ------- | --------------------------------------------------- | ------------------------------------------------------- |
+| **#27** | Citations no longer ordered by `mention.confidence` | venues leading with an address **82 → 28** of 243       |
+| **#29** | Pin line stripped where testimony sits under it     | RedNote address-shaped **103 → 73**, leads **28 → 18**  |
+| **#30** | Extractor asks for the opinion, not the location    | new captures only, **6 better / 0 worse** on 15 sampled |
+
+**Confidence was an anti-signal.** It measures how easy the text was to extract, which is close to the opposite of
+whether it is worth reading: the ≥0.95 band averages **75 characters against 180**, and is nearly twice as likely to
+carry no opinion at all. An address is trivially extractable, so it won every time.
+
+**The problem was one platform.** RedNote excerpts average **55.9 characters against Google Maps' 196.8**, and **103 of
+317 are address-shaped against 5 of 1388**. That is the differentiating source — Google Maps reviews are a commodity —
+so the weak column was the one carrying the product's actual claim.
+
+**It cost ranking a little, deliberately.** Full eval: **p@5 0.984 → 0.982, p95 4.66s → 4.36s, top1 51/51 → 49/51**. The
+entire top1 loss is `matcha`. Pin lines name the venue and its dish, so ranking had been leaning on text the reader
+should never have seen (**#26**).
+
+**A language bias caught by its own test.** The "is there testimony left" threshold was a plain `len()`, and 30 CJK
+characters is a paragraph where 30 Latin characters is half a sentence. Weighting CJK double raised the repair count
+**22 → 30**, all eight recovered being Chinese testimony a character count was discarding.
+
+### The Next Step On #25, Scoped
+
+A replay over `ingest/pipeline.py` would fix most of the remaining 71. It reads the raw cache and touches no platform.
+**It is gated on two things, both measured rather than guessed:**
+
+1. **4 of 15 re-extract to an empty excerpt.** Honest — those posts give a name and a location and no verdict — but an
+   uncitable mention is dropped by the one invariant, so a replay would _shrink_ the corpus. Whether a venue with no
+   testimony should be recommendable is a product call
+2. **`repair_excerpt` puts the address back.** Its fallback windows on the **venue name**, which is what a pin line is
+   made of, so it undoes #30 exactly where the model did best. **Do this one first** or the replay's ceiling is lower
+   than it looks
 
 ## The Demo Video
 
