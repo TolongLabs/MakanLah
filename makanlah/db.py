@@ -119,6 +119,31 @@ def venue_dishes(con, venue_ids):
     return {r['venue_id']: r['dishes'] for r in rows}
 
 
+def venue_evidence(con, venue_id, limit=40):
+    """Everything the corpus actually says about one venue.
+
+    The copilot answers from these rows and nothing else. Ordered by confidence
+    so the strongest evidence survives a truncation rather than whatever the
+    planner happened to return first.
+    """
+    rows = con.execute(
+        """select m.excerpt, m.dishes, m.sentiment, m.confidence,
+                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw
+           from mention m join source_post p on p.id = m.post_id
+           where m.venue_id = %s and m.excerpt is not null
+           order by m.confidence desc nulls last
+           limit %s""",
+        (venue_id, limit),
+    ).fetchall()
+    return rows
+
+
+def venue_by_id(con, venue_id):
+    return con.execute(
+        'select id, name, area, city, lat, lng, place_id from venue where id = %s', (venue_id,)
+    ).fetchone()
+
+
 def venue_documents(con, only_missing_for=None):
     """The composite a venue is embedded from: name, aliases, dishes, excerpts.
 

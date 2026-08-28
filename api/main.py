@@ -15,7 +15,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from makanlah import auth, config, db, rank
+from makanlah import auth, config, copilot, db, rank
 
 # An outage is a connection that cannot be made. A ProgrammingError, a TypeError
 # or a KeyError is our own bug and must not be dressed up as one.
@@ -214,3 +214,33 @@ def put_prefs(body: Prefs, user=Depends(require_user)):
         prefs = db.set_prefs(con, user['id'], body.prefs)
         con.commit()
     return {'prefs': prefs}
+
+
+# --- Copilot -----------------------------------------------------------------
+
+
+class AskRequest(BaseModel):
+    venue_id: str = Field(min_length=1, max_length=64)
+    question: str = Field(min_length=1, max_length=300)
+
+
+@app.post('/ask')
+def ask(req: AskRequest):
+    """One question about one venue, answered from the corpus or not at all.
+
+    `covered: false` is a correct answer, not an error -- saying the posts do not
+    cover something is the honesty the citation trail exists to support. Like
+    /recommend, this is not gated by auth.
+    """
+    try:
+        out = copilot.ask(req.venue_id, req.question)
+    except CORPUS_UNREACHABLE as e:
+        return {'covered': False, 'answer': 'The corpus is unavailable.', 'citations': [], 'error': type(e).__name__}
+    except ValueError:
+        raise HTTPException(status_code=422, detail='That venue id is not valid.') from None
+
+    # The invariant, asserted at the boundary rather than trusted upstream: a
+    # covered answer carries evidence, or it is not covered.
+    if out['covered'] and not out['citations']:
+        out['covered'] = False
+    return out
