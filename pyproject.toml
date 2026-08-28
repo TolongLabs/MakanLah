@@ -26,6 +26,13 @@ exclude = ["data", "node_modules", ".venv", ".agents/skills", "docs/superpowers"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
 
+# B008 forbids a function call in an argument default, which is exactly how
+# FastAPI declares a dependency. These three are the framework's own idiom and
+# are evaluated once at import, so the rule's actual hazard -- a fresh mutable
+# per call -- does not apply. Naming them beats disabling B008 everywhere.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Query", "fastapi.Path", "fastapi.Body"]
+
 [tool.ruff.format]
 quote-style = "single"
 indent-style = "space"

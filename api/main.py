@@ -5,16 +5,17 @@ makanlah/ library and shares nothing at runtime.
 """
 
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import psycopg
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from makanlah import config, db, rank
+from makanlah import auth, config, db, rank
 
 # An outage is a connection that cannot be made. A ProgrammingError, a TypeError
 # or a KeyError is our own bug and must not be dressed up as one.
@@ -75,3 +76,141 @@ def recommend(req: RecommendRequest):
     # The invariant, asserted at the boundary rather than trusted upstream.
     out['results'] = [r for r in out['results'] if r.get('citations')]
     return out
+
+
+# --- Auth --------------------------------------------------------------------
+#
+# Auth persists preferences. It never gates /recommend: the product promises a
+# decision in under two minutes, and a login wall in front of search breaks that.
+
+RATE_LIMIT = {'login': (10, 300), 'guest': (20, 300), 'signup': (5, 3600)}
+_attempts: dict[tuple[str, str], list[float]] = {}
+
+
+def _rate_limit(bucket: str, request: Request) -> None:
+    """In-process, per-IP, sliding window.
+
+    Deliberately not durable: one API process today, and a limiter that needs
+    Redis to exist is a limiter nobody turns on. It stops credential stuffing
+    from one host, not a distributed attack -- say so rather than imply more.
+    """
+    limit, window = RATE_LIMIT[bucket]
+    now = time.time()
+    key = (bucket, request.client.host if request.client else 'unknown')
+    hits = [t for t in _attempts.get(key, []) if now - t < window]
+    if len(hits) >= limit:
+        raise HTTPException(status_code=429, detail='Too many attempts, try again shortly.')
+    hits.append(now)
+    _attempts[key] = hits
+
+
+class Credentials(BaseModel):
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=auth.MIN_PASSWORD, max_length=auth.MAX_PASSWORD)
+
+
+class Prefs(BaseModel):
+    prefs: dict = Field(default_factory=dict)
+
+
+def _shape(user, *, token=None):
+    out = {
+        'user': {
+            'id': str(user['id']),
+            'email': user['email'],
+            'is_guest': user['is_guest'],
+            # The guest is ONE row shared by everyone who signs in as it, so the
+            # client can and must say so before the click, not after.
+            'shared': bool(user['is_guest']),
+        }
+    }
+    if token:
+        out['token'] = token
+    return out
+
+
+def current_user(authorization: str | None = Header(default=None)):
+    """None when absent, unknown or expired. Callers that require a user raise 401."""
+    if not authorization or not authorization.lower().startswith('bearer '):
+        return None
+    with db.connect() as con:
+        return db.user_for_token(con, authorization.split(' ', 1)[1].strip())
+
+
+def require_user(user=Depends(current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail='Sign in to continue.')
+    return user
+
+
+@app.post('/auth/signup')
+def signup(body: Credentials, request: Request):
+    _rate_limit('signup', request)
+    if not auth.looks_like_email(body.email):
+        raise HTTPException(status_code=422, detail='That does not look like an email address.')
+    try:
+        pw_hash = auth.hash_password(body.password)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from None
+    with db.connect() as con:
+        user = db.create_user(con, email=body.email, password_hash=pw_hash)
+        if not user:
+            # Same shape as a successful call would NOT be: an address either is
+            # or is not free, and a signup form reveals that either way.
+            raise HTTPException(status_code=409, detail='That email is already registered.')
+        token = db.open_session(con, user['id'], hours=db.SESSION_DAYS * 24)
+        con.commit()
+    return _shape(user, token=token)
+
+
+@app.post('/auth/login')
+def login(body: Credentials, request: Request):
+    _rate_limit('login', request)
+    with db.connect() as con:
+        user = db.user_by_email(con, body.email)
+        # Verify against a throwaway hash when the address is unknown, so the
+        # response time does not separate "no such account" from "wrong password".
+        stored = (user or {}).get('password_hash') or auth.hash_password('x' * auth.MIN_PASSWORD)
+        if not user or not user['password_hash'] or not auth.verify_password(body.password, stored):
+            raise HTTPException(status_code=401, detail='Email or password is incorrect.')
+        token = db.open_session(con, user['id'], hours=db.SESSION_DAYS * 24)
+        con.commit()
+    return _shape(user, token=token)
+
+
+@app.post('/auth/guest')
+def guest(request: Request):
+    """ONE shared account. Everything done under it is visible to every other
+    guest, which is why `shared` is true and the session is short."""
+    _rate_limit('guest', request)
+    with db.connect() as con:
+        user = db.guest_user(con)
+        if not user:
+            raise HTTPException(status_code=503, detail='Guest access is unavailable.')
+        token = db.open_session(con, user['id'], hours=db.GUEST_SESSION_HOURS)
+        con.commit()
+    return _shape(user, token=token)
+
+
+@app.post('/auth/logout')
+def logout(authorization: str | None = Header(default=None)):
+    if authorization and authorization.lower().startswith('bearer '):
+        with db.connect() as con:
+            db.close_session(con, authorization.split(' ', 1)[1].strip())
+            con.commit()
+    return {'ok': True}
+
+
+@app.get('/auth/me')
+def me(user=Depends(require_user)):
+    with db.connect() as con:
+        prefs = db.get_prefs(con, user['id'])
+    return {**_shape(user), 'prefs': prefs}
+
+
+@app.put('/auth/prefs')
+def put_prefs(body: Prefs, user=Depends(require_user)):
+    with db.connect() as con:
+        prefs = db.set_prefs(con, user['id'], body.prefs)
+        con.commit()
+    return {'prefs': prefs}

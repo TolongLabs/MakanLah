@@ -352,3 +352,87 @@ def mark_extracted(con, post_id, model):
         'update source_post set extracted_with = %s, extracted_at = now() where id = %s',
         (model, post_id),
     )
+
+
+# --- Accounts, sessions and preferences (docs/TRD.md "API Contract") ----------
+#
+# Auth persists preferences; it never gates /recommend. Nothing below returns a
+# password hash or a raw token to a caller.
+
+SESSION_DAYS = 30
+GUEST_SESSION_HOURS = 12  # the guest credential is effectively public, so it expires fast
+
+
+def create_user(con, *, email, password_hash):
+    """None when the address is already taken, rather than raising: a duplicate
+    signup is an expected outcome of a public form, not an exceptional one."""
+    row = con.execute(
+        """insert into app_user (email, password_hash, is_guest) values (%s, %s, false)
+           on conflict (email) do nothing
+           returning id, email, is_guest, created_at""",
+        (email.strip().lower(), password_hash),
+    ).fetchone()
+    return row
+
+
+def user_by_email(con, email):
+    return con.execute(
+        'select id, email, password_hash, is_guest from app_user where email = %s',
+        (email.strip().lower(),),
+    ).fetchone()
+
+
+def guest_user(con):
+    return con.execute('select id, email, is_guest from app_user where is_guest limit 1').fetchone()
+
+
+def open_session(con, user_id, *, hours):
+    """Stores only the fingerprint. The caller holds the single copy of the token."""
+    from makanlah import auth
+
+    token = auth.new_token()
+    con.execute(
+        """insert into user_session (user_id, token_hash, expires_at)
+           values (%s, %s, now() + make_interval(hours => %s))""",
+        (user_id, auth.token_fingerprint(token), hours),
+    )
+    return token
+
+
+def user_for_token(con, token):
+    """None for absent, unknown or expired. The caller cannot tell which, deliberately."""
+    from makanlah import auth
+
+    if not token:
+        return None
+    return con.execute(
+        """select u.id, u.email, u.is_guest
+           from user_session s join app_user u on u.id = s.user_id
+           where s.token_hash = %s and s.expires_at > now()""",
+        (auth.token_fingerprint(token),),
+    ).fetchone()
+
+
+def close_session(con, token):
+    from makanlah import auth
+
+    con.execute('delete from user_session where token_hash = %s', (auth.token_fingerprint(token),))
+
+
+def purge_expired_sessions(con):
+    return con.execute('delete from user_session where expires_at <= now()').rowcount
+
+
+def get_prefs(con, user_id):
+    row = con.execute('select prefs from user_pref where user_id = %s', (user_id,)).fetchone()
+    return (row or {}).get('prefs') or {}
+
+
+def set_prefs(con, user_id, prefs):
+    row = con.execute(
+        """insert into user_pref (user_id, prefs, updated_at) values (%s, %s, now())
+           on conflict (user_id) do update set prefs = excluded.prefs, updated_at = now()
+           returning prefs""",
+        (user_id, json.dumps(prefs)),
+    ).fetchone()
+    return row['prefs']

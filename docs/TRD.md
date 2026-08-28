@@ -239,12 +239,33 @@ POST /recommend
 
 GET  /health → { ok, corpus_size, oldest_capture, newest_capture }
 
-POST /auth/signup { email, password }  → { token, user }
-POST /auth/login  { email, password }  → { token, user }
-POST /auth/guest  {}                   → { token, user }   user.is_guest, user.shared
-GET  /auth/me                          → { user, prefs }
+POST /auth/signup { email, password }  → { token, user }        409 if taken
+POST /auth/login  { email, password }  → { token, user }        401, one message for both failures
+POST /auth/guest  {}                   → { token, user }        user.is_guest, user.shared
+POST /auth/logout                      → { ok }
+GET  /auth/me                          → { user, prefs }        401 without a live token
 PUT  /auth/prefs  { prefs }            → { prefs }
 ```
+
+**Auth never gates `/recommend`.** The product promises a decision in under two minutes, and a login wall in front of
+search breaks that. Auth persists preferences; it does not guard the corpus. There is a test asserting search answers
+with no `Authorization` header and with a junk one.
+
+| Concern             | How                                                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Passwords**       | `hashlib.scrypt`, N=2^15 r=8 p=1, per-row salt. Parameters live **inside** each hash so they can be raised                               |
+| **Tokens**          | 32 random bytes, opaque, returned once. Only a SHA-256 fingerprint is stored, so a dump yields no sessions                               |
+| **Account probing** | An unknown address and a wrong password return the **same** 401, and the unknown path still runs a hash so timing does not separate them |
+| **Rate limits**     | Per IP, in process: login 10/5min, guest 20/5min, signup 5/hour                                                                          |
+| **Guest expiry**    | 12 hours, against 30 days for a real account — the guest credential is effectively public                                                |
+
+**`scrypt` rather than argon2id or bcrypt**: both need a C extension in the API image, and the standard library's scrypt
+is memory-hard and sufficient. `maxmem` must be passed explicitly — OpenSSL caps it at 32 MB by default, which these
+parameters sit exactly on, and every hash raises `memory limit exceeded` without it.
+
+**The rate limiter is in-process and not durable.** It stops credential stuffing from one host, not a distributed
+attack. That is a deliberate trade: one API process today, and a limiter that needs Redis to exist is a limiter nobody
+turns on.
 
 `prefs` is the `/taste` wizard's output and is **optional on every call** — a bare `query` must keep working, because
 auth never gates `/recommend`:
