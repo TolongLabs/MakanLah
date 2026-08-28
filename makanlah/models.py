@@ -35,8 +35,14 @@ Return ONLY a JSON object: {"venues": [...]}. Each venue:
   dishes      dishes named for this venue, as written. [] if none.
   sentiment   -1.0..1.0. The writer's attitude to THIS venue, not the post overall.
   price_band  1..4 if the post indicates price, else null.
-  excerpt     a VERBATIM span copied from the post, the span the extraction came
-              from. Never paraphrase, never translate. This is shown to users.
+  excerpt     a VERBATIM span copied from the post: the span where the writer
+              says something ABOUT this venue -- what they ate, what it was
+              like, why to go. Never paraphrase, never translate. This is shown
+              to users as the evidence for the recommendation.
+              A LOCATION LINE IS NOT AN EXCERPT. These posts open with a pin
+              line ("📍店名：香港楼") and put the opinion underneath; take
+              the opinion. Fall back to a location line ONLY if the post
+              genuinely says nothing else about this venue.
   confidence  0.0..1.0 that this is a real, orderable venue.
 
 Rules:
