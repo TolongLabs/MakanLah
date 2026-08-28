@@ -9,11 +9,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import psycopg
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from makanlah import config, db, rank
+
+# An outage is a connection that cannot be made. A ProgrammingError, a TypeError
+# or a KeyError is our own bug and must not be dressed up as one.
+CORPUS_UNREACHABLE = (psycopg.OperationalError, psycopg.InterfaceError)
 
 app = FastAPI(title='MakanLah API', version='0.1.0')
 
@@ -59,8 +64,12 @@ def recommend(req: RecommendRequest):
     before the response is built, never returned with a caveat."""
     try:
         out = rank.recommend(req.query, lat=req.lat, lng=req.lng, radius_m=req.radius_m, limit=req.limit)
-    except Exception as e:
-        # An empty, honest answer beats a 500. The UI says the corpus is unavailable.
+    except CORPUS_UNREACHABLE as e:
+        # An empty, honest answer beats a 500 when the corpus is genuinely away.
+        # Only for that: catching everything here reported a 5-placeholder/6-parameter
+        # bug as `degraded` for the life of the project, so the entire distance
+        # filter was dead in the client while the UI blamed the corpus (issue #13).
+        # A code fault raises, and CI and the logs get to see it.
         return {'results': [], 'degraded': True, 'sources_used': [], 'error': type(e).__name__}
 
     # The invariant, asserted at the boundary rather than trusted upstream.

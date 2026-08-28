@@ -140,22 +140,37 @@ def filter_candidates(con, *, lat=None, lng=None, radius_m=None, limit=400):
     bound was given — they stay rankable by preference, never deleted.
     """
     if lat is None or lng is None or not radius_m:
-        return [
-            r['id']
-            for r in con.execute(
-                'select id from venue where exists (select 1 from mention m where m.venue_id = venue.id) limit %s',
-                (limit,),
-            ).fetchall()
-        ]
+        # Ordered by evidence, not arbitrarily: `limit` truncates, and an
+        # unordered truncation returns a different 400 venues between calls,
+        # which makes a ranking complaint impossible to reproduce.
+        rows = con.execute(
+            """select v.id
+               from venue v
+               join (select venue_id, count(*) as n from mention group by venue_id) m
+                 on m.venue_id = v.id
+               order by m.n desc, v.id
+               limit %s""",
+            (limit,),
+        ).fetchall()
+        return [r['id'] for r in rows]
+    # The spherical law of cosines needs the query latitude TWICE and the query
+    # longitude once. The distance is computed in a subquery so the bound and the
+    # ordering can both reference it without restating it, and so the placeholder
+    # count is obvious: three for the position, one for the bound, one for limit.
     rows = con.execute(
-        """select id from venue
-           where lat is not null and lng is not null
-             and exists (select 1 from mention m where m.venue_id = venue.id)
-             and 6371000 * acos(least(1, greatest(-1,
-                   cos(radians(%s)) * cos(radians(lat)) * cos(radians(lng) - radians(%s))
-                 + sin(radians(%s)) * sin(radians(lat))))) <= %s
+        """select id from (
+             select v.id,
+                    6371000 * acos(least(1, greatest(-1,
+                        cos(radians(%s)) * cos(radians(v.lat)) * cos(radians(v.lng) - radians(%s))
+                      + sin(radians(%s)) * sin(radians(v.lat))))) as dist
+             from venue v
+             where v.lat is not null and v.lng is not null
+               and exists (select 1 from mention m where m.venue_id = v.id)
+           ) t
+           where t.dist <= %s
+           order by t.dist
            limit %s""",
-        (lat, lng, lng, lat, radius_m, limit),
+        (lat, lng, lat, radius_m, limit),
     ).fetchall()
     return [r['id'] for r in rows]
 

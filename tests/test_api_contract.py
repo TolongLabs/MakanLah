@@ -104,8 +104,10 @@ class TestFailureIsHonest:
     as zero results."""
 
     def test_a_corpus_failure_returns_degraded_rather_than_a_500(self, client, monkeypatch):
+        import psycopg
+
         def boom(*a, **k):
-            raise RuntimeError('neon unreachable')
+            raise psycopg.OperationalError('neon unreachable')
 
         monkeypatch.setattr(api_main.rank, 'recommend', boom)
         res = client.post('/recommend', json={'query': 'x'})
@@ -113,7 +115,22 @@ class TestFailureIsHonest:
         body = res.json()
         assert body['results'] == []
         assert body['degraded'] is True
-        assert body['error'] == 'RuntimeError'
+        assert body['error'] == 'OperationalError'
+
+    def test_a_bug_in_our_own_code_is_not_dressed_up_as_an_outage(self, client, monkeypatch):
+        """Catching every exception here hid issue #13 for the life of the project:
+        a 5-placeholder/6-parameter query raised ProgrammingError on every request
+        carrying a radius, and the client was told the corpus was unavailable."""
+        import psycopg
+
+        for exc in (psycopg.ProgrammingError('5 placeholders but 6 parameters'), TypeError('nope'), KeyError('lat')):
+
+            def boom(*a, _e=exc, **k):
+                raise _e
+
+            monkeypatch.setattr(api_main.rank, 'recommend', boom)
+            with pytest.raises(type(exc)):
+                client.post('/recommend', json={'query': 'x'})
 
     def test_degraded_is_passed_through_not_overwritten(self, client, monkeypatch):
         monkeypatch.setattr(
