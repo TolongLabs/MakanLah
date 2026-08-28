@@ -59,7 +59,7 @@ REVIEWS_JS = """JSON.stringify((() => {
     const body = n.querySelector('.MyEned, span[class*="wiI7pd"]');
     if (!id || !body) continue;
     // Defence in depth: strip the control's label if a click did not land.
-    const txt = (body.innerText || '').replace(/\s*(?:…|\.\.\.)\s*More\s*$/, '').trim();
+    const txt = (body.innerText || '').replace(/(?:\s*(?:…|\.\.\.)\s*|\s+)More\s*$/, '').trim();
     if (txt.length < 25) continue;
     const stars = n.querySelector('span[role="img"][aria-label*="star"]');
     seen[id] = {
