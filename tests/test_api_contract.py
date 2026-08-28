@@ -18,6 +18,14 @@ TestClient = fastapi_testclient.TestClient
 from api import main as api_main  # noqa: E402
 
 
+def _ranked_result(basis='semantic', dish=None):
+    r = _result()
+    r.pop('score', None)
+    r['rank'] = 1
+    r['match'] = {'basis': basis, 'dish': dish, 'similarity': 0.61}
+    return r
+
+
 @pytest.fixture
 def client():
     return TestClient(api_main.app)
@@ -186,3 +194,31 @@ class TestHealth:
         body = client.get('/health').json()
         assert set(body['configured']) == {'database', 'extract', 'embed', 'rerank'}
         assert all(isinstance(v, bool) for v in body['configured'].values())
+
+
+class TestTheShapeOfARankedEntry:
+    """No test asserted this, which is why `score` could report retrieval cosine
+    while the ORDER came from the re-rank -- a higher number sitting below a
+    lower one, visible in every response, caught by nothing."""
+
+    def _one(self, client, monkeypatch, result):
+        monkeypatch.setattr(
+            api_main.rank,
+            'recommend',
+            lambda *a, **k: {'results': [result], 'degraded': False, 'sources_used': ['rednote']},
+        )
+        return client.post('/recommend', json={'query': 'x'}).json()['results'][0]
+
+    def test_an_entry_reports_its_rank_not_a_similarity_number(self, client, monkeypatch):
+        r = self._one(client, monkeypatch, _ranked_result())
+        assert r['rank'] == 1
+        assert 'score' not in r, 'score reported retrieval cosine while ordering came from the re-rank'
+
+    def test_an_entry_says_why_it_is_present(self, client, monkeypatch):
+        r = self._one(client, monkeypatch, _ranked_result())
+        assert r['match']['basis'] in ('dish', 'text', 'semantic')
+
+    def test_a_dish_match_is_labelled_as_one(self, client, monkeypatch):
+        r = self._one(client, monkeypatch, _ranked_result(basis='dish', dish='bak kut teh'))
+        assert r['match']['basis'] == 'dish'
+        assert r['match']['dish'] == 'bak kut teh'

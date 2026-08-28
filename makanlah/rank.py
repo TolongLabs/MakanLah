@@ -12,6 +12,7 @@ distance wastes the index and returns a great match forty minutes away.
 import math
 
 from makanlah import config, db, models
+from makanlah.dishes import canonical, canonical_for_query
 from makanlah.text import normalize
 
 
@@ -85,6 +86,19 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         if not candidate_ids:
             return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 
+        # The lexical lane. It fires only when the WHOLE query names a dish, so
+        # a mood query stays on the semantic lane, which is what that lane is for.
+        #
+        # Measured justification: `curry mee` scored p@5 0.00 because 何九茶室
+        # carries 咖喱干拌面 and the vector lane never surfaced it, returning
+        # 东京咖喱油拌面 instead -- curry, and noodles, and not the dish asked
+        # for. An exact tag match finds the first; no embedding separates the second.
+        dish = canonical_for_query(query)
+        lexical = []
+        if dish:
+            tags = db.venue_dishes(con, candidate_ids)
+            lexical = [vid for vid, ds in tags.items() if any(canonical(d) == dish for d in ds)]
+
         try:
             qvec = models.embed([query])[0]
             hits = db.retrieve(con, qvec, candidate_ids, s.embed_model, k=retrieve_k)
@@ -95,6 +109,13 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
             # and let the re-rank do the ordering: worse ranking, but every entry
             # is still cited, which is the thing the product actually promises.
             ordered, scores = candidate_ids[:retrieve_k], {}
+
+        # A venue that literally serves the dish goes in front of the vector hits
+        # rather than replacing them: the re-rank still judges fit, and a venue
+        # tagged with a dish is not automatically the best place to eat it.
+        lexical_set = set(lexical)
+        if lexical_set:
+            ordered = lexical + [v for v in ordered if v not in lexical_set]
 
         enriched = db.venues_with_citations(con, ordered)
 
@@ -107,7 +128,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     picked = models.rerank(query, candidates, limit=limit)
 
     results = []
-    for idx, why in picked:
+    for position, (idx, why) in enumerate(picked, start=1):
         v = candidates[idx]
         results.append(
             {
@@ -120,7 +141,15 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     'maps_url': maps_url(v),
                     'dishes': v['dishes'][:6],
                 },
-                'score': round(float(scores.get(v['id'], 0.0)), 4),
+                # `rank` is the position the re-rank assigned. It replaces `score`,
+                # which reported retrieval cosine while the ORDER came from the
+                # re-rank, so a higher number could sit below a lower one.
+                'rank': position,
+                'match': {
+                    'basis': 'dish' if v['id'] in lexical_set else 'semantic',
+                    'dish': dish,
+                    'similarity': round(float(scores.get(v['id'], 0.0)), 4),
+                },
                 'why': why,
                 'distance_m': _distance_m(lat, lng, v['lat'], v['lng']),
                 'citations': v['citations'],

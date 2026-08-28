@@ -54,6 +54,11 @@ QUERIES = {
 MOOD = ['somewhere light for breakfast', '想吃辣的东西', 'tempat makan yang sedap dan murah']
 
 
+def _p95(values):
+    ordered = sorted(values)
+    return ordered[min(len(ordered) - 1, int(round(0.95 * (len(ordered) - 1))))]
+
+
 def score_one(query, truth, limit=10):
     t = time.perf_counter()
     out = rank.recommend(query, lat=LAT, lng=LNG, limit=limit)
@@ -111,7 +116,10 @@ def main():
         f'{args.label}:\n  mean p@5  {statistics.mean(all_p):.3f}\n'
         f'  mean fp@5 {statistics.mean(all_fp):.3f}  (opposite cuisine -- blind to the reported bug)\n'
         f'  mean wd@5 {statistics.mean(all_wd):.3f}  (tagged, but not with the dish asked for)\n'
-        f'  top1 correct {sum(all_top1)}/{len(all_top1)}   median {statistics.median(all_sec):.2f}s'
+        f'  top1 correct {sum(all_top1)}/{len(all_top1)}\n'
+        # PRD.md states p95 < 3s. Reporting a median against a p95 target hides
+        # the tail, which is the only part that target is about.
+        f'  latency median {statistics.median(all_sec):.2f}s  p95 {_p95(all_sec):.2f}s  max {max(all_sec):.2f}s'
     )
     print()
     print('unscored (no dish ground truth; reported so a regression in shape is visible):')

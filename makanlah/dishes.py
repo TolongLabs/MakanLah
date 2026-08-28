@@ -5,8 +5,14 @@ The corpus stores whatever the post said, so one dish arrives as `nasi lemak`,
 together with every other Malaysian dish; an exact match on the wrong casing
 misses them entirely. Grouping them is what makes a lexical lane possible.
 
-Kept deliberately small and hand-checked. This is ground truth for evals/ and
-the seed for the retrieval alias table in issue #7.
+Kept deliberately small and hand-checked. Used by evals/ as ground truth and by
+rank.py as the lexical lane.
+
+The lane earned its place by measurement, not argument. `curry mee` scored p@5
+0.00: 何九茶室 carries 咖喱干拌面 and never surfaced, while the vector lane
+returned 东京咖喱油拌面 -- Tokyo curry oil noodles, which is curry and noodles
+but is not the Malaysian dish. An exact tag match finds the first; no embedding
+distinguishes the second.
 """
 
 DISH_ALIASES = {
@@ -42,4 +48,25 @@ def canonical(dish):
         for f in forms:
             if f in d or d in f:
                 return key
+    return None
+
+
+def match_forms(dish_key):
+    """Every stored form of a canonical dish, for a lexical lookup."""
+    return DISH_ALIASES.get(dish_key, [])
+
+
+def canonical_for_query(query):
+    """The dish a query is asking for, or None.
+
+    Whole-query only: `bak kut teh` resolves, `somewhere nice for dinner` does
+    not, and neither does a sentence that merely mentions a dish in passing.
+    A vague query must stay on the semantic lane, which is what it is for.
+    """
+    q = (query or '').strip().lower()
+    if not q or len(q) > 40:
+        return None
+    for key, forms in DISH_ALIASES.items():
+        if q == key or q in [f.lower() for f in forms]:
+            return key
     return None

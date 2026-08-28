@@ -101,6 +101,24 @@ def upsert_embedding(con, venue_id, model, vector):
     )
 
 
+def venue_dishes(con, venue_ids):
+    """{venue_id: [dish, ...]} for a candidate set.
+
+    Canonicalisation stays in makanlah/dishes.py rather than being rewritten as
+    SQL. Two implementations of "is this the same dish" would drift, and the
+    eval ground truth depends on the answer matching exactly.
+    """
+    if not venue_ids:
+        return {}
+    rows = con.execute(
+        """select m.venue_id, array_agg(distinct d) as dishes
+           from mention m, unnest(m.dishes) d
+           where m.venue_id = any(%s) group by m.venue_id""",
+        (list(venue_ids),),
+    ).fetchall()
+    return {r['venue_id']: r['dishes'] for r in rows}
+
+
 def venue_documents(con, only_missing_for=None):
     """The composite a venue is embedded from: name, aliases, dishes, excerpts.
 
