@@ -64,3 +64,11 @@ docs/source/*.mp4
 docs/source/*.wav
 docs/source/*.m4a
 docs/source/*.webm
+
+# Playwright MCP scratch: snapshots and console logs from driving the browser
+.playwright-mcp/
+
+# Live2D model binaries. The LiveroiD moc3, textures and expressions are a BOOTH
+# download under the Live2D proprietary licence, and the texture alone is 31 MB.
+# Drop them in per web/public/models/README.md; the app runs without them.
+web/public/models/liveroid/

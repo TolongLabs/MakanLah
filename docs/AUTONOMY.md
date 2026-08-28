@@ -113,7 +113,7 @@ saying no.
 > exactly like success. **Confirm a check actually ran before treating it as a pass:** `gh pr checks <n> --watch`. An
 > absent verifier is the one case where self-merge is not authorized.
 
-Three rules that make this hold:
+Four rules that make this hold:
 
 1. **Never claim something works without having run it and read the output.** The `verification-before-completion` skill
    is not optional here — a self-report is not evidence, and [`SWARM.md`](SWARM.md#7-measurements) measured a worker
@@ -121,6 +121,26 @@ Three rules that make this hold:
 2. **Never merge a worker's output on its self-report.** Assert the artifact exists, then run the test the worker never
    saw
 3. **Never disable a check to go green.** Narrowing the change is always available; silencing the check is not
+4. **Never verify a fix with the fix's own definition.** A check that defines its own success will agree with itself
+   perfectly and prove nothing. Confirm against something the check does not own
+
+### A Check That Owns Its Own Definition Of Success
+
+**Rule 4 is the one that keeps happening**, and it does not look like a mistake while you are making it — the number
+comes back clean, so the work looks done. Three instances on 2026-08-28, two of them in the same session:
+
+| What Was Checked      | Why It Agreed With Itself                                                                            | What Actually Caught It        |
+| --------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------ |
+| **Ranking relevance** | The "wrong result" rule counted only the opposite cuisine, and the reported failure was same-cuisine | The owner, on a screen         |
+| **A text strip**      | Completeness was counted with the same regex that did the stripping, so it reported 0 with 295 left  | A deliberately different regex |
+| **Colour contrast**   | The checker misparsed `color-mix()`, reading 0-to-1 floats as 0-to-255                               | Probing computed values        |
+
+Each reported success. Each was wrong. **The thing that caught all three was checking against something the check did
+not own** — a different pattern, a direct probe, or a human looking at the rendered result.
+
+So when a check reports clean, ask what would have to be true for it to report clean _and_ be wrong. If the answer is
+"nothing, by construction", the check is measuring its own definition. **Write the second check first, from a different
+angle, before believing the first.**
 
 ### Unattended Mode
 

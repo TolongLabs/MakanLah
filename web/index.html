@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F7F7F4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12130F" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Where to eat in KL, with the post behind every pick." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Noto Serif SC is not optional. Newsreader carries no CJK, and without a serif
+         that does, Chinese excerpts fall back to a system sans and the whole
+         chrome-versus-testimony distinction collapses on the language the corpus is
+         richest in. Google Fonts subsets it by unicode-range, so a page with no
+         Chinese on it downloads none of it. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Noto+Serif+SC:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <title>MakanLah</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "MakanLah",
+  "short_name": "MakanLah",
+  "description": "Where to eat in KL, with the post behind every pick.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F4",
+  "theme_color": "#F7F7F4",
+  "icons": []
+}

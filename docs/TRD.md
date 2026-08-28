@@ -4,9 +4,9 @@
 and why, and never restates [`README.md`](README.md) — that is the outside reader's document, this one is for whoever
 implements against it.
 
-> **Status: pre-spike.** The corpus schema below is written against what a Xiaohongshu post is expected to contain. The
-> spike is what proves it. **Expect the schema to change once real data lands**, and change it — a schema that survives
-> contact with zero real records has not been validated, only asserted.
+> **Status: post-spike, 2026-08-27.** The schema below has met real records and changed where they broke it. What the
+> spike altered is listed in [What The Spike Changed](#what-the-spike-changed) at the end, with the reason for each.
+> Everything not listed there survived contact unchanged.
 
 ---
 
@@ -61,11 +61,12 @@ recommendation.
 | Column             | Type          | Notes                                                           |
 | ------------------ | ------------- | --------------------------------------------------------------- |
 | `id`               | `uuid` PK     |                                                                 |
-| `platform`         | `text`        | `xhs`, `google_maps`, `instagram`, … Never null                 |
+| `platform`         | `text`        | `rednote`, `google_maps`, `instagram`, … Never null. See below  |
 | `platform_post_id` | `text`        | Unique with `platform`. The dedup key across re-ingestion       |
 | `url`              | `text`        | Where a human verifies the citation. Never null                 |
 | `author_handle`    | `text`        | Attribution                                                     |
-| `posted_at`        | `timestamptz` | The post's own date. Nullable — many platforms hide it          |
+| `posted_at`        | `timestamptz` | Parsed date. **Usually null** — see `posted_at_raw`             |
+| `posted_at_raw`    | `text`        | Verbatim. RedNote renders `Feb 17` and `3 days ago`, no year    |
 | `captured_at`      | `timestamptz` | When we fetched it. Never null                                  |
 | `langs`            | `text[]`      | Detected, plural. A single-language column would erase the mix  |
 | `raw_text`         | `text`        | Verbatim. Never a translation or a summary                      |
@@ -101,18 +102,19 @@ one-request-per-second free service is adequate and no key is needed at request 
 The many-to-many, and the reason it exists: one post can name five restaurants, and one restaurant accumulates many
 posts.
 
-| Column            | Type          | Notes                                                         |
-| ----------------- | ------------- | ------------------------------------------------------------- |
-| `id`              | `uuid` PK     |                                                               |
-| `post_id`         | `uuid` FK     | → `source_post`, `on delete cascade`                          |
-| `venue_id`        | `uuid` FK     | → `venue`                                                     |
-| `dishes`          | `text[]`      | As named in the post, not translated                          |
-| `sentiment`       | `real`        | −1…1                                                          |
-| `price_band`      | `smallint`    | 1–4, nullable. Most posts do not say                          |
-| `excerpt`         | `text`        | The span the extraction came from. **What the UI shows**      |
-| `extractor_model` | `text`        | Which model produced this, so a bad run is revocable by model |
-| `extracted_at`    | `timestamptz` |                                                               |
-| `confidence`      | `real`        |                                                               |
+| Column            | Type          | Notes                                                            |
+| ----------------- | ------------- | ---------------------------------------------------------------- |
+| `id`              | `uuid` PK     |                                                                  |
+| `post_id`         | `uuid` FK     | → `source_post`, `on delete cascade`                             |
+| `venue_id`        | `uuid` FK     | → `venue`                                                        |
+| `dishes`          | `text[]`      | As named in the post, not translated                             |
+| `sentiment`       | `real`        | −1…1                                                             |
+| `price_band`      | `smallint`    | 1–4, nullable. Most posts do not say                             |
+| `excerpt`         | `text`        | The span the extraction came from. **What the UI shows**         |
+| `excerpt_origin`  | `text`        | `model` \| `repaired` \| `dropped`. How the excerpt was obtained |
+| `extractor_model` | `text`        | Which model produced this, so a bad run is revocable by model    |
+| `extracted_at`    | `timestamptz` |                                                                  |
+| `confidence`      | `real`        |                                                                  |
 
 `unique (post_id, venue_id)`.
 
@@ -133,10 +135,23 @@ venue; posts are evidence attached to it.
 
 ### The One Invariant
 
-> **Every ranked result joins to at least one `source_post` through `mention`.**
+> **1. Every ranked result joins to at least one `source_post` through `mention`.**
+>
+> **2. Every stored `excerpt` is a substring of its post's `raw_text`.**
 
-Checkable in SQL, so it is a test rather than a principle — and therefore a legitimate worker task under
+Both are checkable in SQL, so they are tests rather than principles — and therefore legitimate worker tasks under
 [`SWARM.md`](SWARM.md#4-worker-contract) §4.
+
+**The second invariant is enforced by a trigger, not by convention**, because the spike measured the extractor violating
+it. Asked for the verbatim span an extraction came from, the model returned text that read correctly and was **not in
+the post** — it had stitched non-contiguous lines together, dropping an opening-hours line between them. A fabricated
+quote behind a citation is worse than no citation, and the failure is invisible on inspection because the output reads
+well. `mention_excerpt_is_verbatim()` raises instead.
+
+The write path repairs before it reaches the trigger: an excerpt that is not a substring is re-anchored on the venue
+name to a real contiguous span (`repaired`), and if even that fails it is dropped and the citation falls back to the
+post link (`dropped`). **`excerpt_origin` records which happened**, so a bad extractor run is revocable by origin as
+well as by model.
 
 ---
 
@@ -167,11 +182,32 @@ preference once geocoding catches up.
 
 Split along the same seam as the runtimes, for the same reason.
 
-| Job         | Where                    | Why                                                                                                                                                  |
-| ----------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Extract** | ModelScope (Qwen)        | Batch, high volume, latency-tolerant. Qwen is strong on Chinese, and the corpus is Xiaohongshu. China-hosted latency is irrelevant when nobody waits |
-| **Embed**   | **Undecided**            | The one open row. Decide by measurement — see below                                                                                                  |
-| **Re-rank** | Hermes, interactive lane | A user is waiting. Never ModelScope: the latency that is free in batch is disqualifying here                                                         |
+| Job         | Where                                       | Why                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Extract** | **DashScope `qwen-plus-2025-07-28`**        | Batch, high volume, latency-tolerant. Qwen is strong on Chinese, and the corpus is RedNote. **ModelScope was the pre-spike assumption and no key for it exists**; the owner holds an International/Singapore DashScope key, which is also nearer KL |
+| **Embed**   | **DashScope `text-embedding-v3`**, 1024-dim | Decided by measurement, not argument. Free under the same key. See below                                                                                                                                                                            |
+| **Re-rank** | **DashScope `qwen3.8-flash`**, thinking off | A user is waiting, and this lane is ~96% of request latency                                                                                                                                                                                         |
+
+### Every Lane Is Pinned To A Dated Snapshot
+
+**The rolling aliases carry no free quota.** Measured against the ModelStudio console on 2026-08-28: `qwen-plus`,
+`qwen-turbo`, `qwen-flash` and `qwen3.7-flash` all read **No Free Quota / Not Supported**, while the dated snapshots
+carry **1,000,000 tokens each, expiring 2026-10-13**. An unpinned alias therefore moves onto a paid tier without
+anything in the repo changing, which is why each lane names a date.
+
+**`enable_thinking: false` is worth 9x on the interactive lane.** `qwen3.8-flash`, same prompts, same candidates:
+
+| Thinking | Latency, three queries    |
+| -------- | ------------------------- |
+| On       | 4.06s / 15.48s / 20.75s   |
+| **Off**  | **1.04s / 2.02s / 2.26s** |
+
+The qwen3 tier is not slow, it reasons by default. `RERANK_THINKING=1` re-enables it; nothing should, on a lane with a
+user waiting. Free-quota alternatives measured the same way: `qwen-plus-2025-07-28` 0.97/1.59/2.39s, `qwen-max`
+1.68/7.72/4.83s, `qwen3.5-122b-a10b` 30-38s and unusable.
+
+**Enable Stop-on-Exhaust in the console** so an exhausted lane returns `403 AllocationQuota.FreeTierOnly` rather than
+billing silently.
 
 ### The Embedding Decision
 
@@ -194,14 +230,93 @@ poorly in Malay has failed, not partly passed. Write the result to `superpowers/
 
 ```
 POST /recommend
-  { query, lat, lng, radius_m, budget?, cuisine?, limit? }
-→ { results: [ { venue: {id, name, area, lat, lng, maps_url},
-                 score, why,
+  { query, lat, lng, radius_m, prefs?, budget?, cuisine?, limit? }
+→ { results: [ { venue: {id, name, area, lat, lng, maps_url, dishes},
+                 rank, why, match: {basis, dish_hit, lexical, vector},
+                 distance_m,
                  citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] } ],
-    degraded: bool, sources_used: [string] }
+    degraded: bool, degraded_reasons: [string], sources_used: [string] }
 
-GET /health → { ok, corpus_size, oldest_capture, newest_capture }
+POST /ask
+  { venue_id, question }
+→ { covered: bool, answer, venue,
+    citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] }
+
+GET  /venue/{id}?lat&lng
+→ one entry, same shape as a /recommend result. rank/why/match are null: nothing was ranked.
+  404 when the venue has no citations -- an entry that cannot be cited is not a result.
+
+GET  /health → { ok, corpus_size, oldest_capture, newest_capture }
+
+POST /auth/signup { email, password }  → { token, user }        409 if taken
+POST /auth/login  { email, password }  → { token, user }        401, one message for both failures
+POST /auth/guest  {}                   → { token, user }        user.is_guest, user.shared
+POST /auth/logout                      → { ok }
+GET  /auth/me                          → { user, prefs }        401 without a live token
+PUT  /auth/prefs  { prefs }            → { prefs }
 ```
+
+**Auth never gates `/recommend`.** The product promises a decision in under two minutes, and a login wall in front of
+search breaks that. Auth persists preferences; it does not guard the corpus. There is a test asserting search answers
+with no `Authorization` header and with a junk one.
+
+| Concern             | How                                                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Passwords**       | `hashlib.scrypt`, N=2^15 r=8 p=1, per-row salt. Parameters live **inside** each hash so they can be raised                               |
+| **Tokens**          | 32 random bytes, opaque, returned once. Only a SHA-256 fingerprint is stored, so a dump yields no sessions                               |
+| **Account probing** | An unknown address and a wrong password return the **same** 401, and the unknown path still runs a hash so timing does not separate them |
+| **Rate limits**     | Per IP, in process: login 10/5min, guest 20/5min, signup 5/hour                                                                          |
+| **Guest expiry**    | 12 hours, against 30 days for a real account — the guest credential is effectively public                                                |
+
+**`scrypt` rather than argon2id or bcrypt**: both need a C extension in the API image, and the standard library's scrypt
+is memory-hard and sufficient. `maxmem` must be passed explicitly — OpenSSL caps it at 32 MB by default, which these
+parameters sit exactly on, and every hash raises `memory limit exceeded` without it.
+
+**The rate limiter is in-process and not durable.** It stops credential stuffing from one host, not a distributed
+attack. That is a deliberate trade: one API process today, and a limiter that needs Redis to exist is a limiter nobody
+turns on.
+
+`prefs` is the `/taste` wizard's output and is **optional on every call** — a bare `query` must keep working, because
+auth never gates `/recommend`:
+
+```
+prefs: { craving: [string], company: 'solo'|'couple'|'family'|'group',
+         range_m: int, mood: 'adventurous'|'comfort', budget: 'cheap'|'mid'|'splurge' }
+```
+
+**`results` may be shorter than `limit`, including empty.** Returning a venue that does not match, with prose conceding
+it does not match, is worse than returning nothing — see [`Ranking`](#ranking).
+
+`rank` is the position the re-rank assigned. It replaces the old `score`, which reported retrieval cosine while ordering
+came from the re-rank, so a higher number could appear below a lower one. `match.basis` is one of `dish` (an alias hit
+on `mention.dishes`), `text` (lexical hit in an excerpt) or `semantic` (vector only), so the UI can say _why_ an entry
+is present rather than asserting a number.
+
+### The Copilot Never Introduces A Fact
+
+`/ask` answers one question about one venue **from that venue's stored excerpts, or not at all**. It routes, quotes and
+admits gaps.
+
+**`covered: false` is a correct answer, not a failure.** Saying the posts do not cover something is the honesty the
+citation trail exists to support, and it is the thing a maps product cannot do because it has no evidence trail to be
+honest about.
+
+Three enforcements, none of which trust the model:
+
+| Enforcement                                              | Why                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| A `covered` answer with no excerpt is downgraded         | The model does not get to assert grounding it did not use                              |
+| Excerpt indices outside the supplied range are dropped   | An invented index is a hallucinated citation by another name                           |
+| Citations are built from database rows                   | A model asked for a URL produces a plausible one. It is never parsed out of the answer |
+| `covered: false` **always** carries an empty `citations` | So a client renders the two states from one field, rather than inspecting both         |
+
+Like `/recommend`, `/ask` is **not gated by auth**. Its lane is configured separately from the re-rank
+(`COPILOT_MODEL`): re-rank is tuned for "pick 10 and write 12 words", while getting a citation wrong is worse than
+getting an ordering wrong.
+
+**The guest account is shared.** `/auth/guest` returns a session on a single row that every caller shares, so `user`
+carries `is_guest` and `shared: true` and the client must disclose that activity is visible to other guests **before**
+the sign-in, not after.
 
 `citations` is **never empty**. An entry that cannot be cited is dropped before the response is built, not returned with
 a caveat.
@@ -223,13 +338,45 @@ discover → fetch → store raw → extract → resolve venue → geocode → e
 Each stage is **resumable and idempotent**, keyed on `(platform, platform_post_id)`. A stage that fails records the
 failure and continues the batch — never aborts it ([`AUTONOMY.md`](AUTONOMY.md#standing-operational-defaults)).
 
-| Stage             | Notes                                                                                                                 |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Fetch**         | Firecrawl for open web; CDP against the signed-in Chrome profile for Xiaohongshu                                      |
-| **Store raw**     | Before extraction, always. A schema change must never require re-scraping                                             |
-| **Extract**       | One prompt handling all three languages. Never a per-language path                                                    |
-| **Resolve venue** | Match on `name_normalized` and proximity. Ambiguity creates a new venue — merging is safe later, a wrong merge is not |
-| **Geocode**       | Nominatim, one request per second, contact address in the User-Agent per its usage policy                             |
+| Stage             | Notes                                                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fetch**         | CDP against the signed-in Chrome for RedNote and for Google Maps. Firecrawl stays for open-web fallbacks                                                      |
+| **Store raw**     | Before extraction, always. A schema change must never require re-scraping                                                                                     |
+| **Extract**       | One prompt handling all three languages. Never a per-language path                                                                                            |
+| **Resolve venue** | Match on `name_normalized` and proximity. Ambiguity creates a new venue — merging is safe later, a wrong merge is not                                         |
+| **Geocode**       | **Google Maps over CDP**, which needs no key. Nominatim is the fallback, one request per second with a contact address in the User-Agent per its usage policy |
+| **Merge**         | Venues sharing a Google `place_id` are merged. Nothing else is accepted as evidence                                                                           |
+
+### Two Sources, Neither Load-Bearing
+
+| Source          | Carries                                           | Auth                                 |
+| --------------- | ------------------------------------------------- | ------------------------------------ |
+| **RedNote**     | Long-form posts, often naming many venues at once | A signed-in Chrome profile, over CDP |
+| **Google Maps** | Per-venue reviews, coordinates, `place_id`        | **None.** No API key, no billing     |
+
+This is [`PRODUCT.md`](PRODUCT.md#data-sources)'s design rule made real, and it is about uptime rather than legal cover.
+**Prefer a fallback that needs no session**: a second login-walled source doubles the surface that can expire unattended
+without doubling the resilience.
+
+**Maps review sentiment comes from the star rating, not from a model.** The rating is the writer's judgement stated
+numerically, so inferring it from prose would be less accurate and cost a call per review. A review with no readable
+rating stores `null`, never `0` — null means unknown, zero means the writer was ambivalent, and collapsing the two makes
+missing data look like a judgement.
+
+### Merging Venues
+
+`venue` deliberately creates a new row on ambiguity, because merging later is safe and a wrong merge is not. **A shared
+Google `place_id` is the only accepted evidence** for the merge — it is not a guess, it is Google stating two names
+resolve to one establishment.
+
+**Name similarity is explicitly not evidence.** `Village Park` and `Village Park Nasi Lemak` look mergeable and may be
+two businesses at one address. Those are collapsed by the ranking layer for a single response, which is reversible,
+rather than in the corpus, which is not.
+
+The merge order matters and is pinned by tests: conflicting mentions are deleted before re-pointing, or the
+`(post_id, venue_id)` unique key aborts the merge; the venue row is dropped last, or its mentions cascade away before
+they can be moved; and embeddings are dropped on both sides, because the survivor's document changed and a stale vector
+would rank it on pre-merge text.
 
 **Rate limiting and caching are the durable answers, not evasion** ([`AGENTS.md`](../AGENTS.md#critical-do-nots)).
 Collect modestly, cache hard, and keep the whole thing easy to turn off.
@@ -270,12 +417,82 @@ Two consequences worth stating, because they are what make the MVP cheap:
 
 ## Open Rows
 
-| Row                    | Resolved By                                                            |
-| ---------------------- | ---------------------------------------------------------------------- |
-| **Embedding model**    | The three-language retrieval test above                                |
-| **Corpus volume**      | The spike. Determines whether the schema needs partitioning at all     |
-| **Fallback sources**   | Which platforms carry enough KL signal. Prefer ones needing no session |
-| **Ingestion schedule** | After the first full run gives a wall-clock number                     |
+| Row                    | State                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Embedding model**    | **Closed.** `text-embedding-v3`, 1024-dim. en 8/8 · ms 7/8 · zh 8/8, with the sample-size caveat recorded    |
+| **Corpus volume**      | **Closed for now.** 50 posts → 137 venues, 150 mentions. Far too small to need partitioning                  |
+| **Fallback sources**   | **Open.** Google Maps reviews work over CDP with no key and carry coordinates. Reddit serves a bot challenge |
+| **Ingestion schedule** | **Open.** 50 posts took ~35 min wall-clock, dominated by page settle time, not by the models                 |
+
+---
+
+## What The Spike Changed
+
+**50 posts, captured 2026-08-27.** A redacted 14-post fixture set is in [`source/`](source/). The full result:
+
+| Field         | Coverage | Note                                                        |
+| ------------- | -------- | ----------------------------------------------------------- |
+| **Name**      | 137/137  | Every venue row is named. Chinese and Latin scripts both    |
+| **Sentiment** | 150/150  | 100%. The extractor always forms a judgement                |
+| **Excerpt**   | 150/150  | 147 verbatim, **3 repaired**, 0 dropped                     |
+| **Dish**      | 93/150   | 62%. A listicle often gives a verdict without naming a dish |
+| **Location**  | 45/137   | **33%. The weak stage** — see Geocoding below               |
+
+Extraction: **50/50 posts, 0 failures.** 16 posts named no venue at all; those are video-first posts whose description
+carries no restaurant name, and returning zero is the correct answer for them.
+
+Languages, per post: **36 Chinese only · 6 Chinese+Malay · 5 Chinese+English · 3 all three.** The corpus is
+overwhelmingly Chinese, which makes the multilingual embedding decision load-bearing rather than theoretical — a
+retrieval stack weak on Chinese would fail on 100% of this corpus, and one weak on Malay fails on 18% of it silently.
+
+### The Six Changes
+
+| Change                                                | Because                                                                                                                                                                                               |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `platform` is **`rednote`**, not `xhs`                | `rednote.com` and `xiaohongshu.com` serve the same content behind **separate sessions**. On the spike machine the first was signed in and the second was not. The host is the identity, not the brand |
+| Added **`posted_at_raw`**                             | RedNote renders `Feb 17` and `3 days ago` — no year. Parsing is lossy and re-parsing from a stored string is free                                                                                     |
+| Added **`mention.excerpt_origin`**                    | The excerpt may be the model's, repaired, or absent. Without this, a bad extractor run is not revocable by origin                                                                                     |
+| Added the **excerpt substring invariant**             | Measured: the extractor returned excerpts that were not in the post                                                                                                                                   |
+| **`venue_embedding` is keyed on `(venue_id, model)`** | Embeddings from two models never compare. One column keyed only by venue silently mixes incomparable vectors                                                                                          |
+| **DashScope replaces ModelScope**                     | No ModelScope key exists; the owner has an International/Singapore DashScope key. Nearer KL, and OpenAI-compatible so only the base URL changed                                                       |
+
+### Source Health
+
+`ingest_run` records one row per platform per attempt and `source_status` is the last outcome per platform. Without it
+`degraded` can only be hardcoded `false`, **which is worse than omitting the field** — the UI then promises an honesty
+it cannot deliver.
+
+A run that dies mid-batch leaves `ok` null and reads as "did not finish", never as a pass. This is the same rule
+[`AUTONOMY.md`](AUTONOMY.md#verification-replaces-the-human) states about CI: an absent verifier must not look like
+success.
+
+`source_health()` never raises. A health check that failed closed would mark every request degraded, which is the same
+lie in the other direction.
+
+`media_urls` stays in the schema but is **empty in practice**: RedNote image URLs carry per-request signatures that
+expire, so storing them would persist a credential and a dead link. `raw_payload` keeps the image count instead.
+
+### Geocoding Is The Weak Stage
+
+[`CREDENTIALS.md`](CREDENTIALS.md#geocoding-and-what-it-does-not-need) said to move to Google Places only if Nominatim's
+match rate on mixed-language Malaysian restaurant names proved poor, and **to measure it rather than assume it**.
+Measured: **33%.**
+
+The misses are overwhelmingly Chinese-only venue names, which OpenStreetMap does not carry for KL. A Klang Valley
+bounding box rejects out-of-region matches, because Nominatim will otherwise resolve a bare Chinese restaurant name to
+somewhere in China — **a wrong coordinate is worse than a null one**, since a null venue is merely unrankable by
+distance while a wrong one is confidently misplaced.
+
+Two options, neither taken yet because both cost something:
+
+- **Google Places** — needs a Cloud project with billing enabled even inside the free tier, so it is a hard stop under
+  [`AUTONOMY.md`](AUTONOMY.md#what-still-stops-you) #1 until someone funds it
+- **Google Maps place search over CDP** — no key at all, and the place URL embeds coordinates as `!3d<lat>!4d<lng>`.
+  Proven working during the spike. It is a scrape rather than an API, so it belongs behind the same rate limiting and
+  caching as any other source
+
+**Venues with null coordinates are excluded from distance-filtered queries, not deleted.** At a 33% match rate that
+exclusion is most of the corpus, so the default search is KL-wide and distance is opt-in.
 
 Everything else in [`PRODUCT.md`](PRODUCT.md#open-decisions) is closed, with the reasoning in
 [`AUTONOMY.md`](AUTONOMY.md#pre-authorized-defaults).

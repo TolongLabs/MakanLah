@@ -71,7 +71,10 @@ do_verify() {
 
   # Chrome 111+ answers GET /json/new with "Using unsafe HTTP verb GET" rather
   # than an empty body, so a GET-first fallback never fires. PUT is the only verb.
-  local probe='https://www.xiaohongshu.com/search_result?keyword=%E5%90%89%E9%9A%86%E5%9D%A1%E7%BE%8E%E9%A3%9F'
+  # rednote.com, not xiaohongshu.com. The two hosts serve the same content behind
+  # SEPARATE sessions (docs/CREDENTIALS.md), and ingest/rednote.py targets .com.
+  # Probing the other host reports "logged out" for a session ingestion never uses.
+  local probe='https://www.rednote.com/search_result?keyword=%E5%90%89%E9%9A%86%E5%9D%A1%E7%BE%8E%E9%A3%9F'
   local tab
   tab=$(curl -s -m 10 -X PUT "http://127.0.0.1:$PORT/json/new?$probe" 2>/dev/null)
   local tid; tid=$(echo "$tab" | grep -o '"id": *"[^"]*"' | head -1 | cut -d'"' -f4)
@@ -80,7 +83,13 @@ do_verify() {
   local tabs; tabs=$(cdp /json)
   if [[ -z "$tabs" ]]; then bad "CDP stopped responding"; return 1; fi
 
-  python3 - "$tabs" "$PORT" <<'PY_INNER'
+  # Ambient python3 has no websockets, which made verify warn and assert nothing —
+  # the same silent-pass failure the content check exists to prevent. Prefer uv.
+  local -a runner
+  if command -v uv >/dev/null 2>&1; then runner=(uv run --quiet --with websockets python -)
+  else runner=(python3 -); fi
+
+  "${runner[@]}" "$tabs" "$PORT" <<'PY_INNER'
 import json, sys, urllib.request
 
 try:
@@ -89,9 +98,9 @@ except Exception:
     print("  \033[31mfail\033[0m  could not parse the CDP tab list"); raise SystemExit(1)
 port = sys.argv[2]
 
-hits = [t for t in tabs if "xiaohongshu.com/search_result" in (t.get("url") or "")]
+hits = [t for t in tabs if "rednote.com/search_result" in (t.get("url") or "")]
 if not hits:
-    print("  \033[31mfail\033[0m  no xiaohongshu search tab opened"); raise SystemExit(1)
+    print("  \033[31mfail\033[0m  no rednote search tab opened"); raise SystemExit(1)
 t = hits[0]
 print(f"  title: {(t.get('title') or '')[:90]}")
 
