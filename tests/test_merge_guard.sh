@@ -31,6 +31,13 @@ want 2 "gh pr merge --merge" "a merge with no PR number"
 want 2 "gh pr merge 21 --merge --admin" "--admin, which bypasses branch protection"
 want 2 "rtk gh pr merge 21 --merge" "an rtk-prefixed merge is still matched"
 
+# Known and deliberate: the guard matches the phrase anywhere in the command, so
+# prose containing it is blocked too. Narrowing to a command position needs shell
+# parsing a hook cannot do, and a miss is an unguarded merge. Asserted here so the
+# behaviour is a documented trade rather than a surprise at 2am.
+want 2 "echo 'the gh pr merge deny was replaced by a hook' > notes.md" \
+  "prose mentioning the phrase is blocked, which is the safe side of the trade"
+
 if gh auth status >/dev/null 2>&1; then
   want 2 "gh pr merge 999999 --merge" "a PR that does not exist"
   merged=$(gh pr list --state merged --limit 1 --json number --jq '.[0].number' 2>/dev/null || true)

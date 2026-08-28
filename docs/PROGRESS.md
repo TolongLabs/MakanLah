@@ -1,13 +1,18 @@
-# Progress — 2026-08-28 · everything merged to main
+# Progress — 2026-08-28 · agents can merge; citations now lead with testimony
 
-**`main` is at `e644755` and carries all of it.** Five PRs merged today — #3, #5, #14, #17, #18 — and no feature
-branches remain. **220 Python tests, 71 web tests, lint and format clean, CI green.** Verified on `main` rather than on
-a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the
-corpus and admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `5e48e98`.** Eight PRs merged today — #3, #5, #14, #17, #18, #23, #24, #27 — and no feature branches
+remain. **228 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather than on a branch:
+`/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the corpus and
+admits a gap, `/auth/guest` reports `shared: true`.
 
-**Ranking is measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.984, wd@5 0.000, top1
-51/51**, up from 0.780 and 47-of-51. **p95 is 4.66s against the 3s target in [`PRD.md`](PRD.md)** — bounded
-deliberately, not met, and the trade is written up in [`TRD.md`](TRD.md). Tracked as **#16**.
+**Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
+**fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
+CLEAN, and refuses `--admin`. Nine cases in `tests/test_merge_guard.sh`. **The first autonomous merge was #27.** The
+hook takes effect only after a session restart — the harness caches permissions at start.
+
+**Ranking is measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.982, wd@5 0.000, top1
+49/51, p95 4.36s** — see the excerpt-ordering trade below, which cost 2 top1 and bought back 0.3s. **p95 is still
+measured against a 3s target in [`PRD.md`](PRD.md)** and still not met, deliberately. Tracked as **#16**.
 
 **A full eval run costs ~134k tokens**, 13% of a lane's free allowance, which does not refill before it expires on
 **2026-10-13**. The runner prints the bill before spending it; use `--quick` while iterating.
@@ -31,7 +36,7 @@ session produced.**
 
 ---
 
-## Five Things Found By Measuring, 2026-08-28
+## Six Things Found By Measuring, 2026-08-28
 
 1. **The reported ranking bug was the model, not the architecture.** `bak kut teh` returning 首都茶室 and 何九茶室 was
    blamed on venue-level embeddings. Measured A/B: `qwen-turbo` scores **p@5 0.20 / wd@5 0.40** and reproduces the
@@ -48,6 +53,12 @@ session produced.**
    being read
 5. **Nothing asserted the response shape.** `score` reported retrieval cosine while the ORDER came from the re-rank, so
    a higher number could sit below a lower one — in every response, caught by no test. Now `rank` + `match.basis`
+6. **Citations led with a postal address, 82 times out of 243.** Both citation queries ordered by `mention.confidence`,
+   which measures how easy the text was to extract — close to the opposite of whether it is worth reading. The ≥0.95
+   band averages **75 characters against 180** for the band below, and is nearly twice as likely to carry no opinion.
+   Found by re-recording the demo: the hero frame cited an address against that venue's single most negative review.
+   Fixed in #27; address-shaped leads **82 → 28**. It cost **top1 51/51 → 49/51**, all of it `matcha` — pin lines name
+   the venue and its dish, so ranking had been leaning on text the reader should never have seen (**#26**)
 
 **Start the API:** `scripts/dev-api.sh`. **Point the live page at it:** append `?api=<url>`.
 
@@ -101,10 +112,6 @@ and also returns the `place_id` that makes venue merging evidence-based rather t
 
 ## Blocked, Needing A Human
 
-- **Agents still cannot merge.** `gh pr merge` is a hard deny in the committed `.claude/settings.json`, and
-  `settings.local.json` cannot override it, so `scripts/unattended.sh on` reports success without working. The owner
-  merged today's five PRs by hand. **#4** asks for the narrower mechanism: allow merge only on green CI. Never routed
-  around — routing around a deny is the guard failing
 - **API not deployed.** Fly has no free allowance and the card is unfunded. `fly.toml` and `Dockerfile` are written; it
   is one `flyctl deploy` at roughly USD 2-3/month. **#6**
 - **1008 Google Maps posts are missing their text.** The scrape read reviews collapsed behind Google's own control. The
@@ -154,4 +161,18 @@ Each was found by running something, not by reading code.
   without naming one
 - Growing the corpus is now one command: `ingest/capture_rednote.py --target N`, then `ingest/pipeline.py`
 
-**Branches:** `feat/xhs-spike` (PR #3) → `feat/app-scaffold` (PR #5, stacked). **Merge #3 first.**
+**No open PRs, no feature branches.** Open issues: **#25** RedNote excerpts are pin lines · **#26** ranking leans on
+address text · **#16** p95 · **#15** 1,008 posts missing text · **#6** deploy.
+
+## The Demo Video
+
+`scripts/demo/` records, narrates and muxes it — Playwright, Piper, ffmpeg, all local and free.
+**`makanlah-demo-v2.mp4`, 55.4s, 1920×1080, 2.4 MB**, sitting beside the repo rather than in it (`.mp4` is gitignored).
+
+Narration keys to beats `record.mjs` **measures** and writes to `beats.json`, not to hand-tuned offsets that drift the
+moment a page gets slower. `record.mjs` also **asserts the corroboration pair is on screen** and prints the count, so a
+run that re-records the #20 bug says so instead of looking fine.
+
+**What it still cannot show:** `/ask` is API-only, so the strongest moment in the product — the copilot answering
+`covered: false` — is unfilmable. And the RedNote column of the corroboration pair is still a pin line (**#25**), which
+ordering cannot fix because the corpus holds nothing better for that venue.
