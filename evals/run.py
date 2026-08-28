@@ -83,7 +83,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--label', default='baseline')
     ap.add_argument('--repeats', type=int, default=REPEATS)
+    ap.add_argument('--quick', action='store_true', help='one repeat, dish queries only (~43k tokens)')
     args = ap.parse_args()
+    repeats = 1 if args.quick else args.repeats
+
+    # This is not free. One full run is ~134k tokens against a 1,000,000-token
+    # free quota that does not refill until it expires, so a careless afternoon
+    # of re-runs is most of a month's allowance. Print the bill BEFORE spending it.
+    queries = sum(len(v) for k, v in QUERIES.items() if k in TRUTH)
+    calls = queries * repeats + (0 if args.quick else len(MOOD))
+    print(f'{calls} model calls, roughly {calls * 2500:,} tokens. Ctrl-C now if that is not intended.\n')
 
     print(f'{"query":26} {"lang":5} {"p@5":>12} {"fp@5":>6} {"wd@5":>6} {"top1":>6} {"n":>7} {"sec":>6}')
     print('-' * 82)
@@ -93,7 +102,7 @@ def main():
             continue
         for q in queries:
             lang = 'zh' if any('一' <= c <= '鿿' for c in q) else 'en'
-            runs = [score_one(q, TRUTH[dish]) for _ in range(args.repeats)]
+            runs = [score_one(q, TRUTH[dish]) for _ in range(repeats)]
             p = [r['p_at_k'] for r in runs]
             fp = [r['fp_at_k'] for r in runs]
             wd = [r['wd_at_k'] for r in runs]
@@ -122,6 +131,8 @@ def main():
         f'  latency median {statistics.median(all_sec):.2f}s  p95 {_p95(all_sec):.2f}s  max {max(all_sec):.2f}s'
     )
     print()
+    if args.quick:
+        return
     print('unscored (no dish ground truth; reported so a regression in shape is visible):')
     for q in MOOD:
         t = time.perf_counter()

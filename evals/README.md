@@ -5,8 +5,22 @@ Ranking quality, measured. Not part of `pytest`: these need the live corpus and 
 
 ```bash
 uv run python evals/build_truth.py   # regenerate labels from the corpus (do this deliberately)
-uv run python evals/run.py --label "what changed"
+uv run python evals/run.py --quick   # 1 repeat, dish queries only  ~43k tokens
+uv run python evals/run.py --label "what changed"   # 3 repeats, everything  ~134k tokens
 ```
+
+## It Costs Real Quota
+
+**A full run is ~134,000 tokens.** The DashScope free allowance is 1,000,000 per model, expiring 2026-10-13 and not
+refilling, so a full run is **13% of the budget for that lane** and the allowance covers about **7 of them**.
+
+Measured: one re-rank prompt is ~2,286 input tokens (16 candidates, two excerpts each) plus ~200 out, and a full run
+makes 54 calls at 3 repeats.
+
+**Use `--quick` while iterating** and spend a full run only on a decision you are going to record. On 2026-08-28 a
+single afternoon of measurement consumed ~815k of the lane's allowance, and the largest single item was a `max_tokens`
+A/B that returned a **negative** result. Finding that out was worth it once; it is not worth it twice, which is why the
+numbers are written down in `TRD.md` rather than left to be re-measured.
 
 ## Metrics
 
