@@ -188,7 +188,7 @@ export function Discover() {
             {commonLine && <p className="basis list-basis">{commonLine}</p>}
             <ol className="results">
               {results.map((r, i) => (
-                <ResultRow key={r.venue.id} result={r} rank={i + 1} showBasis={!common} />
+                <ResultRow key={r.venue.id} result={r} rank={r.rank ?? i + 1} showBasis={!common} />
               ))}
             </ol>
           </>

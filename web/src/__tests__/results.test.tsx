@@ -144,3 +144,19 @@ describe('evidence on a row', () => {
     expect(container.querySelector('.basis')).toBeNull()
   })
 })
+
+describe('the rank numeral', () => {
+  it('shows the position the re-rank assigned, not the row it happens to occupy', () => {
+    // A result whose citations are all unreachable does not render. Counting positions
+    // in the list would renumber everything below it and quietly disagree with the API.
+    const { container } = render(
+      <MemoryRouter>
+        <ol>
+          <ResultRow result={result({ citations: [] })} rank={1} />
+          <ResultRow result={result({ rank: 2 })} rank={2} />
+        </ol>
+      </MemoryRouter>
+    )
+    expect(container.querySelector('.rank')?.textContent).toBe('2')
+  })
+})

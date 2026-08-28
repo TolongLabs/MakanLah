@@ -8,6 +8,10 @@ import { Testimony } from './Testimony'
  * One pick. Ordered by visual weight per docs/DESIGN.md: rank in the margin, the venue
  * name as the label on the testimony, metadata, our claim, then the writing itself.
  *
+ * `rank` is the position the re-rank assigned, passed in rather than derived from the
+ * array index: a row whose citations are all unreachable does not render, and counting
+ * positions in the list would then quietly renumber everything below it.
+ *
  * When two platforms carry the venue, both excerpts render side by side, each under
  * its own source chip. The layout is the evidence claim, so nothing has to assert it.
  */
