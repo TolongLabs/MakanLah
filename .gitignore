@@ -72,3 +72,8 @@ docs/source/*.webm
 # download under the Live2D proprietary licence, and the texture alone is 31 MB.
 # Drop them in per web/public/models/README.md; the app runs without them.
 web/public/models/liveroid/
+
+# Demo video artefacts. The pipeline that makes them is committed; the output is not.
+*.mp4
+*.webm
+*.wav
