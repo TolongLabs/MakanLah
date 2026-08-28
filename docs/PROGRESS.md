@@ -1,9 +1,32 @@
-# Progress — 2026-08-27 · the app works end to end
+# Progress — 2026-08-28 · round two, measured
 
-**A query in English, Malay or Chinese returns a ranked shortlist from a real corpus on Neon, every entry citing a real
-post, answered in the language it was asked in.** Median response **2.51s**, inside the 3s target in [`PRD.md`](PRD.md).
+**Two sessions are working this repo at once.** This one owns `makanlah/`, `ingest/`, `api/`, `tests/` and `evals/` on
+`feat/app-scaffold`, from a **separate worktree** at `../MakanLah-api`. The peer owns `web/` on `feat/web-redesign` in
+the main checkout. **A branch is per-worktree, not per-session** — sharing one directory put a backend commit on the
+peer's branch before this was split. Do not check out `feat/app-scaffold` in the main directory.
+
+**Ranking quality is now measured, not asserted.** `evals/` holds pinned ground truth and a runner. Baseline: **p@5
+0.780, wd@5 0.000, top1 47/51, median 2.33s** across 51 runs in English and Chinese.
+
+**Every model lane is free again.** The rolling DashScope aliases carry no free quota; each lane is pinned to a dated
+snapshot with 1M tokens expiring **2026-10-13**. Re-check the console before repinning.
 
 **Web client is live:** <https://makanlah-b5h.pages.dev> · **API is local only** — see Blocked.
+
+---
+
+## Three Things Found By Measuring, 2026-08-28
+
+1. **The reported ranking bug was the model, not the architecture.** `bak kut teh` returning 首都茶室 and 何九茶室 was
+   blamed on venue-level embeddings. Measured A/B: `qwen-turbo` scores **p@5 0.20 / wd@5 0.40** and reproduces the
+   complaint exactly; `qwen3.8-flash` scores **1.00 / 0.00** and returns the one real bak kut teh shop. The swap made to
+   escape a paid tier fixed relevance as a side effect. **Hybrid retrieval is no longer justified by this failure**
+2. **Distance filtering had never worked.** Six parameters into a five-placeholder query, so every request carrying
+   `radius_m` raised `ProgrammingError` — which `api/main.py` returned as `200 degraded: true`. The client blamed the
+   corpus for a bug in the query builder for the life of the project. Fixed, and `degraded` now means only that the
+   corpus is unreachable
+3. **The first quality metric flattered the system.** Counting a venue wrong only when its dishes were the opposite
+   cuisine scores the actual complaint **0.000**, because a kopitiam and a bak kut teh shop are both Malaysian
 
 **Start the API:** `scripts/dev-api.sh`. **Point the live page at it:** append `?api=<url>`.
 
