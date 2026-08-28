@@ -1,0 +1,111 @@
+/* Nav, footer, and the shell every route sits in. */
+
+.shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell > main {
+  flex: 1;
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+
+@supports not (backdrop-filter: blur(8px)) {
+  .nav {
+    background: var(--paper);
+  }
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  height: 64px;
+  max-width: var(--page);
+  margin: 0 auto;
+  padding-inline: var(--s4);
+}
+
+@media (min-width: 48rem) {
+  .nav-inner {
+    height: 72px;
+    padding-inline: var(--s6);
+  }
+}
+
+.wordmark {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  font-size: var(--t-ms);
+}
+
+@media (min-width: 30rem) {
+  .nav-links {
+    gap: var(--s5);
+  }
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.nav-link:hover,
+.nav-link[aria-current="page"] {
+  color: var(--ink);
+}
+
+.nav-cta {
+  padding: var(--s2) var(--s4);
+  font-size: var(--t-ms);
+}
+
+.foot {
+  border-top: 1px solid var(--rule);
+  margin-top: var(--s9);
+  padding-block: var(--s6) var(--s7);
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+.foot-inner {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding-inline: var(--s4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+  justify-content: space-between;
+}
+
+@media (min-width: 48rem) {
+  .foot-inner {
+    padding-inline: var(--s6);
+  }
+}
+
+.foot p {
+  max-width: 44ch;
+}

@@ -1,0 +1,339 @@
+/* The result row. Its centre of gravity is somebody else's writing, so the excerpt
+   carries the weight and the venue name is the label on the testimony.
+
+   The one structural idea here: when two platforms carry the same venue, the two
+   excerpts sit side by side, each under its own source chip. The layout is the claim.
+   Nothing has to assert "two sources agree" because the reader can see it. */
+
+.results {
+  margin-top: var(--s6);
+  border-top: 1px solid var(--rule);
+}
+
+.result {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  column-gap: var(--s3);
+  padding-block: var(--s6);
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 48rem) {
+  .result {
+    grid-template-columns: 3rem 1fr;
+    column-gap: var(--s5);
+  }
+}
+
+.rank {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  padding-top: 0.4rem;
+}
+
+.venue-name {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+@media (min-width: 48rem) {
+  .venue-name {
+    font-size: var(--t-xl);
+  }
+}
+
+.venue-name a {
+  text-decoration: none;
+}
+
+.venue-name a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.result .meta-line {
+  margin-top: var(--s2);
+}
+
+/* Our claim, so it is set in chrome type. Dressing it as testimony would be a lie
+   about who said it. */
+.why {
+  margin-top: var(--s3);
+  font-size: var(--t-ms);
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+
+.evidence {
+  margin-top: var(--s4);
+  display: grid;
+  gap: var(--s4);
+}
+
+@media (min-width: 60rem) {
+  .evidence-pair {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--s6);
+  }
+}
+
+.testimony {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  border-top: 1px solid var(--rule);
+  padding-top: var(--s3);
+}
+
+/* Serif because it is not our writing. Nothing else in the interface uses this face.
+   line-height 1.75 and no letter-spacing, because a mixed EN/MS/ZH sentence crowds
+   at anything tighter and letter-spacing mangles CJK. */
+.excerpt {
+  font-family: var(--testimony);
+  font-size: var(--t-md);
+  line-height: 1.75;
+  letter-spacing: normal;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 46ch;
+}
+
+.excerpt-lg {
+  font-size: var(--t-lg);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--enamel);
+  background: var(--enamel-quiet);
+  border-radius: var(--r-chip);
+  padding: var(--s1) var(--s3);
+  text-decoration: none;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  text-decoration: underline;
+}
+
+.result-actions {
+  margin-top: var(--s4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  font-size: var(--t-ms);
+}
+
+/* ------------------------------------------------------------------- discover */
+
+.discover-grid {
+  display: grid;
+  gap: var(--s6);
+  padding-block: var(--s5) var(--s8);
+}
+
+@media (min-width: 60rem) {
+  .discover-grid {
+    grid-template-columns: 17rem 1fr;
+    gap: var(--s8);
+    padding-block: var(--s7) var(--s10);
+  }
+}
+
+@media (min-width: 60rem) {
+  .discover-rail {
+    position: sticky;
+    top: calc(72px + var(--s5));
+    align-self: start;
+    max-height: calc(100dvh - 72px - var(--s8));
+    overflow-y: auto;
+  }
+}
+
+.rail-block + .rail-block {
+  margin-top: var(--s5);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule);
+}
+
+.rail-heading {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  margin-bottom: var(--s3);
+}
+
+.search {
+  display: flex;
+  gap: var(--s2);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  padding: var(--s3) var(--s4);
+}
+
+.search input::placeholder {
+  color: var(--ink-faint);
+}
+
+.taste-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+.taste-summary dt {
+  color: var(--ink-faint);
+}
+
+.taste-summary dd {
+  margin: 0 var(--s3) 0 var(--s1);
+  color: var(--ink);
+}
+
+.result-count {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.stack-gap > * + * {
+  margin-top: var(--s4);
+}
+
+/* --------------------------------------------------------------------- states */
+
+.empty {
+  padding-block: var(--s8);
+  color: var(--ink-soft);
+  max-width: var(--measure);
+}
+
+/* Centre alignment is reserved for the genuinely symmetric moment, which is this one
+   and nothing else. */
+.empty-centred {
+  text-align: center;
+  margin-inline: auto;
+}
+
+.empty > * + * {
+  margin-top: var(--s3);
+}
+
+.skeleton {
+  border-bottom: 1px solid var(--rule);
+  padding-block: var(--s6);
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  column-gap: var(--s3);
+}
+
+@media (min-width: 48rem) {
+  .skeleton {
+    grid-template-columns: 3rem 1fr;
+    column-gap: var(--s5);
+  }
+}
+
+.skeleton-bar {
+  height: 0.75rem;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+}
+
+.skeleton-bar + .skeleton-bar {
+  margin-top: var(--s3);
+}
+
+/* Uneven on purpose: bars of one length read as a loading bar, not as a row of text
+   about to arrive. */
+.skeleton-bar:nth-child(1) {
+  width: 45%;
+  height: 1.25rem;
+}
+
+.skeleton-bar:nth-child(2) {
+  width: 30%;
+}
+
+.skeleton-bar:nth-child(3) {
+  width: 88%;
+}
+
+.skeleton-bar:nth-child(4) {
+  width: 66%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: skeleton-breathe 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ----------------------------------------------------------------- venue page */
+
+.venue-head {
+  padding-block: var(--s7) var(--s6);
+  border-bottom: 1px solid var(--rule);
+}
+
+.venue-title {
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.trail {
+  padding-block: var(--s6) var(--s10);
+}
+
+.trail-item {
+  padding-block: var(--s5);
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  gap: var(--s3);
+}
+
+@media (min-width: 48rem) {
+  .trail-item {
+    grid-template-columns: 12rem 1fr;
+    gap: var(--s6);
+  }
+}
+
+.trail-source {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s2);
+}

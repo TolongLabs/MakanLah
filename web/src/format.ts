@@ -15,3 +15,11 @@ export function sourceLabel(platform: string, author: string | null): string {
   const p = platform === 'rednote' ? 'RedNote' : platform === 'google_maps' ? 'Google Maps' : platform
   return author ? `${p} · ${author}` : p
 }
+
+export function platformName(platform: string): string {
+  return sourceLabel(platform, null)
+}
+
+export function count(n: number, one: string, many = `${one}s`): string {
+  return `${n.toLocaleString('en-MY')} ${n === 1 ? one : many}`
+}

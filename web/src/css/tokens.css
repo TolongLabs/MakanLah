@@ -1,0 +1,85 @@
+/* The system in docs/DESIGN.md. Paper and ink, hairlines instead of cards, and one
+   accent whose only job is marking where evidence came from.
+
+   Two things here extend DESIGN.md rather than restate it, and DESIGN.md records both:
+   the type scale gains two display steps above 2.25rem, because a landing hero set at
+   the old ceiling reads as a paragraph; and the space scale gains 96 and 144 for
+   section rhythm at desktop. Neither adds a value between existing steps. */
+
+:root {
+  --paper: #f7f7f4;
+  --paper-raised: #ffffff;
+  --paper-sunk: #efefe9;
+  --ink: #16180f;
+  --ink-soft: #5c5f52;
+  --ink-faint: #6c6f60;
+  --rule: #d9dad0;
+  --rule-strong: #b9bbae;
+  --enamel: #0b6b5e;
+  --enamel-quiet: #e3efec;
+  --warn: #8a5a00;
+  --warn-quiet: #f6efdf;
+
+  /* Shadows are tinted to the ground, never pure black. Only two surfaces float:
+     the wizard's bottom island and the sticky nav. */
+  --lift: 0 1px 0 rgb(22 24 15 / 4%), 0 8px 32px rgb(22 24 15 / 10%);
+
+  --chrome: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --testimony: "Newsreader", "Noto Serif SC", "Songti SC", ui-serif, Georgia, serif;
+
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-ms: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.625rem;
+  --t-2xl: 2.25rem;
+  --t-3xl: 3.25rem;
+  --t-display: clamp(2.25rem, 6.4vw, 4.5rem);
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 72px;
+  --s9: 96px;
+  --s10: 144px;
+
+  /* Radius carries information rather than being a uniform coat: 0 on rules, rows and
+     floating chrome; 2px on anything you can type in or select; the pill is the source
+     chip alone, because the pill is what "this came from somewhere" looks like. */
+  --r-input: 2px;
+  --r-chip: 999px;
+
+  --dur-fast: 120ms;
+  --dur-ui: 180ms;
+  --dur-step: 280ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --z-nav: 30;
+  --z-island: 40;
+
+  --measure: 34rem;
+  --page: 76rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #12130f;
+    --paper-raised: #1a1b16;
+    --paper-sunk: #0c0d0a;
+    --ink: #f2f2ec;
+    --ink-soft: #9b9e90;
+    --ink-faint: #84877a;
+    --rule: #2c2e25;
+    --rule-strong: #43463a;
+    --enamel: #3fa697;
+    --enamel-quiet: #15302c;
+    --warn: #d9a441;
+    --warn-quiet: #2a2113;
+    --lift: 0 1px 0 rgb(0 0 0 / 30%), 0 8px 32px rgb(0 0 0 / 45%);
+  }
+}
