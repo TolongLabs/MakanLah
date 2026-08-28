@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { type MascotMood, readingFor } from '../evidence'
 
 const MascotStage = lazy(() => import('../live2d/MascotStage'))
@@ -29,12 +29,21 @@ export function Mascot({ mood }: { mood: MascotMood }) {
   // three, so there is never a frame where the panel is blank.
   const [phase, setPhase] = useState<'idle' | 'loading' | 'live' | 'failed'>('idle')
   const { read, note } = readingFor(mood)
+  const hostRef = useRef<HTMLDivElement>(null)
 
   // Deferred past first paint on purpose. pixi plus pixi-live2d-display is heavy for a
   // PWA that promises a decision in two minutes.
+  //
+  // The width gate is not cosmetic. The wizard's rail is display:none below 56rem, and
+  // without this a phone still fetched the Cubism core, the moc3 and the physics JSON
+  // and allocated a WebGL2 context for a canvas measured at 0x0.
   useEffect(() => {
     if (off) return
-    const start = () => setPhase((p) => (p === 'idle' ? 'loading' : p))
+    const start = () => {
+      const box = hostRef.current?.getBoundingClientRect()
+      if (!box || box.width < 1 || box.height < 1) return
+      setPhase((p) => (p === 'idle' ? 'loading' : p))
+    }
     const idle = window.requestIdleCallback
     if (typeof idle === 'function') {
       const id = idle(start, { timeout: 2500 })
@@ -47,18 +56,16 @@ export function Mascot({ mood }: { mood: MascotMood }) {
   if (off) return null
 
   return (
-    <div className={phase === 'live' ? 'mascot mascot-live' : 'mascot'}>
+    <div ref={hostRef} className={phase === 'live' ? 'mascot mascot-live' : 'mascot'}>
       {phase !== 'idle' && phase !== 'failed' && (
         <Suspense fallback={null}>
           <MascotStage mood={mood} onReady={() => setPhase('live')} onFail={() => setPhase('failed')} />
         </Suspense>
       )}
-      {phase !== 'live' && (
-        <div className="mascot-fallback">
-          <p className="mascot-read">{read}</p>
-          <p className="mascot-note">{note}</p>
-        </div>
-      )}
+      <div className={phase === 'live' ? 'mascot-reading' : 'mascot-fallback'}>
+        <p className="mascot-read">{read}</p>
+        {phase !== 'live' && <p className="mascot-note">{note}</p>}
+      </div>
       <button
         type="button"
         className="mascot-dismiss"

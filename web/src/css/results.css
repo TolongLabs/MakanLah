@@ -87,8 +87,13 @@
 
 /* Keyed to the container, not the viewport. The same pair renders inside a full width
    result row and inside the landing specimen, which is half as wide, and a viewport
-   query would split the specimen into two columns too narrow to read Chinese in. */
-.evidence-pair {
+   query would split the specimen into two columns too narrow to read Chinese in.
+   
+   The container has to be an ANCESTOR. Declaring container-type on .evidence-pair and
+   then querying .evidence-pair asks the element to match its own container, which
+   never fires, and the pair silently stayed one column everywhere. */
+.result-body,
+.specimen {
   container-type: inline-size;
 }
 
@@ -401,6 +406,14 @@
     grid-template-columns: 12rem minmax(0, 1fr);
     gap: var(--s6);
   }
+}
+
+.trail-list {
+  margin-top: var(--s5);
+}
+
+.venue-back {
+  padding-top: var(--s5);
 }
 
 .trail-source {

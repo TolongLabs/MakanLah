@@ -45,7 +45,9 @@ describe('evidenceOf', () => {
 
 describe('leadPair', () => {
   it('prefers a citation that actually carries text', () => {
-    const pair = leadPair([c({ excerpt: null }), c({ excerpt: '有汤' })])
+    // Distinct URLs, because two posts at one URL are the same post and citable()
+    // now collapses them.
+    const pair = leadPair([c({ excerpt: null }), c({ post_url: 'https://rednote/b', excerpt: '有汤' })])
     expect(pair[0]?.excerpt).toBe('有汤')
   })
 
@@ -103,5 +105,23 @@ describe('sharedBasis', () => {
   it('still admits the whole list is a semantic match', () => {
     // The honest caveat has to survive being hoisted, or hoisting it lost the point.
     expect(listBasisLine('semantic')).toMatch(/none of these match your words exactly/i)
+  })
+})
+
+describe('duplicate citations', () => {
+  it('counts the same post once, however many times the corpus carries it', () => {
+    // Two rows for one post is not two pieces of evidence. Inflating the count is the
+    // one arithmetic error this product cannot afford.
+    expect(citable([c(), c()])).toHaveLength(1)
+  })
+
+  it('does not let a duplicate masquerade as corroboration', () => {
+    expect(evidenceOf(result([c(), c()]))).toBe('single')
+  })
+
+  it('still pairs two genuinely different posts', () => {
+    const two = [c(), c({ post_url: 'https://maps/1', platform: 'google_maps', excerpt: 'Good' })]
+    expect(citable(two)).toHaveLength(2)
+    expect(leadPair(two)).toHaveLength(2)
   })
 })

@@ -7,10 +7,22 @@ import type { Citation, Result } from './api'
  */
 export type Evidence = 'corroborated' | 'single' | 'none'
 
-/** Only a citation that can be opened counts. An excerpt with no post behind it is
-    the thing this product exists not to show. */
+/**
+ * Only a citation that can be opened counts. An excerpt with no post behind it is the
+ * thing this product exists not to show.
+ *
+ * Deduped by URL as well: the corpus can carry the same post twice for one venue, and
+ * showing it twice inflates the apparent evidence behind a pick, which is the one
+ * number on the page nobody should be able to inflate by accident. It also fixes the
+ * duplicate React key that surfaced on /discover, but that was the symptom.
+ */
 export function citable(citations: Citation[]): Citation[] {
-  return citations.filter((c) => c.post_url)
+  const seen = new Set<string>()
+  return citations.filter((c) => {
+    if (!c.post_url || seen.has(c.post_url)) return false
+    seen.add(c.post_url)
+    return true
+  })
 }
 
 /** Two posts from one account is one person saying it twice. Corroboration means two
