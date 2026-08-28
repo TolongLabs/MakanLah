@@ -31,16 +31,43 @@ export function Landing() {
       <Corpus />
       <Commitments />
 
-      <section className="page last-call">
-        <div>
-          <h2 className="h-section">Start With A Craving</h2>
-          <p className="body-soft section-lede">Four questions, no account needed.</p>
-        </div>
-        <Link className="btn btn-primary" to="/taste">
-          Find Food
-        </Link>
-      </section>
+      <LastCall />
     </>
+  )
+}
+
+/**
+ * The page's one photographic moment, and the only place it inverts. Deliberate rather
+ * than decorative: the closing section was the emptiest on the page, and this is the
+ * one section that makes no claim about a specific venue, so an atmospheric image
+ * cannot be mistaken for evidence. It is lazy and below the fold, so it never competes
+ * with first paint.
+ */
+function LastCall() {
+  return (
+    <section className="last-call">
+      <picture>
+        <source media="(max-width: 40rem)" srcSet="/kopitiam-800.webp" />
+        <img
+          className="last-call-image"
+          src="/kopitiam-1600.webp"
+          alt=""
+          width={1600}
+          height={667}
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
+      <div className="last-call-copy">
+        <div className="last-call-inner">
+          <h2 className="h-section">Start With A Craving</h2>
+          <p className="section-lede">Four questions, no account needed.</p>
+          <Link className="btn btn-invert" to="/taste">
+            Find Food
+          </Link>
+        </div>
+      </div>
+    </section>
   )
 }
 

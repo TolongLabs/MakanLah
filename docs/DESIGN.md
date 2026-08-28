@@ -153,6 +153,43 @@ gloss beside an excerpt; it may never replace one.
 
 ---
 
+## Imagery
+
+**The default is none, and that default is load-bearing.** A generated or stock photograph of food, placed anywhere a
+pick's evidence appears, would be a fabricated image on the one screen whose entire claim is that nothing here is
+fabricated. No image may sit inside, beside, or above a cited result.
+
+Three exceptions, and the reasoning is the same in each: none of them can be mistaken for evidence.
+
+| Asset                      | Where                              | Why It Is Allowed                                                                                 |
+| -------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **The mark**               | Icon, favicon, share card          | A quotation mark in `--enamel` on `--paper`. It depicts nothing and claims nothing                |
+| **The closing photograph** | Landing page, final section only   | Atmosphere in a section that names no venue. No signage, no faces, no identifiable place, no dish |
+| **The mascot**             | `/taste`, and the `/discover` rail | A rendered character, not a photograph. It reports evidence strength and is dismissible           |
+
+**The mark is a quotation mark, not a bowl.** Every food app is a bowl. The differentiator here is that somebody was
+quoted, so the mark is the quote. It resolves at 16px and uses exactly two colours, `#0B6B5E` and `#F7F7F4`, with no
+third value anywhere in the file.
+
+### The One Inversion
+
+The landing page's closing section is full bleed over a dark photograph and is **the only place the page inverts**. It
+is allowed once, deliberately, and it owns its own colours rather than reading tokens, so it does not flip with the
+theme and cannot be mistaken for a section that lost its background.
+
+Two things are required of it, and both are measured rather than assumed:
+
+- **A scrim.** Text contrast over a photograph otherwise depends on the photograph. The gradient guarantees the floor,
+  and the rendered pixels behind every text box measure **7.0:1 or better** at both widths
+- **Left alignment inside a right-hand block.** Pushing each child right individually shrinks every one to its own text
+  width, which reads as right-aligned text. One block moves; its contents do not
+
+**A DOM walk cannot measure this section.** Neither an `<img>` nor an `::after` scrim is a `background-color`, so a
+contrast checker that climbs the tree finds the body's paper and reports invisible text. It has to be sampled from
+rendered pixels, which is the same lesson as [`AUTONOMY.md`](AUTONOMY.md) on verifying a fix with its own definition.
+
+---
+
 ## Degraded And Empty States
 
 Honesty is a design requirement here, not a nicety, because [`PRD.md`](PRD.md#fr6--honest-degradation) makes it one.

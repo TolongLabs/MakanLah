@@ -217,28 +217,84 @@
 
 /* -------------------------------------------------------------------- last call */
 
+/* Full bleed out of the page container. The image is dark in both themes, so this
+   block owns its own colours rather than reading tokens: it is the single deliberate
+   inversion on the page, not a section that flips with the theme. */
 .last-call {
-  border-top: 1px solid var(--rule);
-  padding-block: var(--s8) var(--s9);
+  position: relative;
+  margin-top: var(--s8);
+  isolation: isolate;
   display: grid;
-  gap: var(--s5);
+  align-items: end;
+  min-height: 22rem;
+  overflow: hidden;
+}
+
+.last-call-image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 30% 50%;
+}
+
+/* A scrim, so the copy clears 4.5:1 wherever the photograph happens to be lightest.
+   Without it the contrast depends on the image, which is not a guarantee. */
+.last-call::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgb(12 14 11 / 45%) 0%, rgb(12 14 11 / 72%) 55%, rgb(12 14 11 / 88%) 100%);
+}
+
+.last-call-copy {
+  max-width: var(--page);
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--s8) var(--s4);
+  color: #f4f4ee;
 }
 
 @media (min-width: 48rem) {
   .last-call {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: var(--s7);
-    /* Capped, so the button stays in the same glance as the sentence it answers
-       instead of drifting to the far edge of a wide screen. */
-    max-width: 52rem;
+    min-height: 26rem;
+  }
+
+  .last-call-copy {
+    padding-inline: var(--s6);
+    padding-block: var(--s9);
+    max-width: min(var(--page), 100%);
   }
 }
 
-.section-lede {
-  margin-top: var(--s4);
+/* One block pushed right, with its contents left-aligned inside it. Pushing each
+   child right individually shrinks every one to its own text width, which reads as
+   right-aligned text and DESIGN.md reserves that for nothing. */
+@media (min-width: 62rem) {
+  .last-call-inner {
+    margin-left: auto;
+    max-width: 32rem;
+  }
 }
 
-.section-notice {
+.last-call-copy .section-lede {
+  color: #d3d5cc;
+}
+
+/* The photograph is dark in both themes, so the button on it is fixed rather than
+   tokenised. Paper ground, ink label: measured 15.8:1. */
+.btn-invert {
   margin-top: var(--s5);
+  color: #16180f;
+  background: #f7f7f4;
+  border: 1px solid #f7f7f4;
+  justify-self: start;
+}
+
+.btn-invert:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #ffffff;
 }
