@@ -29,7 +29,6 @@ export function Shell({ children }: { children: ReactNode }) {
             Recommendations are drawn from posts written by other people. We show them as written, in the language they
             were written in, and link back to the original.
           </p>
-          <p>Kuala Lumpur</p>
         </div>
       </footer>
     </div>

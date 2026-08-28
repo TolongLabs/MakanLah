@@ -32,6 +32,25 @@ export function leadPair(citations: Citation[]): Citation[] {
   return second ? [lead, second] : [lead]
 }
 
+/**
+ * Why this entry is in the list at all. docs/TRD.md replaced the old `score` with this
+ * for a reason: a cosine a reader cannot interpret is not an explanation, and
+ * `semantic` in particular is worth admitting to, because it means nothing the user
+ * typed actually appears anywhere in the post.
+ */
+export function basisLine(basis: string | undefined): string | null {
+  switch (basis) {
+    case 'dish':
+      return 'Here because a post names this dish.'
+    case 'text':
+      return 'Here because those words appear in a post.'
+    case 'semantic':
+      return 'Here because it is close in meaning. No exact match on your words.'
+    default:
+      return null
+  }
+}
+
 export type MascotMood = 'curious' | 'pleased' | 'skeptical' | 'concerned'
 
 /**

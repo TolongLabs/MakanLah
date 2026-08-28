@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { Prefs } from '../api'
 import { Mascot } from '../components/Mascot'
 import { savePrefs } from '../prefs'
-import { BUDGET, COMPANY, type Choice, cravingOptions, MOOD, RANGE, STEPS } from '../taste/options'
+import { BUDGET, type Choice, COMPANY, cravingOptions, MOOD, RANGE, STEPS } from '../taste/options'
 
 type Geo = { lat: number; lng: number } | null
 
@@ -76,9 +76,7 @@ export function Taste() {
 
   return (
     <div className="page taste">
-      <div>
-        <Mascot mood="curious" />
-
+      <div className="taste-steps">
         <Panel step={step} index={0} title="What Are You Craving?" hint="Pick as many as you like.">
           <div className="options">
             {cravings.map((c) => (
@@ -113,18 +111,25 @@ export function Taste() {
         </Panel>
 
         <Panel step={step} index={1} title="Who Is Eating?">
-          <div className="options options-two" role="radiogroup" aria-label="Who is eating">
+          <div className="options">
             {COMPANY.map((c) => (
-              <Radio key={c.value} choice={c} checked={company === c.value} onClick={() => setCompany(c.value)} />
+              <Radio
+                key={c.value}
+                name="company"
+                choice={c}
+                checked={company === c.value}
+                onClick={() => setCompany(c.value)}
+              />
             ))}
           </div>
         </Panel>
 
         <Panel step={step} index={2} title="How Far Will You Go?">
-          <div className="options options-two" role="radiogroup" aria-label="How far">
+          <div className="options">
             {RANGE.map((c) => (
               <Radio
                 key={c.value}
+                name="range"
                 choice={c}
                 checked={range === c.value}
                 onClick={() => {
@@ -144,20 +149,21 @@ export function Taste() {
         </Panel>
 
         <Panel step={step} index={3} title="What Kind Of Meal?">
-          <div className="options options-two" role="radiogroup" aria-label="What kind of meal">
+          <div className="options">
             {MOOD.map((c) => (
-              <Radio key={c.value} choice={c} checked={mood === c.value} onClick={() => setMood(c.value)} />
+              <Radio key={c.value} name="mood" choice={c} checked={mood === c.value} onClick={() => setMood(c.value)} />
             ))}
           </div>
           <fieldset className="budget-set">
             <legend className="rail-heading">Budget (Optional)</legend>
-            <div className="options options-two options-tight" role="radiogroup" aria-label="Budget">
+            <div className="options options-tight">
               {BUDGET.map((c) => (
                 <Radio
                   key={c.value}
+                  name="budget"
                   choice={c}
-                  checked={budget === c.value}
-                  onClick={() => setBudget((b) => (b === c.value ? undefined : c.value))}
+                  checked={(budget ?? 'any') === c.value}
+                  onClick={() => setBudget(c.value === 'any' ? undefined : (c.value as Prefs['budget']))}
                 />
               ))}
             </div>
@@ -165,29 +171,33 @@ export function Taste() {
         </Panel>
       </div>
 
-      <nav className="index-island" aria-label="Steps">
-        <p className="rail-heading">Your Answers</p>
-        <ul className="index-list">
-          {STEPS.map((name, i) => (
-            <li key={name}>
-              <button
-                type="button"
-                className="index-link"
-                aria-current={step === i ? 'step' : undefined}
-                disabled={i > reached}
-                onClick={() => goTo(i)}
-              >
-                <span>{name}</span>
-                {done[i] && (
-                  <span className="index-tick" aria-label="Answered">
-                    ✓
-                  </span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <aside className="taste-rail">
+        <Mascot mood="curious" />
+        <nav className="index-island" aria-label="Steps">
+          <p className="rail-heading">Your Answers</p>
+          <ul className="index-list">
+            {STEPS.map((name, i) => (
+              <li key={name}>
+                <button
+                  type="button"
+                  className="index-link"
+                  aria-current={step === i ? 'step' : undefined}
+                  disabled={i > reached}
+                  onClick={() => goTo(i)}
+                >
+                  <span>{name}</span>
+                  {done[i] && (
+                    <span className="index-tick">
+                      <span aria-hidden="true">✓</span>
+                      <span className="sr-only">Answered</span>
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
 
       <nav className="bottom-island" aria-label="Step navigation">
         <button type="button" className="island-back" onClick={() => goTo(step - 1)} disabled={step === 0}>
@@ -244,32 +254,46 @@ function Toggle<T extends string>({
   onClick: () => void
 }) {
   return (
-    <button type="button" className="option" aria-pressed={pressed} onClick={onClick}>
+    <label className="option">
+      <input className="sr-only" type="checkbox" checked={pressed} onChange={onClick} />
       <span className="option-label">
         <span lang="und">{choice.label}</span>
         {choice.note && <span className="option-note">{choice.note}</span>}
       </span>
-      {pressed && <span className="option-tick">✓</span>}
-    </button>
+      <Tick on={pressed} />
+    </label>
   )
 }
 
 function Radio<T extends string | number>({
+  name,
   choice,
   checked,
   onClick
 }: {
+  name: string
   choice: Choice<T>
   checked: boolean
   onClick: () => void
 }) {
   return (
-    <button type="button" className="option" role="radio" aria-checked={checked} onClick={onClick}>
+    <label className="option">
+      <input className="sr-only" type="radio" name={name} checked={checked} onChange={onClick} />
       <span className="option-label">
         {choice.label}
         {choice.note && <span className="option-note">{choice.note}</span>}
       </span>
-      {checked && <span className="option-tick">✓</span>}
-    </button>
+      <Tick on={checked} />
+    </label>
+  )
+}
+
+function Tick({ on }: { on: boolean }) {
+  if (!on) return null
+  return (
+    <span className="option-tick">
+      <span aria-hidden="true">✓</span>
+      <span className="sr-only">Selected</span>
+    </span>
   )
 }

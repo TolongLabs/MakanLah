@@ -1,9 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { messageFor, saveSession, signInAsGuest, signUp } from '../auth'
+import { MIN_PASSWORD, messageFor, saveSession, signInAsGuest, signUp } from '../auth'
 import { GuestBlock } from './SignIn'
-
-const MIN_PASSWORD = 10
 
 export function SignUp() {
   const navigate = useNavigate()
@@ -48,7 +46,9 @@ export function SignUp() {
     <div className="page auth">
       <header className="auth-head">
         <h1 className="h-section">Create An Account</h1>
-        <p className="body-soft section-lede">Email and password only. There is no sign-in with Google or Apple here.</p>
+        <p className="body-soft section-lede">
+          Email and password only. There is no sign-in with Google or Apple here.
+        </p>
       </header>
 
       <form className="auth-form" onSubmit={onSubmit}>

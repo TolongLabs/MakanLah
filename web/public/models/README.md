@@ -1,8 +1,8 @@
 # Live2D Model Drop-In
 
-The taste wizard's mascot renders the **LiveroiD_A-Y01** Live2D model. The model binaries are **not in this
-repository** and are gitignored: they are a BOOTH download covered by the Live2D proprietary licence, and
-`texture_00.png` alone is 31 MB, which is more than a PWA promising a decision in two minutes should carry.
+The taste wizard's mascot renders the **LiveroiD_A-Y01** Live2D model. The model binaries are **not in this repository**
+and are gitignored: they are a BOOTH download covered by the Live2D proprietary licence, and `texture_00.png` alone is
+31 MB, which is more than a PWA promising a decision in two minutes should carry.
 
 **The app runs without them.** `MascotStage` catches the load failure and falls back to a text panel that reports the
 same evidence strength, so nothing on the results path depends on this directory.

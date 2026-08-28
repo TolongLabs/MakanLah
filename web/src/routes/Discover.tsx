@@ -83,7 +83,7 @@ export function Discover() {
   return (
     <div className="page discover-grid">
       <aside className="discover-rail">
-        <div className="rail-block">
+        <div className="rail-block rail-search">
           <h2 className="rail-heading">Search</h2>
           <form className="search" onSubmit={onSubmit}>
             <input
@@ -99,7 +99,7 @@ export function Discover() {
           </form>
         </div>
 
-        <div className="rail-block">
+        <div className="rail-block rail-distance">
           <h2 className="rail-heading">Distance</h2>
           <div className="options options-tight">
             {RANGE.map((r) => (
@@ -124,7 +124,7 @@ export function Discover() {
           )}
         </div>
 
-        <div className="rail-block">
+        <div className="rail-block rail-taste">
           <h2 className="rail-heading">Your Taste</h2>
           <dl className="taste-summary">
             {summarise(prefs).map((row) => (
@@ -141,12 +141,12 @@ export function Discover() {
           </p>
         </div>
 
-        <div className="rail-block">
+        <div className="rail-block rail-mascot">
           <Mascot mood={mood} />
         </div>
       </aside>
 
-      <div>
+      <div className="discover-results">
         <div className="stack-gap">
           {geoRefused && (
             <p className="notice-plain">
@@ -168,7 +168,16 @@ export function Discover() {
           )}
         </div>
 
-        {loading && <Skeletons />}
+        {loading && (
+          <>
+            {/* The re-rank is a model call and p95 is about five seconds, so the wait
+                is named rather than left to look like a hang. */}
+            <p className="result-count" role="status">
+              Reading the posts. This takes a few seconds.
+            </p>
+            <Skeletons />
+          </>
+        )}
 
         {!loading && results.length > 0 && (
           <>

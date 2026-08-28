@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Result } from '../api'
-import { leadPair } from '../evidence'
+import { basisLine, leadPair } from '../evidence'
 import { dishLine, distance } from '../format'
 import { Testimony } from './Testimony'
 
@@ -21,6 +21,7 @@ export function ResultRow({ result, rank }: { result: Result; rank: number }) {
 
   const dist = distance(result.distance_m)
   const dishes = dishLine(venue.dishes)
+  const basis = basisLine(result.match?.basis)
 
   return (
     <li className="result">
@@ -40,6 +41,7 @@ export function ResultRow({ result, rank }: { result: Result; rank: number }) {
           {dishes && <span lang="und">{dishes}</span>}
         </p>
         {why && <p className="why">{why}</p>}
+        {basis && <p className="basis">{basis}</p>}
         <div className={pair.length > 1 ? 'evidence evidence-pair' : 'evidence'}>
           {pair.map((c) => (
             <Testimony key={`${c.platform}:${c.post_url}`} citation={c} />

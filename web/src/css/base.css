@@ -277,12 +277,22 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
-    scroll-behavior: auto !important;
+  html {
+    scroll-behavior: auto;
+  }
+
+  .rise-in,
+  .fade-in,
+  .skeleton {
+    animation: none;
+  }
+
+  /* Transitions are all hover and press feedback on interactive chrome, which is
+     where reduced motion still wants an instant state change rather than none. */
+  .btn,
+  .option,
+  .nav-link,
+  .index-link {
+    transition-duration: 1ms;
   }
 }

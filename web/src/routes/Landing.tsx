@@ -17,9 +17,7 @@ export function Landing() {
       <section className="page hero">
         <div className="hero-copy">
           <h1 className="display">Somebody Already Ate There</h1>
-          <p className="lede">
-            Every pick comes with the post it came from, in the language it was written in.
-          </p>
+          <p className="lede">Every pick comes with the post it came from, in the language it was written in.</p>
           <div className="hero-actions">
             <Link className="btn btn-primary" to="/taste">
               Find Food
@@ -75,13 +73,15 @@ function Specimen() {
 
 function MixedLanguage() {
   return (
-    <section className="page section">
-      <h2 className="h-section">One Sentence, Three Languages</h2>
-      <p className="body-soft section-lede">
-        KL writes about food in Malay, Chinese and English at once, often inside a single line. A pipeline that reads
-        only one of them still returns results, which is the problem: it looks like it is working while it quietly
-        drops the best posts.
-      </p>
+    <section className="page section section-split">
+      <div>
+        <h2 className="h-section">One Sentence, Three Languages</h2>
+        <p className="body-soft section-lede">
+          KL writes about food in Malay, Chinese and English at once, often inside a single line. A pipeline that reads
+          only one of them still returns results, which is the problem: it looks like it is working while it quietly
+          drops the best posts.
+        </p>
+      </div>
       {MIXED && (
         <div className="feature-quote">
           <Testimony citation={MIXED} large />

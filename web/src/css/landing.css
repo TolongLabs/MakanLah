@@ -13,9 +13,13 @@
 
 @media (min-width: 62rem) {
   .hero {
-    grid-template-columns: 1.02fr 0.98fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
     gap: var(--s8);
-    padding-block: var(--s9) var(--s10);
+    /* Centred rather than top-aligned: the headline block is short and the specimen
+       is tall, and hanging both from the top left a third of the fold empty. */
+    align-items: center;
+    padding-block: var(--s8);
+    min-height: min(38rem, calc(100dvh - 72px));
   }
 }
 
@@ -56,6 +60,31 @@
 
 .specimen .evidence {
   margin-top: 0;
+}
+
+.feature-quote {
+  margin-top: var(--s6);
+  max-width: 44rem;
+}
+
+/* The quote is the section's content, not an explainer paragraph parked in the right
+   column, so this is a real two-column composition rather than the split-header
+   pattern it can be mistaken for. */
+.section-split {
+  display: grid;
+  gap: var(--s6);
+}
+
+@media (min-width: 62rem) {
+  .section-split {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: var(--s8);
+    align-items: start;
+  }
+
+  .section-split .feature-quote {
+    margin-top: 0;
+  }
 }
 
 /* ------------------------------------------------------------------ how it reads */
@@ -167,8 +196,8 @@
 
 @media (min-width: 48rem) {
   .commitments > li {
-    grid-template-columns: minmax(0, 22rem) 1fr;
-    gap: var(--s6);
+    grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+    gap: var(--s7);
     align-items: baseline;
   }
 }
@@ -183,7 +212,7 @@
 .commit-why {
   font-size: var(--t-ms);
   color: var(--ink-soft);
-  max-width: 52ch;
+  max-width: 62ch;
 }
 
 /* -------------------------------------------------------------------- last call */
@@ -197,9 +226,12 @@
 
 @media (min-width: 48rem) {
   .last-call {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
     gap: var(--s7);
+    /* Capped, so the button stays in the same glance as the sentence it answers
+       instead of drifting to the far edge of a wide screen. */
+    max-width: 52rem;
   }
 }
 
@@ -209,9 +241,4 @@
 
 .section-notice {
   margin-top: var(--s5);
-}
-
-.feature-quote {
-  margin-top: var(--s6);
-  max-width: 48rem;
 }

@@ -36,23 +36,27 @@ export function saveSession(session: Session | null): void {
   }
 }
 
-/**
- * The auth backend is issue #9 and is not deployed yet, so every one of these can
- * come back 404. That is reported as itself rather than dressed as a wrong password:
- * a sign-in form that says "incorrect credentials" when the route does not exist
- * sends the user to reset a password that was never stored.
- */
-export const NOT_LIVE = 'accounts-not-live'
+/** The API takes at least 8 and at most 1024. Checked here too, so a short password
+    is caught before it costs a round trip and a 422. */
+export const MIN_PASSWORD = 8
+export const MAX_PASSWORD = 1024
 
-export function isNotLive(err: unknown): boolean {
+/** An API that is reachable but has no auth routes. Kept because the deployed API can
+    be older than the client that talks to it. */
+function isNotLive(err: unknown): boolean {
   return err instanceof ApiError && (err.status === 404 || err.status === 405 || err.status === 501)
 }
 
 export function messageFor(err: unknown): string {
   if (isNotLive(err)) return 'Accounts are not switched on yet. You can still search without one.'
-  if (err instanceof ApiError && err.status === 401) return 'That email and password do not match.'
+  // One message for a wrong password and for an address that was never registered.
+  // Telling them apart would turn the sign-in form into a way to find out who has an
+  // account here, so the API returns the same 401 for both and the copy matches it.
+  if (err instanceof ApiError && err.status === 401) return 'Email or password is incorrect.'
   if (err instanceof ApiError && err.status === 409) return 'That email is already registered.'
   if (err instanceof ApiError && err.status === 422) return 'Check the email and password and try again.'
+  if (err instanceof ApiError && err.status === 429)
+    return 'Too many attempts just now. Wait a few minutes and try again.'
   return 'We could not reach the accounts service. You can still search without an account.'
 }
 

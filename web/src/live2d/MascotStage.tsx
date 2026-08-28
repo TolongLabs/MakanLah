@@ -7,11 +7,19 @@ import { EXPRESSION, MODEL } from './modelRegistry'
  * The React host. Split from Mascot.tsx so that pixi and pixi-live2d-display land in
  * their own lazily-imported chunk and never reach a visitor who does not see a mascot.
  */
-export default function MascotStage({ mood, onFail }: { mood: MascotMood; onFail: () => void }) {
+export default function MascotStage({
+  mood,
+  onReady,
+  onFail
+}: {
+  mood: MascotMood
+  onReady: () => void
+  onFail: () => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Live2DStage | null>(null)
-  const failRef = useRef(onFail)
-  failRef.current = onFail
+  const settled = useRef({ ready: onReady, fail: onFail })
+  settled.current = { ready: onReady, fail: onFail }
 
   useEffect(() => {
     const container = containerRef.current
@@ -21,12 +29,17 @@ export default function MascotStage({ mood, onFail }: { mood: MascotMood; onFail
     const stage = new Live2DStage()
     stageRef.current = stage
 
-    stage.mount(container, MODEL).catch(() => {
-      // The model binaries are not in this repository, so this is the expected path
-      // until someone drops them in. The host swaps to a fallback that carries the
-      // same reading, and nothing on the results path waits for any of it.
-      if (!cancelled) failRef.current()
-    })
+    stage
+      .mount(container, MODEL)
+      .then(() => {
+        if (!cancelled) settled.current.ready()
+      })
+      .catch(() => {
+        // The model binaries are not in this repository, so this is the expected path
+        // until somebody drops them in. The host keeps the fallback, which carries the
+        // same reading, and nothing on the results path waits for any of it.
+        if (!cancelled) settled.current.fail()
+      })
 
     const observer = new ResizeObserver((entries) => {
       const box = entries[0]?.contentRect
@@ -46,5 +59,5 @@ export default function MascotStage({ mood, onFail }: { mood: MascotMood; onFail
     stageRef.current?.setExpression(EXPRESSION[mood])
   }, [mood])
 
-  return <div ref={containerRef} aria-hidden="true" style={{ width: '100%', height: '100%' }} />
+  return <div ref={containerRef} className="mascot-canvas" aria-hidden="true" />
 }

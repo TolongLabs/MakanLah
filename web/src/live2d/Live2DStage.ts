@@ -74,7 +74,7 @@ export class Live2DStage {
     this.app.stage.addChild(model)
     this.baseScale = opts.scale
     this.anchorY = opts.anchorY
-    this.fit(w, h)
+    this.frame(w, h)
   }
 
   setExpression(name: string): void {
@@ -85,7 +85,7 @@ export class Live2DStage {
   resize(w: number, h: number): void {
     if (this.app == null || this.model == null) return
     this.app.renderer.resize(w, h)
-    this.fit(w, h)
+    this.frame(w, h)
   }
 
   destroy(): void {
@@ -98,7 +98,7 @@ export class Live2DStage {
     this.model = null
   }
 
-  private fit(w: number, h: number): void {
+  private frame(w: number, h: number): void {
     if (this.model == null) return
     // 600 is the reference height the scale values in modelRegistry were measured at.
     this.model.scale.set((h * this.baseScale) / 600)

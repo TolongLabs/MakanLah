@@ -61,10 +61,13 @@ export const MOOD: Choice<NonNullable<Prefs['mood']>>[] = [
   { value: 'adventurous', label: 'Something New', note: 'Somewhere I have not been.' }
 ]
 
-export const BUDGET: Choice<NonNullable<Prefs['budget']>>[] = [
+/** 'any' is a real option rather than a click-to-deselect trick, because a radio you
+    have to click twice to clear is not discoverable and not keyboard reachable. */
+export const BUDGET: Choice<string>[] = [
   { value: 'cheap', label: 'Cheap' },
   { value: 'mid', label: 'Mid' },
-  { value: 'splurge', label: 'Splurge' }
+  { value: 'splurge', label: 'Splurge' },
+  { value: 'any', label: 'No Preference' }
 ]
 
 export const STEPS = ['Craving', 'Company', 'Range', 'Mood'] as const

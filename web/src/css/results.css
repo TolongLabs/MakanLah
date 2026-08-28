@@ -68,13 +68,26 @@
   max-width: 56ch;
 }
 
+.basis {
+  margin-top: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+}
+
 .evidence {
   margin-top: var(--s4);
   display: grid;
   gap: var(--s4);
 }
 
-@media (min-width: 60rem) {
+/* Keyed to the container, not the viewport. The same pair renders inside a full width
+   result row and inside the landing specimen, which is half as wide, and a viewport
+   query would split the specimen into two columns too narrow to read Chinese in. */
+.evidence-pair {
+  container-type: inline-size;
+}
+
+@container (min-width: 34rem) {
   .evidence-pair {
     grid-template-columns: 1fr 1fr;
     gap: var(--s6);
@@ -106,6 +119,18 @@
 
 .excerpt-lg {
   font-size: var(--t-lg);
+}
+
+/* A result row is a scan, so a five-paragraph post is clamped here rather than
+   allowed to own the page. Nothing is truncated in the data and nothing is hidden
+   from a screen reader: the venue page behind "All Sources" prints every post in
+   full, which is the one place the whole trail belongs. */
+.result .excerpt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  line-clamp: 7;
+  overflow: hidden;
 }
 
 .chip {
@@ -196,11 +221,16 @@
 }
 
 .taste-summary {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: var(--s2);
   font-size: var(--t-sm);
-  color: var(--ink-soft);
+}
+
+.taste-summary > div {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: var(--s3);
+  align-items: baseline;
 }
 
 .taste-summary dt {
@@ -208,8 +238,9 @@
 }
 
 .taste-summary dd {
-  margin: 0 var(--s3) 0 var(--s1);
+  margin: 0;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .result-count {
@@ -336,4 +367,49 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--s2);
+}
+
+/* On a phone the rail is not a rail. Its blocks become siblings of the results so the
+   search sits above them and the filters, taste summary and mascot fall below: a
+   hungry person on a 360px screen should see picks without scrolling past a
+   configuration panel first. */
+@media (max-width: 59.99rem) {
+  .discover-rail {
+    display: contents;
+  }
+
+  .rail-search {
+    order: 1;
+  }
+
+  .discover-results {
+    order: 2;
+  }
+
+  .rail-distance {
+    order: 3;
+  }
+
+  .rail-taste {
+    order: 4;
+  }
+
+  .rail-mascot {
+    order: 5;
+  }
+
+  /* display:contents drops the rail's own box, and with it the border the stacked
+     blocks were relying on. */
+  .rail-block + .rail-block {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .rail-distance,
+  .rail-taste,
+  .rail-mascot {
+    padding-top: var(--s5);
+    border-top: 1px solid var(--rule);
+  }
 }
