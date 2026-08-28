@@ -80,12 +80,15 @@ def ask(venue_id, question, *, con=None):
 
     s = config.settings()
     if not s.copilot_api_key:
-        # No model lane. Returning the evidence uninterpreted is honest and still
-        # useful; inventing an answer would not be.
+        # No model lane. An earlier version returned the raw excerpts here, which
+        # broke the contract the rest of the module enforces: `covered: false`
+        # carries NO citations, so a client can render the two states without
+        # inspecting both. CI caught it -- CI has no key, so this was the only
+        # branch it ever ran.
         return {
             'covered': False,
             'answer': 'The copilot is unavailable.',
-            'citations': _cite(rows[:3]),
+            'citations': [],
             'venue': venue_out,
         }
 

@@ -44,8 +44,23 @@ class FakeCon:
     pass
 
 
+class FakeSettings:
+    """Pinned, so these assert behaviour rather than whatever .env happens to hold.
+
+    They passed locally and failed in CI purely because the build machine has a
+    DASHSCOPE_API_KEY and CI does not, so CI only ever ran the no-key branch.
+    A test whose result depends on ambient environment is not a test.
+    """
+
+    copilot_api_key = 'test-key'
+    copilot_base_url = 'https://example.invalid/v1'
+    copilot_model = 'test-model'
+    copilot_thinking = False
+
+
 @pytest.fixture
 def wired(monkeypatch):
+    monkeypatch.setattr(copilot.config, 'settings', lambda: FakeSettings())
     monkeypatch.setattr(copilot.db, 'venue_by_id', lambda con, vid: VENUE if vid == 'v-1' else None)
     monkeypatch.setattr(copilot.db, 'venue_evidence', lambda con, vid, limit=40: ROWS)
 
@@ -106,6 +121,7 @@ class TestDegradedPaths:
         assert out['covered'] is False and out['citations'] == []
 
     def test_a_venue_with_no_evidence_says_so(self, monkeypatch):
+        monkeypatch.setattr(copilot.config, 'settings', lambda: FakeSettings())
         monkeypatch.setattr(copilot.db, 'venue_by_id', lambda con, vid: VENUE)
         monkeypatch.setattr(copilot.db, 'venue_evidence', lambda con, vid, limit=40: [])
         out = copilot.ask('v-1', 'how is it?', con=FakeCon())
@@ -120,3 +136,19 @@ class TestDegradedPaths:
         out = copilot.ask('v-1', 'how is it?', con=FakeCon())
         assert out['covered'] is False
         assert out['citations'] == []
+
+
+class TestWithNoModelLane:
+    """CI has no API key, so this is the branch it always takes. It must honour
+    the contract rather than being an untested special case."""
+
+    def test_an_unavailable_copilot_returns_no_citations(self, monkeypatch):
+        class NoKey(FakeSettings):
+            copilot_api_key = None
+
+        monkeypatch.setattr(copilot.config, 'settings', lambda: NoKey())
+        monkeypatch.setattr(copilot.db, 'venue_by_id', lambda con, vid: VENUE)
+        monkeypatch.setattr(copilot.db, 'venue_evidence', lambda con, vid, limit=40: ROWS)
+        out = copilot.ask('v-1', 'how is it?', con=FakeCon())
+        assert out['covered'] is False
+        assert out['citations'] == [], 'covered:false must never carry citations'
