@@ -71,7 +71,6 @@
       "WebSearch"
     ],
     "deny": [
-      "Bash(gh pr merge:*)",
       "Bash(gh repo delete:*)",
       "Bash(git push --force*)",
       "Bash(git reset --hard*)",
@@ -109,6 +108,10 @@
             "command": "[ ! -f \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-git.sh\" ] || bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-git.sh\"",
             "timeout": 5,
             "statusMessage": "Checking git command"
+          },
+          {
+            "type": "command",
+            "command": "[ ! -f \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-merge.sh\" ] || bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-merge.sh\""
           }
         ]
       }

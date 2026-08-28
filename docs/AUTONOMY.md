@@ -167,8 +167,15 @@ branch and would have travelled into the next PR.
 
 ### Unattended Mode
 
-`main` is PR-gated and agents are denied `gh pr merge`, which is correct when a human is present and **will stall an
-unattended run at the first PR**.
+**Agents may merge, but only onto green CI.** `.claude/hooks/guard-merge.sh` permits `gh pr merge` and denies it unless
+the PR is OPEN, its checks have actually reported, every one of them passed, and `mergeStateStatus` is clean. It refuses
+`--admin`, refuses a merge that does not name its PR number, and — **unlike every other hook here — it fails closed**:
+the others exit 0 on internal failure so a broken guard cannot wedge a session, but failing open here would permit
+exactly the merge the guard exists to prevent, and the fallback is only that a human merges.
+
+This replaced a blanket `Bash(gh pr merge:*)` deny, which was right in intent and wrong in effect: **deny outranks
+allow**, so `scripts/unattended.sh on` reported success while doing nothing and every unattended run stalled at its
+first PR. That was issue #4.
 
 ```bash
 scripts/unattended.sh on     # allow self-merge, gated on green CI
