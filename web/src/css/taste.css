@@ -1,0 +1,328 @@
+/* The wizard. One question per screen, set large, with the progress device kept quiet.
+   Modelled on the pattern in the owner's Kawan app: discrete steps, a floating bottom
+   island carrying Back / Continue and the step counter, a step index with ticks, and a
+   cross-fade plus 8px rise between steps that collapses under prefers-reduced-motion.
+
+   Nothing is written anywhere until the final CTA. */
+
+.taste {
+  display: grid;
+  gap: var(--s6);
+  padding-block: var(--s6);
+  /* Clearance for the floating island, which would otherwise sit on the last option. */
+  padding-bottom: 128px;
+  min-height: calc(100dvh - 64px);
+  align-content: start;
+}
+
+@media (min-width: 56rem) {
+  .taste {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    gap: var(--s8);
+    padding-block: var(--s7);
+    padding-bottom: 140px;
+    min-height: calc(100dvh - 72px);
+  }
+}
+
+/* The mascot sits with the progress index rather than above the question. On a phone
+   it does not appear at all: a 132px companion above the question pushes the actual
+   question below the fold, and phone width is the default case here. */
+.taste-rail {
+  display: none;
+}
+
+@media (min-width: 56rem) {
+  .taste-rail {
+    display: block;
+    position: sticky;
+    top: calc(72px + var(--s6));
+    align-self: start;
+  }
+
+  .taste-rail .index-island {
+    margin-top: var(--s6);
+  }
+}
+
+.step-panel[hidden] {
+  display: none;
+}
+
+/* Vertically centred against the space between the nav and the island, so a four
+   option step does not sit in the top third with a void beneath it. */
+@media (min-width: 56rem) {
+  .step-panel:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100dvh - 72px - 140px - var(--s7));
+  }
+}
+
+.step-question {
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+@media (min-width: 48rem) {
+  .step-question {
+    font-size: var(--t-3xl);
+  }
+}
+
+.step-hint {
+  margin-top: var(--s3);
+  color: var(--ink-soft);
+  max-width: var(--measure);
+}
+
+.options {
+  display: grid;
+  gap: var(--s3);
+  margin-top: var(--s6);
+  max-width: 48rem;
+}
+
+/* Two columns from tablet up. One column of full-width bars reads as a list of rows
+   to scroll, not a set of choices to pick between. */
+@media (min-width: 40rem) {
+  .taste .options {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.option {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  padding: var(--s4);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.option:hover {
+  border-color: var(--ink-faint);
+  background: var(--paper-sunk);
+}
+
+.option:focus-within {
+  outline: 2px solid var(--enamel);
+  outline-offset: 2px;
+}
+
+.option:has(input:checked) {
+  border-color: var(--ink);
+  background: var(--paper-raised);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.option:active {
+  transform: translateY(1px);
+}
+
+.option-label {
+  font-weight: 500;
+  flex: 1;
+}
+
+.option-note {
+  display: block;
+  font-weight: 400;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  margin-top: var(--s1);
+}
+
+.option-tick {
+  font-size: var(--t-sm);
+  color: var(--ink);
+  line-height: 1;
+}
+
+.own-words {
+  margin-top: var(--s4);
+  max-width: 44rem;
+}
+
+/* ------------------------------------------------------------------ index island */
+
+.index-list > li + li {
+  margin-top: var(--s1);
+}
+
+.index-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: var(--t-ms);
+  color: var(--ink-soft);
+  background: none;
+  border: none;
+  border-left: 2px solid var(--rule);
+  padding: var(--s2) var(--s3);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.index-link:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.index-link[aria-current="step"] {
+  color: var(--ink);
+  font-weight: 600;
+  border-left-color: var(--ink);
+}
+
+.index-link:disabled {
+  cursor: default;
+  color: var(--ink-faint);
+}
+
+.index-tick {
+  color: var(--enamel);
+  font-size: var(--t-sm);
+}
+
+/* ----------------------------------------------------------------- bottom island */
+
+/* Radius stays at zero here. The pill is the source chip's alone, and a pill-shaped
+   island would be the second place a rounded shape appears with no reason for it. */
+.bottom-island {
+  position: fixed;
+  bottom: var(--s5);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-island);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: calc(100% - var(--s6));
+  max-width: 27rem;
+  justify-content: space-between;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  box-shadow: var(--lift);
+  padding: var(--s2) var(--s2) var(--s2) var(--s3);
+}
+
+.island-counter {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.island-back {
+  font: inherit;
+  font-size: var(--t-ms);
+  font-weight: 500;
+  color: var(--ink);
+  background: none;
+  border: none;
+  padding: var(--s2) var(--s3);
+  cursor: pointer;
+  border-radius: var(--r-input);
+}
+
+.island-back:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
+.bottom-island .btn {
+  padding: var(--s2) var(--s4);
+  font-size: var(--t-ms);
+}
+
+/* --------------------------------------------------------------------- mascot */
+
+/* The stage and the reading occupy the same box, stacked. The reading is painted
+   first and stays until the model actually mounts, so the panel is never blank while
+   500 KB of pixi is in flight. */
+.mascot {
+  position: relative;
+  width: 100%;
+}
+
+/* The fallback carries the same information the model would: what the evidence behind
+   this pick actually is. If it could only smile it would be decoration. */
+.mascot-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 2px solid var(--rule);
+  padding-left: var(--s4);
+  padding-right: var(--s8);
+}
+
+.mascot-canvas,
+.mascot-fallback {
+  position: absolute;
+  inset: 0;
+}
+
+/* Only the live stage needs a reserved box. The reading sizes to its own text, so a
+   missing model leaves a two-line panel rather than 200px of empty rule. */
+.mascot-live {
+  height: 200px;
+}
+
+.mascot:not(.mascot-live) .mascot-fallback {
+  position: static;
+}
+
+.mascot canvas {
+  display: block;
+}
+
+.mascot-dismiss {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  font: inherit;
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-input);
+  padding: var(--s1) var(--s2);
+  cursor: pointer;
+}
+
+.mascot-dismiss:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.mascot-read {
+  font-size: var(--t-ms);
+  font-weight: 600;
+}
+
+.mascot-note {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  margin-top: var(--s1);
+  max-width: 32ch;
+}

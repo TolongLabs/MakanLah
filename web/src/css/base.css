@@ -1,0 +1,298 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--chrome);
+  font-size: var(--t-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+figure,
+blockquote,
+ul,
+ol {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------- headings */
+
+.display {
+  font-size: var(--t-display);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.h-section {
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.h-sub {
+  font-size: var(--t-xl);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  font-size: var(--t-lg);
+  line-height: 1.45;
+  color: var(--ink-soft);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.body-soft {
+  color: var(--ink-soft);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.meta-line {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Middots are rationed to one separator family, and only inside a metadata line. */
+.meta-line > span + span::before {
+  content: " · ";
+  color: var(--ink-faint);
+}
+
+/* -------------------------------------------------------------------- controls */
+
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--enamel);
+  outline-offset: 2px;
+  border-radius: var(--r-input);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: var(--r-input);
+  padding: var(--s3) var(--s5);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.btn-primary {
+  color: var(--paper);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--ink-soft);
+  border-color: var(--ink-soft);
+}
+
+.btn-quiet {
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  background: var(--paper-sunk);
+  border-color: var(--ink-faint);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-wide {
+  width: 100%;
+}
+
+.link {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  text-decoration-color: currentcolor;
+}
+
+/* --------------------------------------------------------------------- fields */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.field > label {
+  font-size: var(--t-ms);
+  font-weight: 500;
+}
+
+.field input,
+.field textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  padding: var(--s3) var(--s4);
+  width: 100%;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+.field-help {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+.field-error {
+  font-size: var(--t-sm);
+  color: var(--warn);
+}
+
+/* --------------------------------------------------------------------- notices */
+
+/* --warn is reserved for degradation and staleness, per DESIGN.md. It never
+   decorates anything that is merely important. */
+.notice {
+  display: block;
+  padding: var(--s3) var(--s4);
+  background: var(--warn-quiet);
+  border-left: 2px solid var(--warn);
+  color: var(--warn);
+  font-size: var(--t-ms);
+}
+
+.notice-plain {
+  color: var(--ink-soft);
+  font-size: var(--t-ms);
+}
+
+.notice a,
+.notice-plain a {
+  color: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------- layout */
+
+.page {
+  max-width: var(--page);
+  margin: 0 auto;
+  padding-inline: var(--s4);
+}
+
+@media (min-width: 48rem) {
+  .page {
+    padding-inline: var(--s6);
+  }
+}
+
+/* ---------------------------------------------------------------------- motion */
+
+/* Every animation in the app enters through one of these two classes, so the
+   reduced-motion override below is the whole story rather than most of it. */
+.rise-in {
+  animation: rise-in var(--dur-step) var(--ease) both;
+}
+
+.fade-in {
+  animation: fade-in var(--dur-step) var(--ease) both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .rise-in,
+  .fade-in,
+  .skeleton {
+    animation: none;
+  }
+
+  /* Transitions are all hover and press feedback on interactive chrome, which is
+     where reduced motion still wants an instant state change rather than none. */
+  .btn,
+  .option,
+  .nav-link,
+  .index-link {
+    transition-duration: 1ms;
+  }
+}

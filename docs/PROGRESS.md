@@ -5,9 +5,9 @@
 the main checkout. **A branch is per-worktree, not per-session** — sharing one directory put a backend commit on the
 peer's branch before this was split. Do not check out `feat/app-scaffold` in the main directory.
 
-**Ranking quality is now measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.984, wd@5
-0.000, top1 51/51** across 51 runs, up from 0.780 and 47-of-51. **p95 is 4.66s against the 3s target in
-[`PRD.md`](PRD.md)** — bounded, not met; the trade is recorded in [`TRD.md`](TRD.md).
+**Ranking quality is now measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.976, wd@5
+0.000, top1 51/51** across 51 runs in English and Chinese, up from 0.780 and 47-of-51. **p95 is 5.30s and still misses
+the 3s target in [`PRD.md`](PRD.md)** — improved from 11.19s, not met.
 
 **Auth and the copilot are in.** Email and password with one shared guest (#9), and `/ask`, which answers a question
 about a venue from its stored excerpts **or says the posts do not cover it** (#12).

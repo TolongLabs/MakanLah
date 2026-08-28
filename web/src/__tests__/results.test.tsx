@@ -1,12 +1,19 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import App from '../App'
-import type { Result } from '../api'
+import { render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, expect, it } from 'vitest'
+import type { Citation, Result } from '../api'
+import { ResultRow } from '../components/ResultRow'
 
-vi.mock('../api', async () => {
-  const actual = await vi.importActual<typeof import('../api')>('../api')
-  return { ...actual, recommend: vi.fn() }
-})
+function citation(over: Partial<Citation> = {}): Citation {
+  return {
+    post_url: 'https://www.rednote.com/explore/abc',
+    excerpt: '汤底浓郁药材香，肉质软烂入味，配白饭简直绝配！Sedap sangat.',
+    platform: 'rednote',
+    author_handle: 'author_ab12',
+    posted_at: 'Feb 17',
+    ...over
+  }
+}
 
 function result(over: Partial<Result> = {}): Result {
   return {
@@ -19,74 +26,137 @@ function result(over: Partial<Result> = {}): Result {
       maps_url: 'https://www.google.com/maps/search/?api=1&query=x',
       dishes: ['肉骨茶', 'nasi lemak', 'ayam goreng berempah']
     },
-    score: 0.78,
+    rank: 1,
     why: 'Rich herbal broth, and the locals keep going back.',
     distance_m: 1200,
-    citations: [
-      {
-        post_url: 'https://www.rednote.com/explore/abc',
-        excerpt: '汤底浓郁药材香，肉质软烂入味，配白饭简直绝配！Sedap sangat.',
-        platform: 'rednote',
-        author_handle: 'author_ab12',
-        posted_at: 'Feb 17'
-      }
-    ],
+    citations: [citation()],
     ...over
   }
 }
 
-async function renderWith(results: Result[]) {
-  const api = await import('../api')
-  vi.mocked(api.recommend).mockResolvedValue({ results, degraded: false, sources_used: ['rednote'] })
-  const { default: userEventDefault } = await import('@testing-library/react')
-  void userEventDefault
-  const view = render(<App />)
-  const input = screen.getByLabelText('What you feel like eating')
-  const { fireEvent } = await import('@testing-library/react')
-  fireEvent.change(input, { target: { value: 'bak kut teh' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Find Food' }))
-  await screen.findByText(/兴记肉骨茶/)
-  return view
+function renderRow(r: Result) {
+  return render(
+    <MemoryRouter>
+      <ol>
+        <ResultRow result={r} rank={1} />
+      </ol>
+    </MemoryRouter>
+  )
 }
 
 describe('a result', () => {
-  it('renders mixed EN/MS/ZH text without dropping any of it', async () => {
-    // PRD acceptance criterion A7. Chinese glyphs, a Malay phrase and English
-    // all appear in one row, and none of them may be lost or transliterated.
-    await renderWith([result()])
+  it('renders mixed EN/MS/ZH text without dropping any of it', () => {
+    // PRD acceptance criterion A7. Chinese glyphs, a Malay phrase and English all
+    // appear in one row, and none of them may be lost or transliterated.
+    renderRow(result())
     expect(screen.getByText(/兴记肉骨茶 Hing Kee Bakuteh/)).toBeTruthy()
     expect(screen.getByText(/Sedap sangat/)).toBeTruthy()
     expect(screen.getByText(/汤底浓郁药材香/)).toBeTruthy()
   })
 
-  it('shows the excerpt verbatim, not translated', async () => {
-    await renderWith([result()])
-    const quote = screen.getByText(/汤底浓郁药材香/)
-    expect(quote.textContent).toContain('配白饭简直绝配')
+  it('shows the excerpt verbatim, not translated', () => {
+    renderRow(result())
+    expect(screen.getByText(/汤底浓郁药材香/).textContent).toContain('配白饭简直绝配')
   })
 
-  it('links to the real post', async () => {
-    await renderWith([result()])
-    const link = screen.getByRole('link', { name: /RedNote/ })
-    expect(link.getAttribute('href')).toBe('https://www.rednote.com/explore/abc')
+  it('links to the real post', () => {
+    renderRow(result())
+    expect(screen.getByRole('link', { name: /RedNote/ }).getAttribute('href')).toBe(
+      'https://www.rednote.com/explore/abc'
+    )
   })
 
-  it('does not render a result that carries no citation', async () => {
-    // The invariant, at the last possible moment. It should never arrive.
-    await renderWith([result({ citations: [] }), result()])
-    expect(screen.getAllByRole('listitem')).toHaveLength(1)
+  it('does not render a result that carries no citation', () => {
+    // The invariant at the last possible moment. It should never arrive.
+    const { container } = renderRow(result({ citations: [] }))
+    expect(container.querySelectorAll('li.result')).toHaveLength(0)
   })
 
-  it('omits distance rather than inventing one when there is no coordinate', async () => {
-    // Showing "0 m" would claim the venue is where the user is standing. A
-    // venue with null coordinates stays rankable by preference instead.
-    const { container } = await renderWith([result({ distance_m: null })])
-    const meta = container.querySelector('.meta')
-    expect(meta?.textContent).not.toMatch(/\d+\s*(m|km)\b/)
+  it('omits distance rather than inventing one when there is no coordinate', () => {
+    // Showing "0 m" would claim the venue is where the user is standing. A venue with
+    // null coordinates stays rankable by preference instead.
+    const { container } = renderRow(result({ distance_m: null }))
+    expect(container.querySelector('.meta-line')?.textContent).not.toMatch(/\d+\s*(m|km)\b/)
   })
 
-  it('does show distance when there is a coordinate', async () => {
-    const { container } = await renderWith([result({ distance_m: 1200 })])
-    expect(container.querySelector('.meta')?.textContent).toContain('1.2 km')
+  it('does show distance when there is a coordinate', () => {
+    const { container } = renderRow(result({ distance_m: 1200 }))
+    expect(container.querySelector('.meta-line')?.textContent).toContain('1.2 km')
+  })
+
+  it('never renders the retrieval score, which orders nothing the user sees', () => {
+    // docs/TRD.md dropped `score` because it reported retrieval cosine while ordering
+    // came from the re-rank, so a higher number could appear below a lower one.
+    const { container } = renderRow(result({ score: 0.5705 }))
+    expect(container.textContent).not.toContain('0.57')
+  })
+})
+
+describe('evidence on a row', () => {
+  it('shows both excerpts when two platforms carry the venue', () => {
+    // The layout is the corroboration claim, so this is the assertion that the claim
+    // is actually being made.
+    const { container } = renderRow(
+      result({
+        citations: [
+          citation(),
+          citation({ post_url: 'https://maps.example/1', platform: 'google_maps', excerpt: 'Queue means something.' })
+        ]
+      })
+    )
+    expect(container.querySelectorAll('.excerpt')).toHaveLength(2)
+    expect(container.querySelector('.evidence-pair')).toBeTruthy()
+  })
+
+  it('shows one excerpt when the same platform carries it twice', () => {
+    // Two posts from one platform is one source saying it twice. Rendering that as a
+    // pair would dress a single source up as agreement.
+    const { container } = renderRow(
+      result({
+        citations: [citation(), citation({ post_url: 'https://www.rednote.com/explore/def', excerpt: '也很好吃' })]
+      })
+    )
+    expect(container.querySelectorAll('.excerpt')).toHaveLength(1)
+    expect(container.querySelector('.evidence-pair')).toBeNull()
+  })
+
+  it('pairs every excerpt with its own source chip', () => {
+    const { container } = renderRow(
+      result({
+        citations: [
+          citation(),
+          citation({ post_url: 'https://maps.example/1', platform: 'google_maps', excerpt: 'Queue means something.' })
+        ]
+      })
+    )
+    for (const fig of container.querySelectorAll('figure.testimony')) {
+      expect(within(fig as HTMLElement).getByRole('link')).toBeTruthy()
+    }
+  })
+
+  it('says why an entry is present when the API reports a basis', () => {
+    renderRow(result({ match: { basis: 'semantic' } }))
+    expect(screen.getByText(/close in meaning/i)).toBeTruthy()
+  })
+
+  it('says nothing about basis when the API does not report one', () => {
+    const { container } = renderRow(result())
+    expect(container.querySelector('.basis')).toBeNull()
+  })
+})
+
+describe('the rank numeral', () => {
+  it('shows the position the re-rank assigned, not the row it happens to occupy', () => {
+    // A result whose citations are all unreachable does not render. Counting positions
+    // in the list would renumber everything below it and quietly disagree with the API.
+    const { container } = render(
+      <MemoryRouter>
+        <ol>
+          <ResultRow result={result({ citations: [] })} rank={1} />
+          <ResultRow result={result({ rank: 2 })} rank={2} />
+        </ol>
+      </MemoryRouter>
+    )
+    expect(container.querySelector('.rank')?.textContent).toBe('2')
   })
 })

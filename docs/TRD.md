@@ -209,34 +209,6 @@ user waiting. Free-quota alternatives measured the same way: `qwen-plus-2025-07-
 **Enable Stop-on-Exhaust in the console** so an exhausted lane returns `403 AllocationQuota.FreeTierOnly` rather than
 billing silently.
 
-### The Latency Budget, And Why It Is Still Missed
-
-`PRD.md` asks for **p95 < 3s**. The measured p95 is **4.66s**. That is a stated trade, not an oversight.
-
-**Re-rank is 93.9% of p95** — every other stage is rounding error:
-
-| Stage         | Median | p95   | Share Of p95 |
-| ------------- | ------ | ----- | ------------ |
-| Dish lookup   | 0.05s  | 0.06s | 0.6%         |
-| Embedding     | 0.18s  | 0.43s | 4.6%         |
-| Vector search | 0.06s  | 0.08s | 0.8%         |
-| Citations     | 0.08s  | 0.10s | 1.0%         |
-| **Re-rank**   | 2.72s  | 8.87s | **93.9%**    |
-
-**Its tail is upstream variance, not anything in this repo.** Identical prompts against the same lane measured p95
-**1.64s** in one window and **8.87s** in another. Two things were tried and rejected on measurement: `max_tokens` made
-it **worse** (p95 1.64s unbounded against 3.02s at 700), and a faster model was already chosen.
-
-**So the tail is bounded rather than chased.** `RERANK_TIMEOUT` defaults to 4s, covering the retry rather than each
-attempt, and past it the retrieval order ships — worse ranking, still cited, still fast. This is the fallback the
-ranking section already described; the timeout now agrees with it instead of being 60s.
-
-Bounding cost nothing measurable: **p@5 0.976 → 0.984, top1 51/51, p95 5.30s → 4.66s, max 7.16s → 4.74s.**
-
-**Closing the last 1.66s means a ~2.5s budget, which would drop re-ranking on a large share of requests.** For a product
-whose promise is a trustworthy pick, shipping worse rankings to hit a latency number is the wrong trade. Revisit when a
-faster lane exists, or when the target is reconsidered against measured quality. One environment variable either way.
-
 ### The Embedding Decision
 
 `PRODUCT.md` risk #3 is EN/MS/ZH inside one sentence, and this is where a stack fails silently — retrieval biases toward

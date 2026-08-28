@@ -1,0 +1,244 @@
+/* The landing page argues by exhibit. Its hero is a real pick with real excerpts from
+   two platforms, because the product's whole claim is that the evidence is there, and
+   a claim shown beats a claim made. There is no stock photography and no invented
+   product screenshot for the same reason: a fabricated image on a page selling
+   "we do not fabricate" would undercut the one thing being sold. */
+
+.hero {
+  display: grid;
+  gap: var(--s7);
+  padding-block: var(--s7) var(--s8);
+  align-items: start;
+}
+
+@media (min-width: 62rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    gap: var(--s8);
+    /* Centred rather than top-aligned: the headline block is short and the specimen
+       is tall, and hanging both from the top left a third of the fold empty. */
+    align-items: center;
+    padding-block: var(--s8);
+    min-height: min(38rem, calc(100dvh - 72px));
+  }
+}
+
+.hero-copy > * + * {
+  margin-top: var(--s5);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s6);
+}
+
+/* A specimen plate, not a card: 1px rule, zero radius, no fill and no shadow. The
+   distinction matters, because a card says "component" and a plate says "exhibit". */
+.specimen {
+  border: 1px solid var(--rule);
+  padding: var(--s5);
+  margin: 0;
+}
+
+@media (min-width: 48rem) {
+  .specimen {
+    padding: var(--s6);
+  }
+}
+
+.specimen-caption {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  margin-bottom: var(--s3);
+}
+
+.specimen-head {
+  padding-bottom: var(--s4);
+}
+
+.specimen .evidence {
+  margin-top: 0;
+}
+
+.feature-quote {
+  margin-top: var(--s6);
+  max-width: 44rem;
+}
+
+/* The quote is the section's content, not an explainer paragraph parked in the right
+   column, so this is a real two-column composition rather than the split-header
+   pattern it can be mistaken for. */
+.section-split {
+  display: grid;
+  gap: var(--s6);
+}
+
+@media (min-width: 62rem) {
+  .section-split {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    gap: var(--s8);
+    align-items: start;
+  }
+
+  .section-split .feature-quote {
+    margin-top: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ how it reads */
+
+.section {
+  padding-block: var(--s8);
+  border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 62rem) {
+  .section {
+    padding-block: var(--s9);
+  }
+}
+
+.anatomy {
+  display: grid;
+  gap: var(--s7);
+  margin-top: var(--s6);
+}
+
+@media (min-width: 62rem) {
+  .anatomy {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: var(--s8);
+  }
+}
+
+/* Numbering is honest here and only here: a reading order is a genuine sequence.
+   It never spreads to anything unordered. */
+.key {
+  counter-reset: key;
+}
+
+.key > li {
+  counter-increment: key;
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  gap: var(--s3);
+  padding-block: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.key > li::before {
+  content: counter(key);
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  padding-top: 0.15rem;
+}
+
+.key-term {
+  font-weight: 600;
+  font-size: var(--t-ms);
+}
+
+.key-note {
+  font-size: var(--t-ms);
+  color: var(--ink-soft);
+  margin-top: var(--s1);
+}
+
+/* ---------------------------------------------------------------------- corpus */
+
+.corpus {
+  display: grid;
+  gap: var(--s5);
+  margin-top: var(--s6);
+}
+
+@media (min-width: 40rem) {
+  .corpus {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s6);
+  }
+}
+
+.stat {
+  border-top: 1px solid var(--rule-strong);
+  padding-top: var(--s3);
+}
+
+.stat-figure {
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  margin-top: var(--s2);
+}
+
+/* ----------------------------------------------------------------- commitments */
+
+.commitments {
+  margin-top: var(--s6);
+}
+
+.commitments > li {
+  display: grid;
+  gap: var(--s2);
+  padding-block: var(--s5);
+  border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 48rem) {
+  .commitments > li {
+    grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+    gap: var(--s7);
+    align-items: baseline;
+  }
+}
+
+.commit-claim {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.commit-why {
+  font-size: var(--t-ms);
+  color: var(--ink-soft);
+  max-width: 62ch;
+}
+
+/* -------------------------------------------------------------------- last call */
+
+.last-call {
+  border-top: 1px solid var(--rule);
+  padding-block: var(--s8) var(--s9);
+  display: grid;
+  gap: var(--s5);
+}
+
+@media (min-width: 48rem) {
+  .last-call {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--s7);
+    /* Capped, so the button stays in the same glance as the sentence it answers
+       instead of drifting to the far edge of a wide screen. */
+    max-width: 52rem;
+  }
+}
+
+.section-lede {
+  margin-top: var(--s4);
+}
+
+.section-notice {
+  margin-top: var(--s5);
+}
