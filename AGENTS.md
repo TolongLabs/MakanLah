@@ -89,6 +89,11 @@ never the second.
 final. If you are behind, cut scope, not the quality of what ships. **Never claim it works without having run it and
 read the output** — nobody is checking behind you.
 
+**And never verify a fix with the fix's own definition.** A check that decides its own success agrees with itself
+perfectly and proves nothing. This is the failure that actually recurs — three instances on 2026-08-28, each reporting
+clean, each wrong — so confirm against something the check does not own. Worked examples and the shape to watch for:
+[`docs/AUTONOMY.md`](docs/AUTONOMY.md#a-check-that-owns-its-own-definition-of-success).
+
 ---
 
 ## The Gate Before Implementation
