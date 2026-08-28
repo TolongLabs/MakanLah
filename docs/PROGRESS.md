@@ -5,8 +5,12 @@
 the main checkout. **A branch is per-worktree, not per-session** — sharing one directory put a backend commit on the
 peer's branch before this was split. Do not check out `feat/app-scaffold` in the main directory.
 
-**Ranking quality is now measured, not asserted.** `evals/` holds pinned ground truth and a runner. Baseline: **p@5
-0.780, wd@5 0.000, top1 47/51, median 2.33s** across 51 runs in English and Chinese.
+**Ranking quality is now measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.976, wd@5
+0.000, top1 51/51** across 51 runs in English and Chinese, up from 0.780 and 47-of-51. **p95 is 5.30s and still misses
+the 3s target in [`PRD.md`](PRD.md)** — improved from 11.19s, not met.
+
+**Auth and the copilot are in.** Email and password with one shared guest (#9), and `/ask`, which answers a question
+about a venue from its stored excerpts **or says the posts do not cover it** (#12).
 
 **Every model lane is free again.** The rolling DashScope aliases carry no free quota; each lane is pinned to a dated
 snapshot with 1M tokens expiring **2026-10-13**. Re-check the console before repinning.
@@ -15,7 +19,7 @@ snapshot with 1M tokens expiring **2026-10-13**. Re-check the console before rep
 
 ---
 
-## Three Things Found By Measuring, 2026-08-28
+## Five Things Found By Measuring, 2026-08-28
 
 1. **The reported ranking bug was the model, not the architecture.** `bak kut teh` returning 首都茶室 and 何九茶室 was
    blamed on venue-level embeddings. Measured A/B: `qwen-turbo` scores **p@5 0.20 / wd@5 0.40** and reproduces the
@@ -27,6 +31,11 @@ snapshot with 1M tokens expiring **2026-10-13**. Re-check the console before rep
    corpus is unreachable
 3. **The first quality metric flattered the system.** Counting a venue wrong only when its dishes were the opposite
    cuisine scores the actual complaint **0.000**, because a kopitiam and a bak kut teh shop are both Malaysian
+4. **A median was hiding the tail.** [`PRD.md`](PRD.md) sets a **p95** target and every report until now quoted a
+   median. The baseline's median was a healthy 2.61s while its p95 was **11.19s**. The number that mattered was never
+   being read
+5. **Nothing asserted the response shape.** `score` reported retrieval cosine while the ORDER came from the re-rank, so
+   a higher number could sit below a lower one — in every response, caught by no test. Now `rank` + `match.basis`
 
 **Start the API:** `scripts/dev-api.sh`. **Point the live page at it:** append `?api=<url>`.
 
