@@ -142,6 +142,29 @@ So when a check reports clean, ask what would have to be true for it to report c
 "nothing, by construction", the check is measuring its own definition. **Write the second check first, from a different
 angle, before believing the first.**
 
+#### The Merge Case, Because It Is Invisible And Recurs
+
+A fourth instance, the same day, and the worst-behaved: **a merge silently reverted a commit, and CI stayed green
+because the commit's tests went out with its code.** A suite cannot fail on a test that is not there.
+
+It arose from a rebase reconstructed as a merge — a legitimate workaround for the force-push deny — where the rebase had
+been onto a stale base, so the merge encoded a revert. The author verified `tree == rebased-tip`, which passed, and
+proved only that a tree built on the wrong base had been faithfully reproduced. **The second parent was the whole
+question and was never asked.**
+
+Two checks, cheapest first, after any merge you did not produce by fast-forward:
+
+```bash
+git diff --stat <merge> <second-parent> -- <paths the merge should not touch>   # must be empty
+git diff --diff-filter=D --name-only <pre-merge-tip> <merge>                    # what did it delete?
+```
+
+and compare the **test count** across the merge. A green suite with fewer tests in it is not a green suite.
+
+**`git merge-base --is-ancestor` is not evidence the content arrived.** It returned true for the reverted commit, which
+is exactly why the revert was durable: git considered it merged and would never re-apply it, so it sat latent on the
+branch and would have travelled into the next PR.
+
 ### Unattended Mode
 
 `main` is PR-gated and agents are denied `gh pr merge`, which is correct when a human is present and **will stall an
