@@ -9,8 +9,8 @@ differ between them.
 """
 
 import json
-import time
 import re
+import time
 import urllib.error
 import urllib.request
 
