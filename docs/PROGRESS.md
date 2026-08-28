@@ -1,21 +1,33 @@
-# Progress — 2026-08-28 · round two, measured
+# Progress — 2026-08-28 · everything merged to main
 
-**Two sessions are working this repo at once.** This one owns `makanlah/`, `ingest/`, `api/`, `tests/` and `evals/` on
-`feat/app-scaffold`, from a **separate worktree** at `../MakanLah-api`. The peer owns `web/` on `feat/web-redesign` in
-the main checkout. **A branch is per-worktree, not per-session** — sharing one directory put a backend commit on the
-peer's branch before this was split. Do not check out `feat/app-scaffold` in the main directory.
+**`main` is at `e644755` and carries all of it.** Five PRs merged today — #3, #5, #14, #17, #18 — and no feature
+branches remain. **220 Python tests, 71 web tests, lint and format clean, CI green.** Verified on `main` rather than on
+a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the
+corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
-**Ranking quality is now measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.976, wd@5
-0.000, top1 51/51** across 51 runs in English and Chinese, up from 0.780 and 47-of-51. **p95 is 5.30s and still misses
-the 3s target in [`PRD.md`](PRD.md)** — improved from 11.19s, not met.
+**Ranking is measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.984, wd@5 0.000, top1
+51/51**, up from 0.780 and 47-of-51. **p95 is 4.66s against the 3s target in [`PRD.md`](PRD.md)** — bounded
+deliberately, not met, and the trade is written up in [`TRD.md`](TRD.md). Tracked as **#16**.
 
-**Auth and the copilot are in.** Email and password with one shared guest (#9), and `/ask`, which answers a question
-about a venue from its stored excerpts **or says the posts do not cover it** (#12).
+**A full eval run costs ~134k tokens**, 13% of a lane's free allowance, which does not refill before it expires on
+**2026-10-13**. The runner prints the bill before spending it; use `--quick` while iterating.
 
-**Every model lane is free again.** The rolling DashScope aliases carry no free quota; each lane is pinned to a dated
-snapshot with 1M tokens expiring **2026-10-13**. Re-check the console before repinning.
+**Every model lane is pinned to a dated free-quota snapshot.** The rolling DashScope aliases carry none. Re-check the
+console before repinning.
 
 **Web client is live:** <https://makanlah-b5h.pages.dev> · **API is local only** — see Blocked.
+
+---
+
+## Read This Before Merging Anything
+
+**A merge silently reverted a commit today and CI stayed green**, because the commit's tests went out with its code. It
+was caught only because the test count dropped 220 → 216. `git merge-base --is-ancestor` returned **true** for the
+reverted commit, which is why it was durable — git considered it merged and would never re-apply it.
+
+The checks that would have caught it, and the four instances of the same shape from one day, are rule 4 in
+[`AUTONOMY.md`](AUTONOMY.md#a-check-that-owns-its-own-definition-of-success). **It is the most reusable thing this
+session produced.**
 
 ---
 
@@ -89,11 +101,16 @@ and also returns the `place_id` that makes venue merging evidence-based rather t
 
 ## Blocked, Needing A Human
 
-- **Nobody can merge. PRs #3 and #5 are green and waiting.** `scripts/unattended.sh on` reports success but does not
-  work: **deny outranks allow** in Claude Code, so the `gh pr merge` deny in `.claude/settings.json` cannot be lifted
-  from `settings.local.json`. Filed as **#4**. Not routed around — routing around a deny is the guard failing
+- **Agents still cannot merge.** `gh pr merge` is a hard deny in the committed `.claude/settings.json`, and
+  `settings.local.json` cannot override it, so `scripts/unattended.sh on` reports success without working. The owner
+  merged today's five PRs by hand. **#4** asks for the narrower mechanism: allow merge only on green CI. Never routed
+  around — routing around a deny is the guard failing
 - **API not deployed.** Fly has no free allowance and the card is unfunded. `fly.toml` and `Dockerfile` are written; it
-  is one `flyctl deploy` at roughly USD 2-3/month. Filed as **#6**
+  is one `flyctl deploy` at roughly USD 2-3/month. **#6**
+- **1008 Google Maps posts are missing their text.** The scrape read reviews collapsed behind Google's own control. The
+  marker is stripped from all 1331 affected excerpts and the scraper now expands before reading, but the lost text needs
+  a re-capture over CDP. **#15**
+- **p95 is 4.66s against a 3s target.** Bounded, not met, and the trade is deliberate. **#16**
 
 ---
 
