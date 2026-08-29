@@ -1,7 +1,11 @@
 # Demo Video Pipeline
 
-Records the product, narrates it, and muxes the two. **Free, local, no account.** Proven end to end on 2026-08-28;
-output was 47.7s at 1920×1080, 2.9 MB.
+Records the product, narrates it, and muxes the two. **Free, local, no account.** Run three times: 47.7s on 2026-08-28,
+then 55.4s twice on 2026-08-29 after the citation work, all at 1920×1080 and around 2.5 MB.
+
+**The third run is the one worth looking at, and the difference is the corpus rather than the pipeline.** `record.mjs`
+reported **1** two-source pair on screen in the second run and **4** in the third, because the extraction replay (#42)
+gave venues real testimony to corroborate with. The same script, unchanged, films a materially better product.
 
 Rationale and the options that were rejected:
 [`../../docs/superpowers/research/2026-08-28-agent-recorded-demo-video.md`](../../docs/superpowers/research/2026-08-28-agent-recorded-demo-video.md).
