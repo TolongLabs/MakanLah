@@ -75,3 +75,46 @@ class TestRenderBlueprint:
         # pyproject.toml declares no build backend, so `pip install .` fails.
         assert 'pip install .' not in service['buildCommand']
         assert 'requirements.txt' in service['buildCommand']
+
+
+class TestVercelConfig:
+    """vercel.json is what actually ships the API. Every assertion here is a
+    failure that would deploy green and be wrong in production."""
+
+    @pytest.fixture
+    def cfg(self):
+        import json
+
+        return json.loads((ROOT / 'vercel.json').read_text())
+
+    def test_region_is_singapore(self, cfg):
+        # Vercel defaults new projects to iad1, Washington DC. Neon is in
+        # ap-southeast-1 and the model API is in Singapore, so iad1 adds a
+        # transpacific round trip to every query and nothing would fail loudly.
+        assert cfg['regions'] == ['sin1']
+
+    def test_exactly_one_function_is_built(self, cfg):
+        # Vercel builds every file under api/ as its own function. Without an
+        # explicit builds block, api/main.py ships a second time at /api/main:
+        # one app, two cold starts, two public paths.
+        assert len(cfg['builds']) == 1
+        assert cfg['builds'][0]['src'] == 'api/index.py'
+
+    def test_the_package_travels_with_the_function(self, cfg):
+        # api/main.py imports makanlah, which sits beside api/ rather than inside
+        # it, so it is not picked up by the builder's own tracing.
+        included = cfg['builds'][0]['config']['includeFiles']
+        assert any(i.startswith('makanlah') for i in included), included
+
+    def test_every_route_reaches_the_app(self, cfg):
+        routes = cfg['routes']
+        assert any(r['src'] == '/(.*)' and r['dest'] == 'api/index.py' for r in routes), routes
+
+    def test_duration_outlives_a_slow_query(self, cfg):
+        # p95 is ~2.9s and the embed and re-rank deadlines bound the tail, but a
+        # cold start plus both model calls must still fit.
+        assert cfg['builds'][0]['config']['maxDuration'] >= 30
+
+    def test_entrypoint_exports_an_asgi_app(self):
+        src = (ROOT / 'api' / 'index.py').read_text()
+        assert 'from api.main import app' in src
