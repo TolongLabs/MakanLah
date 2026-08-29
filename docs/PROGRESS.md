@@ -24,6 +24,84 @@ console before repinning.
 
 ---
 
+## 2026-08-29 — Two Workers, Three Merges, And The Real Launch Blocker Named
+
+**Prod serves `main`** (`/build.json` = `420e893`), and **#46 is closed**. Four PRs merged today: #57, #58, #61, plus
+the peer's #56 and #62. Suite is **300 passing** on `main`.
+
+### The Launch Blocker Is Not What The Backlog Said
+
+The deployed client calls `http://127.0.0.1:8000` — its build-time default — so **the public site works for nobody but
+the machine that built it**. The bundle also still carries a literal `https://your-api` placeholder. Deploying the API
+(#6) is therefore not a nice-to-have before the launch post; it is the post's precondition.
+
+**Cloudflare Python Workers is dead as an option, and this is now verified rather than assumed.** The Workers Python
+runtime ships **no PostgreSQL driver at all** — not `psycopg`, not `psycopg2`, not `asyncpg` — and documents only
+`aiohttp`, `httpx` and the JS `fetch()` FFI. `db.py` is `psycopg` throughout, so that path is a rewrite of the data
+layer onto Neon's HTTP SQL endpoint, across every query on the citation path.
+`docs/superpowers/research/2026-08-28-free-public-deployment.md` is corrected in place rather than left recommending
+something that cannot work.
+
+**Render Singapore is blueprinted and its build path is verified**, not sketched: a clean 3.11 venv installs
+`requirements.txt`, imports every runtime dependency, loads `api.main:app` with `/health` `/recommend` `/ask`, and folds
+a real venue name. That check caught `pip install .` failing — `pyproject.toml` declares no build backend — which would
+have broken Render's first build.
+
+**What is left on #6 is not mine to do:** a Render account and three pasted secrets (`DATABASE_URL`,
+`DASHSCOPE_API_KEY`, `CF_PAGES_PROJECT`). Creating accounts and typing credentials are outside the authorization.
+
+### Workers Are Working, With Caveats Worth Carrying
+
+Both lanes the owner asked for exist and both produced merged code:
+
+| Lane     | Model                                   | Outcome                                |
+| -------- | --------------------------------------- | -------------------------------------- |
+| Devin    | `swe-1-7` (SWE-1.7 Max, 262K, **Free**) | #31 — fold + disambiguation, 290 green |
+| OpenCode | `openrouter/z-ai/glm-5.3-flash`         | #41 — shared embed deadline, 270 green |
+
+**Three things cost time and will again.** Devin's `--permission-mode` rejects tool calls in `accept-edits` and `smart`
+is not on this account, so the only working non-interactive mode is `dangerous`; it is run in a **clone with no git
+remote** so it physically cannot push. Workspace trust is a separate gate —
+`/home/user/.local/share/devin/cli/trusted_workspaces.json` needs the path added. And a worker told to lint `makanlah/`
+will not lint the test file, which is how #57 went red on two ruff errors **in the spec I wrote**, not in the worker's
+code.
+
+**Neither worker was merged on its self-report.** Both spec files came back byte-identical, and each got a hidden check
+it never saw. #41's proved the deadline is genuinely shared in wall-clock — four batches against a 2.0s budget gave
+timeouts of 2.0 → 1.1 → 0.2 and gave up at 2.00s — where the committed test only proved the numbers decrease. #31's ran
+the fold across the live corpus to catch over-merging.
+
+### #41 Was A One-Line Omission, Not A Mystery
+
+`embed()` passed no timeout and inherited `_post`'s **120s default**, while `rerank()` beside it has always bounded
+itself with `RERANK_TIMEOUT`. That matches the observed maxima — **131.88s and 122.14s** against a p95 of 2.7–3.1s —
+almost exactly. Both production callers pass a single batch, so the shared budget never spans batches and ingestion is
+untouched.
+
+### What The Hidden Check Found: #59
+
+The fold made a data problem visible that `normalize()` cannot see: **`normalize()` finds 0 colliding venue groups
+across 256 venues; `fold_variants()` finds 6, covering 13.** Several are not branches — `八大八小 The Eight` and
+`八大八小` are **both in Bukit Jalil**, and `华阳冰室` / `华阳 Oriental Kopi` is the exact pair `text.py` already
+carries a comment about. The `兴记肉骨茶` group has **three** rows, not the two #31 documented. Filed as #59; each group
+needs checking against `place_id` before anything merges, and the evidence-based merge rule must not be loosened.
+
+### The Drift Guard Paid For Itself Within The Hour
+
+`tests/test_deploy_manifest.py` asserts `requirements.txt` and `pyproject.toml` agree. It fired for real on the rebase:
+#31 landed `opencc` as a **request-path** dependency and `requirements.txt` did not have it. Render would have built
+green and raised `ModuleNotFoundError` on every `/recommend` — a failure visible only in production, under traffic.
+`pyyaml` is a dev dependency so the blueprint checks cannot silently skip; a skipped check and a passing one are
+identical in a CI log.
+
+### Open
+
+**#6** needs the owner: a Render account, then `DATABASE_URL`, `DASHSCOPE_API_KEY` and `CF_PAGES_PROJECT` pasted into
+its dashboard, then `VITE_API_BASE_URL` set on Pages and a rebuild. **#15** (1,008 truncated Google Maps posts) needs
+the signed-in browser and is orchestrator-only. **#59** needs a review pass over six venue groups.
+
+---
+
 ## Read This Before Merging Anything
 
 **A merge silently reverted a commit today and CI stayed green**, because the commit's tests went out with its code. It
