@@ -38,10 +38,17 @@ const MascotStage = lazy(() => import('../live2d/MascotStage'))
  */
 const SPEAK_BY_MS = 1200
 
-/** The width at which the rail gains a column and she gains a stage. Mirrors the
-    56rem breakpoint in taste.css; the two have to agree, and CSS cannot tell React
-    not to mount a component. */
-const STAGE_AT = '(min-width: 56rem)'
+/** The width at which she gains a stage. Mirrors `.companion-stage` in taste.css;
+    the two have to agree, and CSS cannot tell React not to mount a component.
+
+    This was 56rem, to match the width at which the rail becomes a sticky column. That
+    conflated two different questions -- "is there room for a second column" and "is
+    there room for a character" -- and the tablet band answered no to the second on the
+    strength of the first. Measured at 834: 549 px of empty page below the last option,
+    and no companion anywhere on it. The reason her stage is off on a phone, that 220px
+    of character pushes the question below the fold, is a real constraint at 390 and
+    not one at 834. */
+const STAGE_AT = '(min-width: 48rem)'
 
 /**
  * True only where the stage is actually visible.

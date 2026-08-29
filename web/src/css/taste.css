@@ -382,9 +382,26 @@
   display: block;
 }
 
-@media (min-width: 56rem) {
+/* From tablet up. Below this she is a line in a bubble and nothing else: at 390 a
+   220px character above the question is the question below the fold, which is the
+   whole reason the gate exists. At 834 it is 220px taken out of 549px of nothing. */
+@media (min-width: 48rem) {
   .companion-stage {
     display: block;
+  }
+}
+
+/* Capped to the width she is framed for, in the band where the rail is stacked above
+   the question rather than beside it and would otherwise hand her the full page.
+
+   `Live2DStage.frame()` scales purely by height and centres on `w / 2`, so a stage
+   770px wide does not enlarge her -- it parks her in the middle of a 4:1 letterbox
+   while the bubble's tail stays at `left: var(--s6)`, pointing at 41px of nothing.
+   Measured at 834 before this cap: canvas 770x160. Same box as the rail column gives
+   her the same size and the same relationship to the tail at every width above phone. */
+@media (min-width: 48rem) and (max-width: 55.99rem) {
+  .companion-stage {
+    max-width: 18rem;
   }
 }
 
@@ -426,8 +443,8 @@
   border-bottom: 10px solid var(--bandung-soft);
 }
 
-/* Below 56rem she has no stage, so a tail pointing at nothing is a lie in layout. */
-@media (max-width: 55.99rem) {
+/* Below 48rem she has no stage, so a tail pointing at nothing is a lie in layout. */
+@media (max-width: 47.99rem) {
   .companion-bubble::before,
   .companion-bubble::after {
     display: none;

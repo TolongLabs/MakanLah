@@ -166,6 +166,52 @@ const browser = await chromium.launch()
   await page.close()
 }
 
+// ------------------------------------------------------------- tablet: she paints
+//
+// The band between phone and desktop had no companion at all: `Companion.tsx` gated
+// her at 56rem to match the width where the rail becomes a second column, which
+// answered "is there room for a character" with the answer to "is there room for a
+// column". Measured at 834 before the fix: canvas NONE, and 549px of empty page
+// between the last option and the island.
+//
+// Asserted HERE, in the check that counts pixels, rather than only in the geometry
+// run -- a reserved 288x220 box with nothing drawn in it is precisely the failure
+// that shipped once already, and a box is not a mascot.
+{
+  const page = await (await browser.newContext({ viewport: { width: 834, height: 1112 } })).newPage()
+  await page.goto(`${BASE}/taste`, { waitUntil: 'networkidle' })
+  const canvas = page.locator('.companion canvas')
+  try {
+    await canvas.waitFor({ state: 'attached', timeout: 20000 })
+  } catch {
+    say(false, 'tablet: no mascot canvas was ever created at 834')
+  }
+  await page.waitForTimeout(4000)
+
+  if (await canvas.count()) {
+    const ground = await page.evaluate(() => {
+      const paper = getComputedStyle(document.body).backgroundColor
+      const m = paper.match(/\d+/g)
+      return m ? m.slice(0, 3).map(Number) : [255, 255, 255]
+    })
+    const png = decodePng(await canvas.screenshot())
+    const ink = inkOf(png, ground)
+    // The same box as the rail column, not the full page width. `frame()` scales by
+    // height and centres on w/2, so a full-width stage leaves her small and adrift
+    // in a 4:1 letterbox with the bubble's tail pointing at nothing.
+    say(png.width <= 320, `tablet: her stage is the width she is framed for  ${png.width}x${png.height}`)
+    say(
+      ink.coverage >= MIN_COVERAGE,
+      `tablet: the mascot is painted  coverage=${ink.coverage.toFixed(1)}% (want >=${MIN_COVERAGE}%)`
+    )
+    say(
+      ink.topRow >= 0 && ink.topRow <= png.height * MAX_TOP_ROW_FRACTION,
+      `tablet: her head is in frame  topRow=${ink.topRow} of ${png.height}`
+    )
+  }
+  await page.close()
+}
+
 // ------------------------------------------------- phone: never mounted, not hidden
 {
   const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage()
