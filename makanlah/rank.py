@@ -299,6 +299,58 @@ def maps_url(venue):
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
+GAP_VENUES = 5
+
+
+def evidence_gap(named, dish, lexical, enriched, candidates):
+    """The corpus knows this dish and cannot show anybody writing about it.
+
+    Measured on prod: `roti canai` returned Mon Beef Roti, RAYs @ B.LAND, Potato
+    Corner, kaiia kanteen and Menya Aburi. The lexical lane had resolved the dish
+    correctly and found **exactly the two venues carrying it**, Devi's Corner and
+    Kapitan; both were dropped by `with_live_citations` because each has a single
+    RedNote citation and both are dead. Every step behaved as designed and a person
+    searching for roti canai was shown a potato shop.
+
+    **This is the app at its most misleading where it knows most.** `ayam goreng
+    berempah` is the corpus never having heard of a dish, and is harder -- telling
+    that from a mood query needs a signal #85 measured and did not find. This case
+    needs no such signal: the corpus holds the answer and is declining to say it.
+
+    Returning `results: []` rather than the substitutes is not severity for its own
+    sake. docs/TRD.md: returning a venue that does not match, with prose conceding
+    it does not match, is worse than returning nothing.
+
+    Naming the venues rather than counting them, because the two claims are not
+    equally checkable. That a post said X is unverifiable once the post is gone;
+    that the RESTAURANT exists is verifiable in ten seconds from its place_id. A
+    bare number gives a hungry person nothing and is no more provable.
+
+    Fires only when all three hold, and each rules out a different false positive:
+
+      - the query named something the corpus carries -- a mood query names nothing
+        in any lane at any cutoff, so it never reaches here
+      - venues in range actually carry it
+      - NONE of them survived to the response
+
+    `enriched` inner-joins mentions, so a venue with no citation at all never
+    appears in it and is never named here. Everything this returns had readable
+    testimony that has since stopped resolving, which is what lets the copy say so.
+    """
+    if not named or not lexical:
+        return None
+    if any(dishes.fold(d) in named for c in candidates for d in (c['dishes'] or [])):
+        return None
+    lost = [enriched[v] for v in lexical if v in enriched and enriched[v]['citations']]
+    if not lost:
+        return None
+    return {
+        'term': dish,
+        'venues': [{'name': e['name'], 'area': e['area'], 'maps_url': maps_url(e)} for e in lost[:GAP_VENUES]],
+        'total': len(lost),
+    }
+
+
 def match_block(venue_id, *, lexical_set, dish, scores):
     """Why this ROW is here: `{basis, dish, similarity}` per docs/TRD.md.
 
@@ -378,6 +430,21 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     # cited is dropped, never returned with a caveat.
     candidates = dedupe([enriched[v] for v in ordered if v in enriched and enriched[v]['citations']])
     candidates = with_live_citations(candidates)
+
+    gap = evidence_gap(named, dish, lexical, enriched, candidates)
+    if gap:
+        # `results: []` is the point, not a side effect. docs/TRD.md is explicit that
+        # returning a venue that does not match, with prose conceding it does not
+        # match, is worse than returning nothing -- and five semantically-close
+        # venues under a note saying we meant something else is exactly that.
+        return {
+            'results': [],
+            'evidence_gap': gap,
+            'degraded': degraded,
+            'degraded_reasons': reasons,
+            'sources_used': [],
+        }
+
     if not candidates:
         return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 

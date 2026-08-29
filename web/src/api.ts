@@ -60,12 +60,28 @@ export type Result = {
   citations: Citation[]
 }
 
+/** The corpus carries the dish and cannot show anybody writing about it: every
+    venue serving it was dropped because its posts no longer resolve (#98). Present
+    only in that case, and `results` is empty when it is -- five semantically-close
+    venues under a note conceding they are not what was asked for is the thing
+    docs/TRD.md says is worse than returning nothing. */
+export type EvidenceGap = {
+  term: string
+  /** Named rather than counted. That a post said something is unverifiable once
+      the post is gone; that the restaurant exists is checkable in ten seconds. */
+  venues: { name: string; area: string | null; maps_url: string }[]
+  /** How many carry it in total. The list is capped; the count is not, so a
+      bounded list never reads as the whole answer. */
+  total: number
+}
+
 export type RecommendResponse = {
   results: Result[]
   degraded: boolean
   /** Why it is degraded, in plain language. Shown to the user, not logged. */
   degraded_reasons?: string[]
   sources_used: string[]
+  evidence_gap?: EvidenceGap
   error?: string
 }
 

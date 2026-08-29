@@ -137,6 +137,7 @@ export function Discover() {
   }
 
   const results = data?.results ?? []
+  const gap = data?.evidence_gap ?? null
   // One caveat about the list beats the same sentence on every row.
   const common = sharedBasis(results)
   const commonLine = listBasisLine(common)
@@ -280,7 +281,38 @@ export function Discover() {
               Of KL right after returned ten picks. It also told people to try the
               suggestions above when there were none on screen. Both were the page
               guessing at a reason instead of naming the one it knows. */}
-          {!loading && data && results.length === 0 && !failed && (
+          {/* The corpus knows the dish and cannot show you the writing (#98). This
+              sits ABOVE the generic empty state and takes precedence over it,
+              because it is the one case where the page knows the real reason and
+              the generic copy would guess a different one -- which is the mistake
+              #82 was filed for. Measured: `roti canai` returned Potato Corner. */}
+          {!loading && gap && !failed && (
+            <div className="empty empty-centred gap">
+              <p className="gap-lede">
+                {count(gap.total, 'place')} near you {gap.total === 1 ? 'serves' : 'serve'}{' '}
+                <strong lang="und">{gap.term}</strong>, and we cannot show you what people wrote.
+              </p>
+              <p>
+                The posts we had about {gap.total === 1 ? 'it' : 'them'} no longer open, so these are not picks. The
+                restaurants are real and you can check them yourself.
+              </p>
+              <ul className="gap-venues">
+                {gap.venues.map((v) => (
+                  <li key={v.maps_url}>
+                    <a className="link" href={v.maps_url} target="_blank" rel="noreferrer noopener">
+                      <span lang="und">{v.name}</span>
+                    </a>
+                    {v.area && <span className="posted">{v.area}</span>}
+                  </li>
+                ))}
+              </ul>
+              {gap.total > gap.venues.length && (
+                <p className="gap-more">{`Showing ${gap.venues.length} of ${gap.total}.`}</p>
+              )}
+            </div>
+          )}
+
+          {!loading && data && results.length === 0 && !failed && !gap && (
             <div className="empty empty-centred">
               {askedRadius > 0 ? (
                 <>

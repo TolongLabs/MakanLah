@@ -351,8 +351,9 @@ POST /recommend
 → { results: [ { venue: {id, name, area, lat, lng, maps_url, dishes},
                  rank, why, match: {basis, dish, similarity},
                  distance_m,
-                 citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] } ],
-    degraded: bool, degraded_reasons: [string], sources_used: [string] }
+                 citations: [ {post_url, excerpt, platform, author_handle, posted_at, dead} ] } ],
+    degraded: bool, degraded_reasons: [string], sources_used: [string],
+    evidence_gap?: { term, total, venues: [ {name, area, maps_url} ] } }
 
 POST /ask
   { venue_id, question }
@@ -411,6 +412,29 @@ moment a real response met the type. `tests/test_api_contract.py` now asserts th
 
 **`results` may be shorter than `limit`, including empty.** Returning a venue that does not match, with prose conceding
 it does not match, is worse than returning nothing — see [`Ranking`](#ranking).
+
+**`evidence_gap` is the one case where empty results carry an answer.** It is present only when the query named a dish
+the corpus carries, venues in range carry it, and **none of them survived to the response** — every one dropped because
+its posts no longer resolve. `results` is then empty, deliberately: five semantically-close venues under a note
+conceding they are not what was asked for is precisely what the paragraph above forbids.
+
+Measured on prod before it existed: `roti canai` returned Mon Beef Roti, RAYs @ B.LAND, Potato Corner, kaiia kanteen and
+Menya Aburi. The lane had resolved the dish and found exactly the two venues carrying it, Devi's Corner and Kapitan, and
+both were dropped by `with_live_citations` because each has a single dead RedNote citation. Every step behaved as
+designed and a person searching for roti canai was shown a potato shop.
+
+**It names the venues rather than counting them, and the asymmetry is the reason.** That a post said something is
+unverifiable once the post is gone; that the restaurant exists is checkable in ten seconds from its `place_id`, which is
+why `maps_url` travels with each name. A bare count is no more provable and gives a hungry person nothing.
+
+`venues` is capped at five and `total` is not, so a bounded list never reads as the whole answer. Nothing appears here
+that never had a citation — the query behind it inner-joins mentions, so an uncited venue (#42) cannot be named as
+having lost evidence it never had.
+
+**A dish the corpus never carried is NOT this.** `ayam goreng berempah` and `char kway teow` are absent in every
+spelling, so nothing resolves and no venue is lexical; those keep the "closest in meaning" register. Telling a missing
+dish from a mood query needs a signal `#85` measured and did not find: retrieval cosine does not separate them, since
+`蛋挞` scores 0.5651 while `ayam goreng berempah` scores 0.5877.
 
 `rank` is the position the re-rank assigned. It replaces the old `score`, which reported retrieval cosine while ordering
 came from the re-rank, so a higher number could appear below a lower one. `match.basis` is one of `dish` (an alias hit
