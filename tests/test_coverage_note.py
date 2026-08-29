@@ -52,6 +52,29 @@ class TestDetectsWhatWeCannotAnswer:
         assert coverage_gaps(None) == []
 
 
+class TestTheMosqueTrap:
+    """清真寺 is a mosque and 清真 is a prefix of it.
+
+    Found in the corpus by the UAT session: one excerpt contains both 清真友好
+    ("halal-friendly", a real claim by a real person) and 清真寺 used as a
+    landmark. A substring match reads "near a mosque" as "is halal" and
+    mislabels a venue on the strength of its neighbours.
+
+    Being wrong about halal is not a ranking miss. It is the one error a
+    Malaysian user will not forgive, and rightly.
+    """
+
+    def test_a_mosque_is_not_a_halal_query(self):
+        assert coverage_gaps('清真寺') == []
+
+    def test_a_mosque_as_a_landmark_is_not_a_halal_query(self):
+        assert coverage_gaps('附近有清真寺的餐厅') == []
+
+    def test_the_real_halal_term_still_matches(self):
+        assert coverage_gaps('清真友好') == ['halal']
+        assert coverage_gaps('清真餐厅') == ['halal']
+
+
 class TestTheNoteIsHonestNotDecorative:
     def test_it_names_the_gap_rather_than_apologising(self):
         note = coverage_gaps('halal food')

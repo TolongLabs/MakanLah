@@ -111,7 +111,11 @@ def disambiguate(entries):
 # have them -- Python's \\w matches Han, so 清真餐厅 would be rejected by its own
 # following character. Two patterns rather than one clever one.
 _HALAL = re.compile(r'(?<![A-Za-z])halal(?![A-Za-z])', re.I)
-_HALAL_CJK = re.compile(r'清真')
+# 清真寺 is a mosque, and 清真 is a prefix of it. A substring match reads a venue
+# described as near a mosque as a halal claim -- confidently mislabelling it on
+# the strength of a landmark. Being wrong about halal is the one error a
+# Malaysian user will not forgive, so the exclusion is explicit and tested.
+_HALAL_CJK = re.compile(r'清真(?!寺)')
 _HALAL_NAME = re.compile(r'\b(restoran|restaurant|kedai|corner|cafe)\b', re.I)
 
 
@@ -129,6 +133,36 @@ def coverage_gaps(query):
     if _HALAL_CJK.search(query) or (_HALAL.search(query) and not _HALAL_NAME.search(query)):
         gaps.append('halal')
     return gaps
+
+
+def mark_gap_coverage(entries, gaps):
+    """Say per venue whether its own posts speak to the gap.
+
+    A blanket "we have no halal information" is false and a reader can disprove
+    it: the corpus contains 清真友好 -- halal-friendly, written by a person --
+    behind a venue we already show. Claiming silence over real testimony is the
+    same failure as claiming knowledge we do not have, pointed the other way.
+
+    So the claim is per result and checkable: this venue's posts mention it, or
+    they do not. Quoting someone who wrote it is not inference; it is the core
+    loop. Deciding halal from a name or a cuisine would be, and is not done here.
+    """
+    if not gaps:
+        return entries
+    for e in entries:
+        cites = e.get('citations') or []
+        mentions = []
+        for gap in gaps:
+            pattern = _HALAL_CJK if gap == 'halal' else None
+            hit = any(
+                (pattern and pattern.search(c.get('excerpt') or ''))
+                or (gap == 'halal' and _HALAL.search(c.get('excerpt') or ''))
+                for c in cites
+            )
+            if hit:
+                mentions.append(gap)
+        e['venue']['gap_mentions'] = mentions
+    return entries
 
 
 def add_corroboration(entries):
@@ -346,6 +380,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     results = disambiguate(results)
     results = add_corroboration(results)
     gaps = coverage_gaps(query)
+    results = mark_gap_coverage(results, gaps)
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
     return {
