@@ -1,0 +1,23 @@
+# Secrets belong in Vercel's encrypted environment store, never in the bundle.
+# makanlah/config.py calls load_dotenv() against the repo root, so an uploaded
+# .env silently satisfies every credential and the deploy looks configured when
+# it is not. The first deploy shipped one as src/.env before this line existed.
+.env
+.env.*
+
+# The Vercel project ships the API only; the client lives on Cloudflare Pages.
+# Without this the whole repo uploads -- 25.4MB on the first attempt, most of it
+# the web app and its node_modules, none of which the Python function imports.
+web/
+node_modules/
+data/
+docs/
+tests/
+ingest/
+scripts/
+.agents/
+.claude/
+.github/
+uv.lock
+bun.lock
+package.json

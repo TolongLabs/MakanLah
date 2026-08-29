@@ -81,3 +81,8 @@ web/public/models/liveroid/
 # Rendered screenshots. Regenerated on demand by scripts/screenshots.py, and a
 # binary set that churns on every visual change does not belong in review.
 docs/screenshots/
+
+# Written by `vercel link`. .vercel holds the project id and a short-lived OIDC
+# token; .env* is already covered above and is repeated here only because the
+# CLI appends it unconditionally.
+.vercel
