@@ -70,6 +70,10 @@ replacement for the `piper` call in `narrate.sh`; nothing else changes.
   posts don't mention whether it's halal" — cannot be filmed. It exists as an API endpoint only
 - **The API is local**, so the capture points at `127.0.0.1:8000` via `?api=`. A public URL needs
   [#6](https://github.com/TolongLabs/MakanLah/issues/6)
+- **`data/corpus/spike.db` can never show a corroboration pair.** It is the original 50-post RedNote capture and holds
+  **one platform**, so a run against it renders every result single-sourced. That is the file, not a regression, and the
+  distinction is easy to lose: the live corpus is Postgres on Neon via `DATABASE_URL`, 1,507 posts across two platforms
+  with 134 venues corroborating. Check which one you are pointed at before diagnosing a thin demo
 - **Some venues still cite a postal address** rather than testimony, because the corpus holds nothing better for them
   ([#25](https://github.com/TolongLabs/MakanLah/issues/25)). 28 of 243 venues, down from 82
 
