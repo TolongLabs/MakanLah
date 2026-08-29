@@ -7,7 +7,13 @@ name = "makanlah"
 version = "0.1.0"
 description = "KL restaurant recommendations with the post behind every pick"
 requires-python = ">=3.11"
-dependencies = ["websockets>=13", "psycopg[binary]>=3.2", "fastapi>=0.115", "uvicorn>=0.32"]
+dependencies = [
+    "websockets>=13",
+    "psycopg[binary]>=3.2",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "opencc-python-reimplemented>=0.1.7",
+]
 
 # pytest and httpx are only needed to run the suite, so they are a dev group
 # rather than a runtime dependency: the API image should not ship a test client.
