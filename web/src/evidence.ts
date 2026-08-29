@@ -34,13 +34,28 @@ export function evidenceOf(result: Result): Evidence {
 }
 
 /** The lead excerpt, then the best excerpt from a different platform. Returns one
-    entry when nothing corroborates it, and never two from the same source. */
+    entry when nothing corroborates it, and never two from the same source.
+
+    **A post that no longer resolves is not corroboration.** Measured on prod: 阿喜
+    and 三美肉骨茶 lead with a live Google Maps citation and carry nothing but dead
+    RedNote ones, so the second chip -- chosen only for being a different platform --
+    linked the reader to a wall on 3 of 5 cards. The server's `prefer_live` had done
+    its half correctly and the lead was right on 5 of 5; this is the other half.
+
+    `dead` is tri-state and the distinction matters: `true` is measured dead, `null`
+    or absent is never checked. Unchecked counts as live, because collapsing unknown
+    into dead deletes real evidence -- the 兴记肉骨茶 citation was exactly that case
+    and re-probing resolved it live. */
 export function leadPair(citations: Citation[]): Citation[] {
   const cited = citable(citations)
   const withText = cited.filter((c) => c.excerpt?.trim())
-  const lead = withText[0] ?? cited[0]
+  const alive = (c: Citation) => c.dead !== true
+  // A dead lead should be unreachable -- the API drops an entry whose every citation
+  // is dead -- but if one arrives, showing it beats showing nothing. A card that
+  // cannot say where it came from is not a card this product is allowed to render.
+  const lead = withText.find(alive) ?? withText[0] ?? cited[0]
   if (!lead) return []
-  const second = withText.find((c) => c.platform !== lead.platform)
+  const second = withText.find((c) => c.platform !== lead.platform && alive(c))
   return second ? [lead, second] : [lead]
 }
 

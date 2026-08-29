@@ -1,0 +1,155 @@
+[
+  {
+    "rank": 1,
+    "citations": [
+      {
+        "post_url": "https://www.rednote.com/explore/1-0",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/1-1",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/1-2",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/1-3",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      }
+    ]
+  },
+  {
+    "rank": 2,
+    "citations": [
+      {
+        "post_url": "https://www.rednote.com/explore/2-0",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/2-1",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/2-2",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      }
+    ]
+  },
+  {
+    "rank": 3,
+    "citations": [
+      {
+        "post_url": "https://maps.google.com/place/3-0",
+        "excerpt": "x",
+        "platform": "google_maps",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/3-1",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://maps.google.com/place/3-2",
+        "excerpt": "x",
+        "platform": "google_maps",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      }
+    ]
+  },
+  {
+    "rank": 4,
+    "citations": [
+      {
+        "post_url": "https://maps.google.com/place/4-0",
+        "excerpt": "x",
+        "platform": "google_maps",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/4-1",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/4-2",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      }
+    ]
+  },
+  {
+    "rank": 5,
+    "citations": [
+      {
+        "post_url": "https://maps.google.com/place/5-0",
+        "excerpt": "x",
+        "platform": "google_maps",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://maps.google.com/place/5-1",
+        "excerpt": "x",
+        "platform": "google_maps",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": null
+      },
+      {
+        "post_url": "https://www.rednote.com/explore/5-2",
+        "excerpt": "x",
+        "platform": "rednote",
+        "author_handle": null,
+        "posted_at": null,
+        "dead": true
+      }
+    ]
+  }
+]
