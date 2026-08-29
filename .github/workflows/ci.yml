@@ -141,6 +141,16 @@ jobs:
           # and resolving the whole project would drag in psycopg and fastapi for nothing.
           CHROME="$CHROME" uv run --no-project --with websockets python scripts/layout_check.py
 
+      # The mascot shipped rendering NOTHING. Every asset returned 200, the WebGL
+      # context was live, onReady fired -- and 0% of the canvas had ink in it,
+      # because the framing pointed at the empty third above the character's head.
+      # The check that existed asserted a live context, which a blank canvas also
+      # has. This one screenshots the element and counts pixels.
+      - name: The mascot must actually be on screen
+        env:
+          BASE: http://127.0.0.1:4188
+        run: node scripts/mascot_check.mjs
+
       # Windows "Animation effects" off and macOS "Reduce motion" both land on
       # prefers-reduced-motion, and people flip them for performance as often as for
       # vestibular reasons. Both engines are checked because they are two separate
