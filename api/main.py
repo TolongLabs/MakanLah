@@ -16,7 +16,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from makanlah import auth, companion, config, copilot, db, rank
+from makanlah import auth, companion, config, copilot, db, rank, suggest
 
 # An outage is a connection that cannot be made. A ProgrammingError, a TypeError
 # or a KeyError is our own bug and must not be dressed up as one.
@@ -137,6 +137,8 @@ RATE_LIMIT = {
     # The wizard is four steps, so a person legitimately hits this four or five
     # times in a minute. Above that it is a loop, not a user.
     'companion': (12, 60),
+    # One call per page load, plus a refresh or two. Above that it is a loop.
+    'suggestions': (10, 60),
 }
 _attempts: dict[tuple[str, str], list[float]] = {}
 
@@ -432,6 +434,39 @@ def companion_line(req: CompanionRequest, request: Request):
     if not _companion_quota():
         return {'text': companion.scripted(req.step), 'source': 'script', 'reason': 'quota'}
     return companion.line(req.step, req.picked)
+
+
+@app.get('/suggestions')
+def suggestions(request: Request):
+    """Search chips for /discover, chosen by a model and written by the corpus.
+
+    Every label is a dish string read out of the database, so a chip cannot lead
+    to an empty result page. The model only reorders: it is handed a numbered
+    list and returns indices, and an index it invents is out of range and
+    dropped. `source` says whether it answered.
+
+    Not gated by auth, and it shares the companion's free-tier counter because it
+    is the same lane. Out of quota returns the corpus order, which is a perfectly
+    good set of chips.
+    """
+    _rate_limit('suggestions', request)
+    try:
+        if not _companion_quota():
+            with db.connect() as con:
+                pool = suggest._candidates(con)
+            return {
+                'chips': [
+                    {'label': r['dish'], 'query': r['dish'], 'posts': r['posts'], 'venues': r['venues']}
+                    for r in pool[: suggest.CHIPS]
+                ],
+                'band': suggest._band(suggest.datetime.now(suggest.MYT).hour),
+                'source': 'corpus',
+            }
+        return suggest.chips()
+    except CORPUS_UNREACHABLE as e:
+        # No corpus, no honest chips. An empty list renders as no chips at all,
+        # which is correct: inventing six would be inventing six dead ends.
+        return {'chips': [], 'band': '', 'source': 'unavailable', 'error': type(e).__name__}
 
 
 @app.get('/venue/{venue_id}')

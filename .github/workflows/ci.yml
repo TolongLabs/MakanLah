@@ -151,6 +151,16 @@ jobs:
           BASE: http://127.0.0.1:4188
         run: node scripts/mascot_check.mjs
 
+      # Scrollbars, selection, focus, autofill and tooltips are the parts most
+      # likely to be left at the OS default, and they do not follow a theme on
+      # their own. Each is asserted in BOTH schemes so "theme-aware" means the
+      # value actually moves rather than resolving the same twice -- which is what
+      # caught a nested :root that had silently killed the entire dark theme.
+      - name: The browser chrome must be ours, in both themes
+        env:
+          BASE: http://127.0.0.1:4188
+        run: node scripts/chrome_check.mjs
+
       # Windows "Animation effects" off and macOS "Reduce motion" both land on
       # prefers-reduced-motion, and people flip them for performance as often as for
       # vestibular reasons. Both engines are checked because they are two separate

@@ -96,8 +96,29 @@ describe('the nav while signed in', () => {
     expect(screen.getByText('someone@example.com')).toBeTruthy()
   })
 
-  it('offers sign-in when there is no session', () => {
+  it('offers one way in when there is no session, and only one', () => {
+    // The bar carries a single action now. A Sign In link beside Get Started is two
+    // doors to the same room, and on the landing page it competes with the one thing
+    // that page is for.
     shell()
-    expect(screen.getByRole('link', { name: 'Sign In' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Get Started' })).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Discover' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull()
+  })
+
+  it('offers only a way out when there is a session', () => {
+    saveSession({ token: 't', user: { email: 'someone@example.com', is_guest: false, shared: false } })
+    shell()
+    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Get Started' })).toBeNull()
+  })
+
+  it('lets somebody choose a theme, including following the machine', () => {
+    // Three states, not two. A two-state toggle cannot express "follow my OS", so
+    // the first tap would silently take that away.
+    shell()
+    for (const name of [/Auto/i, /Light/i, /Dark/i]) {
+      expect(screen.getByRole('radio', { name })).toBeTruthy()
+    }
   })
 })

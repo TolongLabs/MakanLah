@@ -121,10 +121,10 @@
   margin: 0 auto;
   padding-inline: var(--s4);
   display: grid;
-  justify-items: center;
+  justify-items: end;
   align-content: center;
   gap: var(--s3);
-  text-align: center;
+  text-align: right;
 }
 
 .foot-brand {
@@ -209,5 +209,240 @@
     clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
+  }
+}
+
+/* -------------------------------------------------------------- theme switch */
+
+/* Three segments in one track. It reads as a single control rather than three
+   buttons because that is what it is: one setting with three values. */
+.theme-switch {
+  display: inline-flex;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  background: var(--paper-sunk);
+}
+
+.theme-seg {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-chip);
+  padding: var(--s1) var(--s3);
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.theme-seg:hover {
+  color: var(--ink);
+}
+
+/* :has, so the selected segment is styled from the real radio's state rather than
+   from a class React has to keep in sync with it. */
+.theme-seg:has(:checked) {
+  color: var(--ink);
+  background: var(--paper-raised);
+  box-shadow: var(--e1);
+}
+
+/* The focus ring belongs on the label, because the input it belongs to is
+   visually hidden and would draw its ring nowhere. */
+.theme-seg:has(:focus-visible) {
+  outline: 2px solid var(--seal);
+  outline-offset: 2px;
+}
+
+/* Below 30rem the labels go and the track keeps only the selected one, which is
+   enough to say what the current theme is and to change it. */
+@media (max-width: 30rem) {
+  .theme-seg:not(:has(:checked)) span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .theme-seg:not(:has(:checked)) {
+    padding-inline: var(--s2);
+  }
+
+  .theme-seg:not(:has(:checked))::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+  }
+}
+
+/* ---------------------------------------------------------------- nav drawer */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.nav-drawer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.nav-drawer-toggle:hover {
+  background: var(--paper-sunk);
+  border-color: var(--ink-faint);
+}
+
+.nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-island) + 10);
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  /* The closed panel is parked at translateX(100%), and a fixed ancestor does not
+     clip its children by default -- so it kept extending the document 74px past a
+     390px viewport and gave the whole app a horizontal scrollbar on a phone. The
+     panel is only ever inside this box, so clipping here costs nothing. */
+  overflow: hidden;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    visibility 0s linear var(--dur-fast);
+}
+
+.nav-drawer.is-open {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    visibility 0s;
+}
+
+.nav-drawer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  width: min(20rem, calc(100% - var(--s5)));
+  max-width: 20rem;
+  height: 100%;
+  padding: var(--s4);
+  background: var(--paper);
+  color: var(--ink);
+  border-left: 1px solid var(--rule);
+  box-shadow: var(--e3);
+  transform: translateX(100%);
+  transition: transform var(--dur-ui) var(--ease);
+}
+
+.nav-drawer.is-open .nav-drawer-panel {
+  transform: translateX(0);
+}
+
+.nav-drawer-head {
+  display: flex;
+  align-items: center;
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav-drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  flex: 1;
+}
+
+.nav-drawer-link {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  padding: var(--s2) var(--s3);
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: var(--t-ms);
+  font-weight: 500;
+  border-radius: var(--r-input);
+  transition:
+    color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.nav-drawer-link:hover,
+.nav-drawer-link[aria-current="page"] {
+  color: var(--ink);
+  background: var(--paper-sunk);
+}
+
+.nav-drawer-action {
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-drawer-cta {
+  align-self: start;
+  margin-top: auto;
+}
+
+.nav-drawer-footer {
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s4);
+  color: var(--ink);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  font: inherit;
+  font-size: var(--t-ms);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.theme-toggle:hover {
+  background: var(--paper-sunk);
+  border-color: var(--ink-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer-panel {
+    transform: none;
+  }
+
+  .nav-drawer {
+    transition: opacity var(--dur-fast) var(--ease);
   }
 }
