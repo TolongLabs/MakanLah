@@ -73,7 +73,13 @@ class TestBudget:
         monkeypatch.setattr(api_main, 'IP_DAILY_SHARE', 1.0)
         client.post('/recommend', json={'query': 'laksa'})
         assert api_main._spend_left() == 0
-        api_main._spend['day'] -= 1  # yesterday
+        # Advance the clock rather than poking _spend['day']. The day now lives in
+        # the ledger, so mutating the in-memory mirror changes nothing -- and a
+        # test that reaches past the real seam stops testing the real behaviour.
+        import time as _time
+
+        real_time = _time.time
+        monkeypatch.setattr(_time, 'time', lambda: real_time() + 86400)
         assert api_main._spend_left() == 2
 
     def test_ask_stops_honestly_rather_than_erroring(self, client, monkeypatch):

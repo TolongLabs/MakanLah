@@ -21,10 +21,19 @@ from makanlah import config, db
 
 
 def ledger_backend() -> str:
-    if os.environ.get('DATABASE_URL'):
-        return 'postgres'
+    """Which store holds the counters.
+
+    LEDGER_PATH is checked first because it is an explicit override and
+    DATABASE_URL is ambient: config.load_dotenv() populates it from a developer's
+    .env at import, so the other order pointed the test suite at the production
+    ledger. That was not theoretical -- it read real accumulated spend, wrote test
+    charges into it, and turned a thirty-second run into six minutes. CI has no
+    DATABASE_URL and so stayed green throughout.
+    """
     if os.environ.get('LEDGER_PATH'):
         return 'sqlite'
+    if os.environ.get('DATABASE_URL'):
+        return 'postgres'
     return 'memory'
 
 

@@ -19,13 +19,19 @@ EN = re.compile(r'\b(the|and|food|restaurant|best|good|really|place|try|with)\b'
 # \b(酒家)\b never matches inside 适苑酒家 -- which silently split one restaurant
 # into two venue rows.
 LATIN_GENERIC = re.compile(r'\b(restoran|restaurant|kedai|cafe|café|coffee shop|kopitiam)\b', re.I)
-# Malaysian-Chinese restaurant suffixes. 茶餐室 and 冰室 were missing, so 华阳 and
-# 华阳冰室 stayed two venues for one kopitiam. Longest alternatives come first:
+# Malaysian-Chinese restaurant suffixes. 茶餐室 and 冰室 were missing, so names
+# differing only by one stayed two venues. Longest alternatives come first:
 # 茶餐室 must match before 餐室, or the leading 茶 survives and the key differs.
 #
 # Dish names are deliberately NOT stripped. 兴记 and 兴记肉骨茶 may well be one
 # place, but 肉骨茶 is a dish, and stripping dishes from names would collapse
 # genuinely different businesses that happen to share a speciality.
+# The example this list was originally justified with was wrong. 华阳 and 华阳冰室
+# were called "one kopitiam"; measured on 2026-08-29 they are two rows 11,970m
+# apart with different place_ids -- Oriental Kopi is a chain, so those are two
+# outlets. Stripping the suffix is still right, because it makes 华阳冰室 findable
+# from 华阳; it just does not merge them, and nothing here should. Evidence for a
+# merge is place_id, never a name (#59).
 CJK_GENERIC = re.compile(
     r'(茶餐厅|茶餐廳|茶餐室|大排档|大排檔|小食店|快餐店|餐厅|餐廳|餐室|冰室|茶室|酒家|酒楼|酒樓|飯店|饭店|美食|小吃|餐馆|餐館)'
 )
