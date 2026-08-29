@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { loadSession, saveSession, signOut } from '../auth'
+import { Chop } from './Chop'
 
 export function Shell({ children }: { children: ReactNode }) {
   const location = useLocation()
@@ -15,7 +16,8 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="nav">
         <div className="nav-inner">
           <Link className="wordmark" to="/">
-            MakanLah
+            <Chop size={26} />
+            <span>MakanLah</span>
           </Link>
           <nav className="nav-links" aria-label="Main">
             <NavLink className="nav-link" to="/discover">

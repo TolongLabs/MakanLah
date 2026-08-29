@@ -7,6 +7,14 @@
    exception and it names no venue, so it cannot be read as evidence. docs/DESIGN.md
    states the rule. */
 
+/* The hero sits on the shippou ground rather than on bare paper. Full bleed, because a
+   patterned band that stops at the page gutter reads as a decorated box; run to the
+   edges and it reads as the material the page is printed on. The fade takes it out
+   before the fold so the sections below stay quiet. */
+.hero-band {
+  border-bottom: 1px solid var(--rule);
+}
+
 .hero {
   display: grid;
   gap: var(--s7);
@@ -67,9 +75,24 @@
 /* A specimen plate, not a card: 1px rule, zero radius, no fill and no shadow. The
    distinction matters, because a card says "component" and a plate says "exhibit". */
 .specimen {
+  position: relative;
   border: 1px solid var(--rule);
   padding: var(--s5);
   margin: 0;
+}
+
+/* The specimen carries the seal in the same position a result row does, so the landing
+   page and the product agree about what a stamped pick looks like. */
+.specimen .stamp {
+  top: calc(var(--s6) * -1);
+  right: calc(var(--s5) * -1);
+}
+
+/* A plate laid on the ground needs its own opaque field: testimony over a pattern is
+   the one place this motif would cost legibility. Declared after the base rule so the
+   cascade reads top to bottom in specificity order. */
+.hero-band .specimen {
+  background: var(--paper);
 }
 
 @media (min-width: 48rem) {
@@ -288,4 +311,17 @@
 .btn-invert:hover:not(:disabled) {
   background: #ffffff;
   border-color: #ffffff;
+}
+
+/* The exhibit arrives just after the claim it supports, which is the order a person
+   reads them in. One step, not a cascade: staggering more than two things on a hero
+   is the reflex that makes a page feel like a slideshow. */
+.specimen-enter {
+  animation-delay: 90ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .specimen-enter {
+    animation-delay: 0ms;
+  }
 }

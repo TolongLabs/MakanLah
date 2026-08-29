@@ -20,6 +20,16 @@
   --warn: #8a5a00;
   --warn-quiet: #f6efdf;
 
+  /* The seal. Cinnabar is the ink a chop actually prints in, and it earns a second
+     accent because it carries a second meaning: --enamel marks WHERE evidence came
+     from, --seal marks THAT a pick is attested. Neither decorates. If cinnabar shows
+     up on a border or a heading, that is a bug in exactly the way a green button is.
+
+     It is used rarely and small on purpose. Cinnabar and enamel sit near-complementary
+     and a page carrying both in quantity reads as Christmas. */
+  --seal: #c3272b;
+  --seal-quiet: #f7e6e4;
+
   /* Shadows are tinted to the ground, never pure black. Only two surfaces float:
      the wizard's bottom island and the sticky nav. */
   --lift: 0 1px 0 rgb(22 24 15 / 4%), 0 8px 32px rgb(22 24 15 / 10%);
@@ -80,6 +90,8 @@
     --enamel-quiet: #15302c;
     --warn: #d9a441;
     --warn-quiet: #2a2113;
+    --seal: #e2564c;
+    --seal-quiet: #34191a;
     --lift: 0 1px 0 rgb(0 0 0 / 30%), 0 8px 32px rgb(0 0 0 / 45%);
   }
 }

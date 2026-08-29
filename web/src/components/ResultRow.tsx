@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { Result } from '../api'
-import { basisLine, leadPair } from '../evidence'
+import { basisLine, evidenceOf, leadPair } from '../evidence'
 import { dishLine, distance } from '../format'
+import { Chop } from './Chop'
 import { Testimony } from './Testimony'
 
 /**
@@ -23,6 +24,10 @@ export function ResultRow({ result, rank, showBasis = true }: { result: Result; 
   // not a result. It should never arrive, and if it does it does not render.
   if (!pair.length) return null
 
+  // Two independent platforms saying the same thing is the strongest claim this
+  // product can make, and until now it was only implied by the layout. A chop is
+  // what "attested" looks like, so the row gets stamped.
+  const attested = evidenceOf(result) === 'corroborated'
   const dist = distance(result.distance_m)
   const dishes = dishLine(venue.dishes)
   const basis = showBasis ? basisLine(result.match?.basis) : null
@@ -33,6 +38,12 @@ export function ResultRow({ result, rank, showBasis = true }: { result: Result; 
         {rank}
       </div>
       <div className="result-body">
+        {attested && (
+          <span className="stamp" title="Two independent sources">
+            <Chop size={54} />
+            <span className="sr-only">Corroborated by two independent sources.</span>
+          </span>
+        )}
         <h3 className="venue-name" lang="und">
           <Link to={`/r/${venue.id}`}>
             <span className="sr-only">{`Rank ${rank}. `}</span>
