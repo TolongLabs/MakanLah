@@ -32,6 +32,34 @@ def _format_distance(d):
     return f'{d / 1000:.1f} km away'
 
 
+def prefer_live(citations):
+    """Return the same citations reordered so resolving ones lead.
+
+    A citation carries an optional 'dead' key: True = known dead, False = known
+    live, None/absent = not yet checked. Unknown is treated as live, and the
+    sort is stable so ties keep their original order. Nothing is dropped and no
+    citation dict is modified.
+    """
+    return sorted(citations, key=lambda c: c.get('dead') is True)
+
+
+def with_live_citations(entries):
+    """Reorder each entry's citations and drop the ones nobody can check.
+
+    Drops entries with no citations and entries whose every citation is known
+    dead. Entries with only unchecked citations survive: unknown is not dead.
+    """
+    out = []
+    for entry in entries:
+        if not entry.get('citations'):
+            continue
+        citations = prefer_live(entry['citations'])
+        if all(c.get('dead') is True for c in citations):
+            continue
+        out.append({**entry, 'citations': citations})
+    return out
+
+
 def disambiguate(entries):
     """Label or flag results whose names collide under fold_variants.
 
@@ -182,6 +210,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     # The invariant, enforced before a response is built: an entry that cannot be
     # cited is dropped, never returned with a caveat.
     candidates = dedupe([enriched[v] for v in ordered if v in enriched and enriched[v]['citations']])
+    candidates = with_live_citations(candidates)
     if not candidates:
         return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 
@@ -241,6 +270,10 @@ def one(venue_id, *, lat=None, lng=None):
     entry = enriched.get(v['id'])
     if not entry or not entry['citations']:
         return None
+    kept = with_live_citations([entry])
+    if not kept:
+        return None
+    entry = kept[0]
     return {
         'venue': {
             'id': str(entry['id']),

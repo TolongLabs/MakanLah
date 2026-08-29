@@ -148,7 +148,8 @@ def venue_evidence(con, venue_id, limit=40):
     """
     rows = con.execute(
         """select m.excerpt, m.dishes, m.sentiment, m.confidence,
-                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw
+                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
+                  case when p.dead_at is not null then true else null end as dead
            from mention m join source_post p on p.id = m.post_id
            where m.venue_id = %s and m.excerpt is not null
            order by """
@@ -264,7 +265,8 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     rows = con.execute(
         """select v.id as venue_id, v.name, v.area, v.city, v.lat, v.lng, v.place_id,
                   m.excerpt, m.dishes, m.sentiment, m.confidence,
-                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw
+                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
+                  case when p.dead_at is not null then true else null end as dead
            from venue v
            join mention m on m.venue_id = v.id
            join source_post p on p.id = m.post_id
@@ -300,6 +302,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 'platform': r['platform'],
                 'author_handle': r['author_handle'],
                 'posted_at': r['posted_at_raw'],
+                'dead': r['dead'],
             }
         )
 

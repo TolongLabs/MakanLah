@@ -13,6 +13,7 @@ out of what it said. A model asked for a URL produces a plausible one.
 import json
 
 from makanlah import config, db, models
+from makanlah.rank import prefer_live, with_live_citations
 
 MAX_EXCERPTS = 14
 EXCERPT_CHARS = 320
@@ -47,6 +48,7 @@ def _shape(rows):
                 'posted_at': r['posted_at_raw'],
                 'dishes': list(r['dishes'] or []),
                 'sentiment': r['sentiment'],
+                'dead': r.get('dead'),
             }
         )
     return out
@@ -64,19 +66,21 @@ def ask(venue_id, question, *, con=None):
         venue = db.venue_by_id(con, venue_id)
         if not venue:
             return {'covered': False, 'answer': 'That place is not in the corpus.', 'citations': [], 'venue': None}
-        rows = _shape(db.venue_evidence(con, venue_id))
+        raw = db.venue_evidence(con, venue_id)
     finally:
         if close:
             ctx.__exit__(None, None, None)
 
     venue_out = {'id': str(venue['id']), 'name': venue['name'], 'area': venue['area']}
-    if not rows:
+    kept = with_live_citations([{'citations': raw}])
+    if not kept:
         return {
             'covered': False,
             'answer': 'No posts about this place have been collected yet.',
             'citations': [],
             'venue': venue_out,
         }
+    rows = _shape(kept[0]['citations'])
 
     s = config.settings()
     if not s.copilot_api_key:
@@ -128,21 +132,32 @@ def ask(venue_id, question, *, con=None):
         answer = answer or 'The posts do not cover that.'
 
     citations = _cite([rows[n] for n in used]) if covered else []
+    kept = with_live_citations([{'citations': citations}]) if covered else []
+    if covered and not kept:
+        covered = False
+        answer = answer or 'The posts do not cover that.'
+        citations = []
+    elif covered:
+        citations = kept[0]['citations']
+
     return {'covered': covered, 'answer': answer, 'citations': citations, 'venue': venue_out}
 
 
 def _cite(rows):
     """Built from database rows, never from model output."""
-    return [
-        {
-            'post_url': r['post_url'],
-            'excerpt': r['excerpt'],
-            'platform': r['platform'],
-            'author_handle': r['author_handle'],
-            'posted_at': r['posted_at'],
-        }
-        for r in rows
-    ]
+    return prefer_live(
+        [
+            {
+                'post_url': r['post_url'],
+                'excerpt': r['excerpt'],
+                'platform': r['platform'],
+                'author_handle': r['author_handle'],
+                'posted_at': r['posted_at'],
+                'dead': r.get('dead'),
+            }
+            for r in rows
+        ]
+    )
 
 
 def json_dumps(x):
