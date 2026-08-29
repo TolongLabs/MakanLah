@@ -265,10 +265,15 @@ in order of how much they actually bound the bill:
 
 1. **Stop-on-Exhaust in the console.** With billing off, the ceiling is the free quota and the failure mode is downtime,
    never an invoice. Strongest control, and the one outside our code
-2. **`DAILY_CALL_BUDGET`**, default **2000 model calls** — 1000 `/recommend` a day, about **$0.42**. Every model call is
-   counted, and the API degrades honestly when it is gone. Per-IP limits do not bound spend: a hundred hosts at nineteen
-   requests a minute are each individually polite
-3. **Per-IP rate limits**, 20/min on `/recommend` and 10/min on `/ask`. Stops one noisy host, not a distributed one
+2. **`DAILY_BUDGET_MYR`**, default **RM 10**, metered in the currency the owner thinks in rather than in calls.
+   `MYR_PER_CALL` is measured (RM 0.0019, from the token counts above at 4.4 to the dollar) and **must be re-measured
+   whenever a lane is re-pinned**. The API degrades honestly when the day is spent
+3. **`IP_DAILY_SHARE`**, default **10%** of the day per visitor. This is the anti-troll control: a loop burns its own
+   slice, gets refused for the rest of the day, and every other visitor still gets answers. Without it a daily budget is
+   just a bigger bucket for one attacker to drain. Behind Cloudflare the visitor is read from `CF-Connecting-IP`, which
+   is trusted **only** when `TRUST_PROXY_HEADER` is set — a direct deployment must not trust it, or a spoofed header
+   buys a fresh allowance
+4. **Per-IP rate limits**, 20/min on `/recommend` and 10/min on `/ask`. Stops one noisy host, not a distributed one
 
 **`ENABLE_DOCS`** keeps `/docs` and `/openapi.json` off unless asked for; there is no third-party developer audience,
 and an endpoint map is free reconnaissance.
