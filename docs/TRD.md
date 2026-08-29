@@ -349,7 +349,7 @@ poorly in Malay has failed, not partly passed. Write the result to `superpowers/
 POST /recommend
   { query, lat, lng, radius_m, prefs?, budget?, cuisine?, limit? }
 → { results: [ { venue: {id, name, area, lat, lng, maps_url, dishes},
-                 rank, why, match: {basis, dish_hit, lexical, vector},
+                 rank, why, match: {basis, dish, similarity},
                  distance_m,
                  citations: [ {post_url, excerpt, platform, author_handle, posted_at} ] } ],
     degraded: bool, degraded_reasons: [string], sources_used: [string] }
@@ -400,6 +400,11 @@ auth never gates `/recommend`:
 prefs: { craving: [string], company: 'solo'|'couple'|'family'|'group',
          range_m: int, mood: 'adventurous'|'comfort', budget: 'cheap'|'mid'|'splurge' }
 ```
+
+**The `match` block is what a client types against, so it is tested rather than described.** It carried
+`dish_hit, lexical, vector` here until 2026-08-29 while the API sent `basis, dish, similarity`; the web client's type
+was written faithfully against this block and was wrong for as long as nothing read those fields. `tsc` found it the
+moment a real response met the type. `tests/test_api_contract.py` now asserts this line against the response shape.
 
 **`results` may be shorter than `limit`, including empty.** Returning a venue that does not match, with prose conceding
 it does not match, is worse than returning nothing — see [`Ranking`](#ranking).

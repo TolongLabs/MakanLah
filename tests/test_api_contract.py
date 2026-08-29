@@ -16,6 +16,7 @@ fastapi_testclient = pytest.importorskip('fastapi.testclient')
 TestClient = fastapi_testclient.TestClient
 
 from api import main as api_main  # noqa: E402
+from makanlah import rank  # noqa: E402
 
 
 def _ranked_result(basis='semantic', dish=None):
@@ -222,3 +223,34 @@ class TestTheShapeOfARankedEntry:
         r = self._one(client, monkeypatch, _ranked_result(basis='dish', dish='bak kut teh'))
         assert r['match']['basis'] == 'dish'
         assert r['match']['dish'] == 'bak kut teh'
+
+
+class TestTheDocumentedContractMatchesTheResponse:
+    """The API contract block in TRD.md is what a client types against.
+
+    It said `match: {basis, dish_hit, lexical, vector}` while /recommend sent
+    `basis, dish, similarity`, and the web client's type was written faithfully
+    against the doc -- so the client was wrong about the response for as long as
+    nothing read those fields. `tsc` found it only when a real response finally
+    met the type. Prose cannot be trusted to stay in step with code by intention,
+    so this compares them.
+    """
+
+    @staticmethod
+    def _documented_match_keys():
+        trd = (Path(__file__).resolve().parents[1] / 'docs' / 'TRD.md').read_text()
+        line = next(ln for ln in trd.splitlines() if 'match: {' in ln)
+        inside = line.split('match: {', 1)[1].split('}', 1)[0]
+        return {k.strip() for k in inside.split(',') if k.strip()}
+
+    def test_the_documented_match_keys_are_the_ones_sent(self, client, monkeypatch):
+        keys = self._documented_match_keys()
+        assert keys, 'no match block found in TRD.md -- the doc moved, so fix this test'
+        monkeypatch.setattr(rank, 'recommend', lambda *a, **k: {'results': [_ranked_result()], 'sources_used': ['x']})
+        body = client.post('/recommend', json={'query': 'laksa'}).json()
+        assert set(body['results'][0]['match']) == keys
+
+    def test_the_doc_is_not_silently_empty(self):
+        # An empty set would make the comparison above pass against anything,
+        # which is the failure this whole class exists to catch.
+        assert self._documented_match_keys() == {'basis', 'dish', 'similarity'}
