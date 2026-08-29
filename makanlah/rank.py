@@ -100,6 +100,43 @@ def disambiguate(entries):
     return entries
 
 
+def add_corroboration(entries):
+    """Attach the signals that make "independent sources" checkable (#87).
+
+    Two mentions are corroboration when two different people wrote two different
+    posts. Counting platforms alone said "two independent sources" for one author
+    quoted twice, and counting citations alone said it for one post quoted twice.
+
+    `shared_with` names the other venues in THIS response backed by the same post.
+    UAT found one listicle driving ranks 1, 2 and 3 while each card claimed
+    independent corroboration -- true per card, false read as a page. The client
+    cannot see that without being told, because it only ever holds one card.
+
+    A missing author_handle is unknown, not a second person. Counting absent
+    authorship as distinct would manufacture corroboration out of missing data,
+    which is the failure this whole signal exists to prevent.
+    """
+    backers = {}
+    for e in entries:
+        vid = e['venue']['id']
+        for c in e.get('citations') or []:
+            backers.setdefault(c['post_url'], set()).add(vid)
+
+    order = [e['venue']['id'] for e in entries]
+    for e in entries:
+        vid = e['venue']['id']
+        cites = e.get('citations') or []
+        e['venue']['corroboration'] = {
+            'posts': len({c['post_url'] for c in cites}),
+            'authors': len({c['author_handle'] for c in cites if c.get('author_handle')}),
+            'platforms': len({c['platform'] for c in cites if c.get('platform')}),
+        }
+        for c in cites:
+            others = backers.get(c['post_url'], set()) - {vid}
+            c['shared_with'] = [v for v in order if v in others]
+    return entries
+
+
 def dedupe(candidates):
     """Collapse near-duplicate venues at presentation time, not in the corpus.
 
@@ -246,6 +283,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         )
 
     results = disambiguate(results)
+    results = add_corroboration(results)
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
     return {'results': results, 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': sources}
