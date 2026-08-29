@@ -50,8 +50,8 @@ export function Shell({ children }: { children: ReactNode }) {
                 Sign In
               </NavLink>
             )}
-            <Link className="btn btn-primary nav-cta" to="/taste">
-              Find Food
+            <Link className="btn btn-primary nav-cta" to="/sign-up">
+              Get Started
             </Link>
           </nav>
         </div>
