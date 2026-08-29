@@ -10,6 +10,7 @@ distance wastes the index and returns a great match forty minutes away.
 """
 
 import math
+import re
 
 from makanlah import config, db, dishes, models
 from makanlah.text import fold_variants
@@ -97,6 +98,37 @@ def disambiguate(entries):
                 e['venue']['ambiguous_with_sibling'] = False
 
     return entries
+
+
+# A dietary constraint the corpus cannot speak to. Posts rarely state
+# certification, and inferring it from a venue name or cuisine is the confident
+# wrong answer this product exists to avoid -- getting it wrong is not a ranking
+# miss, it is somebody eating what they hold themselves not to.
+#
+# Matched as a standalone word so "Restoran Halal Corner" -- a name, not a
+# request -- does not put a disclaimer on a search that never asked for one.
+# Latin needs word boundaries so "Halal Corner" is not a request. CJK cannot
+# have them -- Python's \\w matches Han, so 清真餐厅 would be rejected by its own
+# following character. Two patterns rather than one clever one.
+_HALAL = re.compile(r'(?<![A-Za-z])halal(?![A-Za-z])', re.I)
+_HALAL_CJK = re.compile(r'清真')
+_HALAL_NAME = re.compile(r'\b(restoran|restaurant|kedai|corner|cafe)\b', re.I)
+
+
+def coverage_gaps(query):
+    """Name what the corpus cannot answer about this query.
+
+    Returns gap keys, not prose: the caller owns the wording, and /ask already
+    has a voice for this -- "The provided excerpts do not mention whether ...".
+    A ranked list had no equivalent, so a halal query came back as an unmarked
+    list that reads as an answer.
+    """
+    if not query:
+        return []
+    gaps = []
+    if _HALAL_CJK.search(query) or (_HALAL.search(query) and not _HALAL_NAME.search(query)):
+        gaps.append('halal')
+    return gaps
 
 
 def add_corroboration(entries):
@@ -313,9 +345,19 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
 
     results = disambiguate(results)
     results = add_corroboration(results)
+    gaps = coverage_gaps(query)
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
-    return {'results': results, 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': sources}
+    return {
+        'results': results,
+        'degraded': degraded,
+        'degraded_reasons': reasons,
+        'sources_used': sources,
+        # What the corpus cannot speak to for this query. Results still come
+        # back; they come back with the gap named rather than reading as an
+        # answer to a question nobody can answer from these posts.
+        'coverage_gaps': gaps,
+    }
 
 
 def one(venue_id, *, lat=None, lng=None):
