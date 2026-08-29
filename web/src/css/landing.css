@@ -16,8 +16,28 @@
 
 @media (min-width: 62rem) {
   .hero {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    /* 1.25 rather than a near-even split, and a gutter narrower than the vertical
+       rhythm, so the specimen's content box clears the 34rem container query in
+       results.css. At this page width an even split leaves it 49px short, and the
+       hero then argues corroboration at every size except the one most people read
+       it at: the pair stacks and reads as a list rather than as two sources agreeing.
+
+       The threshold is deliberately not what moves. Two columns of Chinese below
+       34rem is precisely what #20 set that bar to prevent, so the specimen gets
+       wider instead.
+
+       This does not make the pair side-by-side at every width, and the gap is worth
+       knowing about. Under 62rem the hero is one column, the specimen is full width
+       and the pair splits. From 62rem to about 1280 the hero splits but the page is
+       not yet wide enough to give the specimen 34rem, so the pair stacks; past 1280
+       the page cap is reached and it splits again. Raising this breakpoint to 80rem
+       removes that band and was measured, but it costs a 1024px laptop the
+       side-by-side hero entirely -- the exhibit drops below the fold and the claim
+       appears with no evidence next to it. A stacked pair inside a visible exhibit
+       beats a split pair nobody scrolls to. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
     gap: var(--s8);
+    column-gap: var(--s7);
     /* Centred rather than top-aligned: the headline block is short and the specimen
        is tall, and hanging both from the top left a third of the fold empty. */
     align-items: center;
