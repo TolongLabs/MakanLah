@@ -151,6 +151,18 @@ jobs:
           BASE: http://127.0.0.1:4188
         run: node scripts/mascot_check.mjs
 
+      # The band between phone and desktop had two different gates on two screens and
+      # only one of them was ever measured: /discover mounted her from 48rem while
+      # /taste held out until 56rem, so a portrait tablet got the wizard with no
+      # companion and 549px of empty page under the last option. Geometry only --
+      # whether she is PAINTED is the pixel check above; this one asserts she has a
+      # box, that the box is the width she is framed for rather than the whole page,
+      # and that buying that space did not push the last option under the island.
+      - name: The wizard holds at tablet width
+        env:
+          BASE: http://127.0.0.1:4188
+        run: node scripts/taste_tablet_check.mjs
+
       # Scrollbars, selection, focus, autofill and tooltips are the parts most
       # likely to be left at the OS default, and they do not follow a theme on
       # their own. Each is asserted in BOTH schemes so "theme-aware" means the

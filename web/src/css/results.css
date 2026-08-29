@@ -424,15 +424,6 @@
   }
 }
 
-/* Only the phone loses her stage. Two hundred pixels of character above ten results
-   is the picks pushed off a 390px screen, and her reading of the evidence plus the
-   Ask box are the useful half. */
-@media (max-width: 47.99rem) {
-  .is-live .ask-stage {
-    height: 0;
-  }
-}
-
 .rail-heading {
   font-size: var(--t-sm);
   font-weight: 600;
@@ -707,6 +698,21 @@
   height: 200px;
 }
 
+/* Only the phone loses her stage. Two hundred pixels of character above ten results
+   is the picks pushed off a 390px screen, and her reading of the evidence plus the
+   Ask box are the useful half.
+
+   It has to sit AFTER the 200px rule, not before it. Both are `.is-live .ask-stage`
+   and a media query adds no specificity, so up where it used to live the later 200px
+   declaration simply won and this rule did nothing. Harmless in practice -- the phone
+   never mounts the stage, so `is-live` is never set there -- but a rule that cannot
+   apply is not a guard, and moving it is also what stops the cascade descending. */
+@media (max-width: 47.99rem) {
+  .is-live .ask-stage {
+    height: 0;
+  }
+}
+
 .ask-companion canvas {
   display: block;
 }
@@ -721,8 +727,14 @@
    desktop treatment at a smaller height: stage on top, everything under it, one
    column. Fewer moving parts and nothing to get wrong at one width and not another. */
 @media (min-width: 48rem) and (max-width: 63.99rem) {
-  .is-live .ask-stage {
-    height: 180px;
+  /* Capped to the width she is framed for. In this band the aside is a full-width
+     row rather than a 20rem column, so an uncapped stage measured 720x180 at 834 --
+     `Live2DStage.frame()` scales by height and centres on `w / 2`, which does not
+     enlarge her, it parks her small and adrift in a 4:1 letterbox. Same box as the
+     desktop column gives her the same size at both widths, which is also one number
+     fewer to keep in agreement. */
+  .ask-stage {
+    max-width: 18rem;
   }
 }
 
