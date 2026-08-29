@@ -26,6 +26,13 @@
        34rem is precisely what #20 set that bar to prevent, so the specimen gets
        wider instead.
 
+       IT CLEARS BY 3.34px. Measured at the page cap: the specimen's content box is
+       547.34 against a 544 bar, and a container query counts the content box, so the
+       specimen's own padding and border come off the top. Four pixels onto that
+       padding puts it at 539.34 and the pair silently drops to one column -- still
+       valid CSS, still renders, still passes every DOM test. scripts/layout_check.py
+       is the only thing that sees it, which is why it exists and why it runs in CI.
+
        This does not make the pair side-by-side at every width, and the gap is worth
        knowing about. Under 62rem the hero is one column, the specimen is full width
        and the pair splits. From 62rem to about 1280 the hero splits but the page is

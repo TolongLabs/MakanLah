@@ -81,6 +81,52 @@ jobs:
             exit 1
           fi
 
+  # The evidence pair is the product's central claim, and jsdom cannot see whether it
+  # renders. #20 shipped a corroboration layout that never rendered once, through four
+  # green runs and a dozen screenshots, because a container query falling back is
+  # silent: the layout stays valid and every DOM assertion still passes.
+  #
+  # It clears the 34rem bar by 3.34px, so this is not a theoretical guard. A four pixel
+  # change to the specimen padding drops it back to one column, verified by mutation.
+  layout:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Build and serve the client
+        working-directory: web
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+          bunx vite preview --port 4188 --strictPort --host 127.0.0.1 &
+          for _ in $(seq 1 40); do
+            curl -fsS -o /dev/null http://127.0.0.1:4188/ && break
+            sleep 0.5
+          done
+
+      # Chrome is preinstalled on ubuntu-latest and websockets is already a project
+      # dependency, so this needs nothing new. The binary is named google-chrome in
+      # some runner images and google-chrome-stable in others.
+      - name: The evidence pair must split
+        env:
+          WEB_BASE: http://127.0.0.1:4188
+        run: |
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser)
+          [ -n "$CHROME" ] || { echo "::error::no Chrome on the runner, so the layout was never checked"; exit 1; }
+          # --with rather than the project: the script needs websockets and stdlib,
+          # and resolving the whole project would drag in psycopg and fastapi for nothing.
+          CHROME="$CHROME" uv run --no-project --with websockets python scripts/layout_check.py
+
   # Publishing the client. Gated on `check`, so nothing ships that CI has not passed.
   #
   # It SKIPS rather than fails when the Cloudflare credentials are absent, because a
