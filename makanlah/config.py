@@ -42,6 +42,7 @@ class Settings:
     embed_api_key: str | None
     embed_model: str
     embed_dim: int
+    embed_timeout: float
     rerank_base_url: str | None
     rerank_api_key: str | None
     rerank_model: str
@@ -85,6 +86,9 @@ def settings() -> Settings:
         embed_api_key=e('DASHSCOPE_API_KEY'),
         embed_model=e('DASHSCOPE_MODEL_EMBED', 'text-embedding-v3'),
         embed_dim=int(e('EMBEDDING_DIM', '1024')),
+        # Batch lane: nobody is waiting, but 120s per call let a hung provider stall
+        # ingestion for minutes (issue #41). The deadline is shared across batches.
+        embed_timeout=float(e('EMBED_TIMEOUT', '10.0')),
         # The re-rank is the interactive lane: a user is waiting, and it is 96%
         # of request latency. Measured on this corpus, 20 candidates each:
         #   qwen-turbo (DashScope, Singapore)  1.38s   most results
