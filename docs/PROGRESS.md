@@ -24,6 +24,39 @@ console before repinning.
 
 ---
 
+## 2026-08-29 — The Frontend Session: A Mark, And Motion That Survives Reduced Motion
+
+Contributed by the frontend session; wording is theirs, merged here because `docs/PROGRESS.md` is one file and two
+sessions must not both hold it open. Prod is at `94e9f02`, matching `main`; #56, #62 and #64 merged.
+
+Reduced motion no longer means no motion. Windows "Animation effects" off and macOS Reduce motion both land on
+`prefers-reduced-motion`, and the old rules set `animation: none` with 1ms transitions, which removed every cue rather
+than the harmful ones. Movement goes, fading stays: entrances swap to the fade keyframes and control feedback keeps its
+full 120ms. Guarded in CI by `motion_check.mjs` across Chromium and Gecko, both preference states, mutation-tested.
+
+MakanLah has a mark. A hanko chop reading "lah" in seal script, 300 bytes of SVG, used as both the logo and an
+attestation stamp on results carrying two independent platforms. The ground is shippou, a motif shared by Japanese komon
+and Peranakan tile. Cinnabar joins enamel green as a second accent with a separate meaning: green marks where evidence
+came from, cinnabar marks that it is attested. Live on prod at `94e9f02`; `docs/screenshots/` refreshed from the live
+site across all three devices.
+
+**The seal is driven by `evidenceOf()`, the same function behind the pair layout and the mascot**, so the three cannot
+disagree about what counts as corroborated. That is the citation trail expressed as a visual rule rather than restated
+as one.
+
+### Two Notes From That Session Worth Carrying
+
+**The layout guard caught a real regression on its first change.** The redesign touched hero, specimen and results, and
+`layout_check.py` confirmed the corroboration pair still splits at 1280+ with the margin unchanged at **+3.34px**.
+
+**Three bugs, all found by measuring rather than looking.** Two logo drafts spelled `Ldh` and `loh` — a full-height stem
+is what makes a `d`, and a squared ring is indistinguishable from an `o`. Then a rotated stamp pushed the document 10px
+past the viewport. The plausible cause was the stamp; its right edge measured **345 against a 375 viewport**, so it
+could not have been. Querying every element for `right > clientWidth` named the real offender. **Reason from the
+measurement, not from the plausible cause** — the same lesson the wrong-worktree runs taught on this side.
+
+---
+
 ## 2026-08-29 — Two Workers, Three Merges, And The Real Launch Blocker Named
 
 **Prod serves `main`** (`/build.json` = `420e893`), and **#46 is closed**. Four PRs merged today: #57, #58, #61, plus

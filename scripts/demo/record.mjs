@@ -20,10 +20,19 @@ const WEB = process.env.DEMO_WEB || 'http://localhost:5188'
 const API = process.env.DEMO_API || 'http://127.0.0.1:8000'
 const OUT = join(DIR, 'capture')
 
-// Playwright is installed into DEMO_DIR, not the repo -- it pulls a browser and has
-// no business in the app's dependency tree. Resolve it from there rather than
-// relying on this file's own location.
-const { chromium } = createRequire(join(DIR, 'resolve-from-here.cjs'))('playwright')
+// Prefer a playwright installed into DEMO_DIR, which is how the README sets this
+// up: it pulls a browser and used to have no business in the app's tree. That is
+// no longer strictly true -- playwright is now a root dev dependency for the
+// cross-engine motion check -- so fall back to the repo's own copy rather than
+// failing. The DEMO_DIR path resolved a resolve-from-here.cjs shim that nothing
+// ever created, so this file could not run at all.
+const require = createRequire(import.meta.url)
+let chromium
+try {
+  chromium = createRequire(join(DIR, 'package.json'))('playwright').chromium
+} catch {
+  chromium = require('playwright').chromium
+}
 
 rmSync(OUT, { recursive: true, force: true })
 mkdirSync(OUT, { recursive: true })

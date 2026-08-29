@@ -43,6 +43,10 @@ the rest; none of them need setting for a local run.
 
 Chromium is not installed for Playwright on this machine, so `record.mjs` uses `channel: 'chrome'` — the system Chrome.
 
+**The `DEMO_DIR` install above is optional now.** `record.mjs` prefers a Playwright installed there and falls back to
+the repo's own copy, which exists because the cross-engine motion check needs it. Before that fallback the file resolved
+a `resolve-from-here.cjs` shim that nothing ever created, so it could not run at all.
+
 ## Why It Looks The Way It Does
 
 **The pauses are deliberate and they feel too long while you are editing.** The product's whole claim is the cited post,
