@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { Shell } from './components/Shell'
 import { Discover } from './routes/Discover'
 import { Landing } from './routes/Landing'
+import { Privacy } from './routes/Privacy'
 import { SignIn } from './routes/SignIn'
 import { SignUp } from './routes/SignUp'
 import { Taste } from './routes/Taste'
@@ -12,6 +13,7 @@ export default function App() {
     <Shell>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/taste" element={<Taste />} />

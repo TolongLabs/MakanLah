@@ -48,3 +48,108 @@
 .auth-alt .link {
   padding-block: 5px;
 }
+
+/* ------------------------------------------------------- the dual-pane frame */
+
+/* Brand panel left, form right, the panel gone below 64rem rather than stacked. A
+   decorative image pushed above a sign-in form on a phone costs a screenful of
+   scrolling before the first field, and getting to the input fast is the entire job
+   of this screen. */
+.auth-split {
+  display: grid;
+  gap: 0;
+  align-items: stretch;
+}
+
+.auth-brand {
+  display: none;
+}
+
+.auth-pane {
+  padding-inline: var(--s4);
+}
+
+@media (min-width: 64rem) {
+  .auth-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* Full bleed out of the page container, and tall enough that the panel reads as a
+       wall rather than a banner. */
+    min-height: calc(100dvh - 72px);
+  }
+
+  /* Sticky, and capped to the viewport. The form column is the taller of the two --
+     the guest disclosure is deliberately long -- and a panel that grows with it puts
+     its own bottom-anchored copy hundreds of pixels below the fold, which is where
+     the headline ended up the first time. */
+  .auth-brand {
+    position: sticky;
+    top: 72px;
+    align-self: start;
+    height: calc(100dvh - 72px);
+    display: block;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .auth-pane {
+    display: grid;
+    align-content: center;
+    padding-inline: var(--s8);
+  }
+}
+
+.auth-brand-image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The art is warm and busy at the top, so the copy sits at the bottom over a scrim
+   rather than trusting the image to stay dark where the words are. */
+.auth-brand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgb(60 12 8 / 10%) 0%, rgb(60 12 8 / 55%) 62%, rgb(60 12 8 / 88%) 100%);
+}
+
+.auth-brand-copy {
+  position: absolute;
+  inset-inline: var(--s7);
+  bottom: var(--s7);
+  color: #fdf6f2;
+}
+
+.auth-brand-mark {
+  display: inline-flex;
+  color: #fdf6f2;
+}
+
+.auth-brand-line {
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-top: var(--s4);
+  text-wrap: balance;
+}
+
+.auth-brand-sub {
+  font-size: var(--t-ms);
+  color: #f0d8cd;
+  margin-top: var(--s3);
+  max-width: 32ch;
+}
+
+/* The form column owns its own width now that the panel carries the left half. */
+@media (min-width: 64rem) {
+  .auth-pane .auth {
+    max-width: 27rem;
+    margin-inline: 0;
+    padding-block: var(--s8);
+  }
+}
