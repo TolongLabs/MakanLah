@@ -202,6 +202,33 @@ def maps_url(venue):
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
+def match_block(venue_id, *, lexical_set, dish, scores):
+    """Why this ROW is here: `{basis, dish, similarity}` per docs/TRD.md.
+
+    `dish` is per-row and not per-query, and the difference was visible on prod.
+    `roti canai` came back as `basis: 'semantic', dish: 'roti canai'` on five
+    venues that have nothing to do with it: the lane resolved the dish correctly
+    and found exactly two venues carrying it, Devi's Corner and Kapitan, and both
+    were dropped by `with_live_citations` because each has a single RedNote
+    citation and both are dead. So no row that reached the client had matched the
+    dish, and every one of them said it had.
+
+    Nothing renders this field today, which is exactly why it was free to be
+    wrong. A payload that says a row matched a dish it did not match becomes
+    untrue UI the moment somebody binds to it.
+
+    Extracted from `recommend` so it can be tested without a database. Inline, the
+    only check available was one that mocked `recommend` and therefore asserted
+    nothing about this rule at all.
+    """
+    hit = venue_id in lexical_set
+    return {
+        'basis': 'dish' if hit else 'semantic',
+        'dish': dish if hit else None,
+        'similarity': round(float(scores.get(venue_id, 0.0)), 4),
+    }
+
+
 def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50):
     s = config.settings()
     with db.connect() as con:
@@ -277,11 +304,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                 # which reported retrieval cosine while the ORDER came from the
                 # re-rank, so a higher number could sit below a lower one.
                 'rank': position,
-                'match': {
-                    'basis': 'dish' if v['id'] in lexical_set else 'semantic',
-                    'dish': dish,
-                    'similarity': round(float(scores.get(v['id'], 0.0)), 4),
-                },
+                'match': match_block(v['id'], lexical_set=lexical_set, dish=dish, scores=scores),
                 'why': why,
                 'distance_m': _distance_m(lat, lng, v['lat'], v['lng']),
                 'citations': v['citations'],

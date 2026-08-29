@@ -480,3 +480,55 @@ class TestAServerFaultIsReportedAsAServerFault:
         monkeypatch.setattr(api_main.rank, 'recommend', boom)
         res = client.post('/recommend', json={'query': 'x'}, headers={'Origin': 'https://evil.example'})
         assert res.headers.get('access-control-allow-origin') is None
+
+
+class TestTheMatchBlockDoesNotClaimADishItDidNotMatch:
+    """`match.dish` was set from the QUERY while `match.basis` was set per row.
+
+    Measured on prod: `roti canai` returned `basis: 'semantic', dish: 'roti canai'`
+    on five venues that have nothing to do with it. The two that do carry it, Devi's
+    Corner and Kapitan, were dropped by `with_live_citations` -- both have a single
+    RedNote citation and both are dead -- so the lane resolved the dish correctly and
+    no row that reached the client had matched it.
+
+    Nothing renders `match.dish` today, which is why it was free to be wrong. A
+    payload field that is untrue becomes untrue UI the moment somebody binds to it.
+    """
+
+    def _match(self, client, monkeypatch, basis):
+        r = _ranked_result(basis=basis, dish='roti canai')
+        monkeypatch.setattr(
+            api_main.rank,
+            'recommend',
+            lambda *a, **k: {'results': [r], 'degraded': False, 'degraded_reasons': [], 'sources_used': ['rednote']},
+        )
+        return client.post('/recommend', json={'query': 'roti canai'}).json()['results'][0]['match']
+
+    def test_a_dish_row_still_names_its_dish(self, client, monkeypatch):
+        m = self._match(client, monkeypatch, 'dish')
+        assert m['basis'] == 'dish'
+        assert m['dish'] == 'roti canai'
+
+    def test_the_field_survives_the_contract(self, client, monkeypatch):
+        # `dish` stays in the block whatever its value -- a client typing against
+        # {basis, dish, similarity} must not find the key missing on a semantic row.
+        assert set(self._match(client, monkeypatch, 'semantic')) == {'basis', 'dish', 'similarity'}
+
+    # The two above mock `rank.recommend` wholesale, so they assert the endpoint
+    # passes the block through and NOTHING about the rule that builds it. The rule
+    # itself is `rank.match_block`, tested directly below.
+
+    def test_a_row_the_lexical_lane_did_not_reach_claims_no_dish(self):
+        m = api_main.rank.match_block('v9', lexical_set={'v1'}, dish='roti canai', scores={'v9': 0.51})
+        assert m['basis'] == 'semantic'
+        assert m['dish'] is None, 'a semantic row must not name the dish the query resolved to'
+
+    def test_a_row_the_lexical_lane_reached_names_it(self):
+        m = api_main.rank.match_block('v1', lexical_set={'v1'}, dish='roti canai', scores={'v1': 0.62})
+        assert m == {'basis': 'dish', 'dish': 'roti canai', 'similarity': 0.62}
+
+    def test_a_venue_the_vector_lane_never_scored_reports_zero_not_a_crash(self):
+        # Lexical hits are prepended to the retrieval order, so a venue can be in
+        # the list with no cosine at all. Measured on prod: 春记大埔面 came back
+        # `basis: dish, similarity: 0.0`.
+        assert api_main.rank.match_block('v1', lexical_set={'v1'}, dish='char siew', scores={})['similarity'] == 0.0
