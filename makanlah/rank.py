@@ -13,7 +13,7 @@ import math
 
 from makanlah import config, db, models
 from makanlah.dishes import canonical, canonical_for_query
-from makanlah.text import fold_variants, normalize
+from makanlah.text import fold_variants
 
 
 def _distance_m(lat1, lng1, lat2, lng2):
