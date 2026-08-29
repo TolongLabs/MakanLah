@@ -1,9 +1,14 @@
-"""The staleness probe, against a real socket.
+"""The staleness probe, against a real socket and a throwaway history.
 
 No mock of urlopen. The failure this probe exists to catch is a live host answering
 200 with the wrong body, so the content type has to travel through an actual HTTP
 response for the test to mean anything -- a stubbed fetch would assert the shape of
 the stub. The server is localhost on an ephemeral port, so the suite stays hermetic.
+
+The git history is built per test rather than read from this repo. The first version
+of this file used HEAD~1 and passed locally and failed in CI, because ci.yml checks
+out at depth 1 and HEAD~1 is not there. A test that depends on how the tree was
+cloned is testing the checkout.
 """
 
 import subprocess
@@ -55,16 +60,34 @@ def host():
         stop()
 
 
-def _git(*args):
-    return subprocess.run(['git', *args], capture_output=True, text=True, check=True).stdout.strip()
+@pytest.fixture
+def history(tmp_path, monkeypatch):
+    """Four commits in a scratch repo, oldest first. The probe shells out to git in
+    the working directory, so chdir is what points it at this history."""
+
+    def run(*args):
+        return subprocess.run(['git', *args], cwd=tmp_path, capture_output=True, text=True, check=True).stdout.strip()
+
+    run('init', '-q', '-b', 'main')
+    run('config', 'user.email', 'probe@example.invalid')
+    run('config', 'user.name', 'Probe Test')
+    shas = []
+    for n in range(4):
+        (tmp_path / 'f.txt').write_text(f'{n}\n')
+        run('add', 'f.txt')
+        # --no-verify: husky may have set core.hooksPath in the ambient config.
+        run('commit', '-q', '--no-verify', '-m', f'commit {n}')
+        shas.append(run('rev-parse', 'HEAD'))
+    monkeypatch.chdir(tmp_path)
+    return shas
 
 
 def _stamp(commit, built='2026-08-28T00:00:00.000Z'):
     return f'{{"commit": "{commit}", "built_at": "{built}"}}'
 
 
-def test_matching_commit_is_current(host):
-    head = _git('rev-parse', 'HEAD')
+def test_matching_commit_is_current(host, history):
+    head = history[-1]
     url = host(_stamp(head))
     stamp, failure = probe.fetch_stamp(url)
     assert failure is None
@@ -83,29 +106,27 @@ def test_spa_fallback_is_not_a_deploy(host):
     assert 'no build stamp at all' in failure.headline
 
 
-def test_older_commit_reports_how_far_behind(host):
+def test_older_commit_reports_how_far_behind(host, history):
     """Regression: git() returns '' for `cat-file -e`, which is falsy but not failure.
 
     Testing that truthily treated every known commit as unknown, so the probe said
-    'diverged from main' for a commit one step behind it and dropped the list of what
-    was missing -- a true verdict with its most useful half silently removed.
+    'diverged from main' for a commit three behind it and dropped the list of what was
+    missing -- a true verdict with its most useful half silently removed.
     """
-    head = _git('rev-parse', 'HEAD')
-    parent = _git('rev-parse', 'HEAD~1')
-    url = host(_stamp(parent))
+    url = host(_stamp(history[0]))
     stamp, failure = probe.fetch_stamp(url)
     assert failure is None
-    verdict = probe.compare(stamp, head, url)
+    verdict = probe.compare(stamp, history[-1], url)
     assert verdict.state == probe.STALE
-    assert '1 commits behind' in verdict.headline
+    assert '3 commits behind' in verdict.headline
     assert 'Not on the live site' in verdict.detail
+    assert 'commit 3' in verdict.detail
 
 
-def test_unknown_commit_does_not_crash(host):
-    head = _git('rev-parse', 'HEAD')
+def test_unknown_commit_does_not_crash(host, history):
     url = host(_stamp('deadbeef' * 5))
     stamp, _ = probe.fetch_stamp(url)
-    verdict = probe.compare(stamp, head, url)
+    verdict = probe.compare(stamp, history[-1], url)
     assert verdict.state == probe.STALE
     assert 'not a commit in this clone' in verdict.detail
 
