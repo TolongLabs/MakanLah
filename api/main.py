@@ -451,18 +451,7 @@ def suggestions(request: Request):
     """
     _rate_limit('suggestions', request)
     try:
-        if not _companion_quota():
-            with db.connect() as con:
-                pool = suggest._candidates(con)
-            return {
-                'chips': [
-                    {'label': r['dish'], 'query': r['dish'], 'posts': r['posts'], 'venues': r['venues']}
-                    for r in pool[: suggest.CHIPS]
-                ],
-                'band': suggest._band(suggest.datetime.now(suggest.MYT).hour),
-                'source': 'corpus',
-            }
-        return suggest.chips()
+        return suggest.chips(use_model=_companion_quota())
     except CORPUS_UNREACHABLE as e:
         # No corpus, no honest chips. An empty list renders as no chips at all,
         # which is correct: inventing six would be inventing six dead ends.

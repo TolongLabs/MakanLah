@@ -346,7 +346,7 @@ class TestSuggestionsAreMeteredAndCannotInvent:
         monkeypatch.setattr(
             api_main.suggest,
             'chips',
-            lambda: {
+            lambda **_: {
                 'chips': [{'label': '肉骨茶', 'query': '肉骨茶', 'posts': 14, 'venues': 9}],
                 'band': 'dinner',
                 'source': 'model',
@@ -369,19 +369,28 @@ class TestSuggestionsAreMeteredAndCannotInvent:
         # Peer review asked for this explicitly: a dead suggestion strip is fine, a
         # stack trace on the results path is not.
         monkeypatch.setattr(api_main, '_companion_quota', lambda: False)
-        monkeypatch.setattr(
-            api_main.suggest, '_candidates', lambda con: [{'dish': 'nasi lemak', 'posts': 9, 'venues': 5}]
-        )
+        seen = {}
+
+        def chips(*, use_model=True):
+            seen['use_model'] = use_model
+            return {
+                'chips': [{'label': 'nasi lemak', 'query': 'nasi lemak', 'posts': 9, 'venues': 5}],
+                'band': 'lunch',
+                'source': 'corpus',
+            }
+
+        monkeypatch.setattr(api_main.suggest, 'chips', chips)
         r = client.get('/suggestions')
+        # The endpoint must ASK for the model-free path rather than having its own.
+        assert seen['use_model'] is False
         assert r.status_code == 200
         assert r.json()['source'] == 'corpus'
         assert r.json()['chips'][0]['label'] == 'nasi lemak'
 
     def test_an_unreachable_corpus_offers_nothing_rather_than_inventing(self, client, monkeypatch):
-        def boom():
+        def boom(**_):
             raise psycopg.OperationalError('no route to host')
 
-        monkeypatch.setattr(api_main.db, 'connect', boom)
         monkeypatch.setattr(api_main.suggest, 'chips', boom)
         r = client.get('/suggestions')
         assert r.status_code == 200

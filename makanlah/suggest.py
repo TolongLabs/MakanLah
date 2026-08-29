@@ -75,8 +75,14 @@ Rules:
   - Order them best first."""
 
 
-def chips(*, now: datetime | None = None, con=None) -> dict:
-    """`{'chips': [{label, query, posts, venues}], 'band': str, 'source': str}`."""
+def chips(*, now: datetime | None = None, con=None, use_model: bool = True) -> dict:
+    """`{'chips': [{label, query, posts, venues}], 'band': str, 'source': str}`.
+
+    `use_model=False` is the out-of-quota path. It is a parameter rather than a
+    second code path in the caller so that the database connection has exactly
+    one home -- the endpoint used to open its own and CI, which has no
+    DATABASE_URL, was the thing that noticed.
+    """
     close = con is None
     ctx = db.connect() if close else None
     con = ctx.__enter__() if close else con
@@ -94,7 +100,7 @@ def chips(*, now: datetime | None = None, con=None) -> dict:
     source = 'corpus'
 
     s = config.settings()
-    if s.companion_api_key:
+    if use_model and s.companion_api_key:
         listing = '\n'.join(f'{i}. {r["dish"]} ({r["posts"]} posts)' for i, r in enumerate(pool))
         payload = {
             'model': s.companion_model,
