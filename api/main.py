@@ -4,7 +4,9 @@ Separate process and separate host from ingest/ (docs/TRD.md). It shares the
 makanlah/ library and shares nothing at runtime.
 """
 
+import logging
 import os
+import sqlite3
 import sys
 import time
 from pathlib import Path
@@ -16,7 +18,13 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from makanlah import auth, companion, config, copilot, db, rank, suggest
+from makanlah import auth, companion, config, copilot, db, ledger, rank, suggest
+
+logger = logging.getLogger(__name__)
+
+# Reaching the ledger is not the same as a code bug: an outage must fail open
+# on the in-memory path so the product keeps answering. Other exceptions raise.
+_LEDGER_ERRORS = (psycopg.OperationalError, psycopg.InterfaceError, sqlite3.OperationalError, sqlite3.DatabaseError)
 
 # An outage is a connection that cannot be made. A ProgrammingError, a TypeError
 # or a KeyError is our own bug and must not be dressed up as one.
@@ -185,6 +193,10 @@ _companion: dict[str, float] = {'day': -1.0, 'used': 0.0}
 _companion_minute: list[float] = []
 
 
+def ledger_backend() -> str:
+    return ledger.ledger_backend()
+
+
 def _budget_day() -> int:
     return int(time.time() // 86400)
 
@@ -195,30 +207,49 @@ def _roll_day() -> None:
         _ip_spend.clear()
 
 
+def _companion_roll(_companion: dict, _companion_minute: list) -> None:
+    day = _budget_day()
+    if _companion['day'] != day:
+        _companion['day'], _companion['used'] = float(day), 0.0
+        _companion_minute.clear()
+
+
 def _spend_left() -> float:
     """Ringgit left in the day."""
-    _roll_day()
-    return DAILY_BUDGET_MYR - _spend['myr']
+    try:
+        return ledger.get_ledger().spend_left(DAILY_BUDGET_MYR, _spend, _ip_spend)
+    except _LEDGER_ERRORS as e:
+        # An outage must not take the product down. The in-memory path is a
+        # degraded fallback, not an extra security control.
+        logger.warning('ledger unreachable, using in-memory path: %s', type(e).__name__)
+        _roll_day()
+        return DAILY_BUDGET_MYR - _spend['myr']
 
 
 def _ip_left(ip: str) -> float:
     """Ringgit left for one visitor today."""
-    _roll_day()
-    return (DAILY_BUDGET_MYR * IP_DAILY_SHARE) - _ip_spend.get(ip, 0.0)
+    try:
+        return ledger.get_ledger().ip_left(ip, DAILY_BUDGET_MYR, IP_DAILY_SHARE, _spend, _ip_spend)
+    except _LEDGER_ERRORS as e:
+        logger.warning('ledger unreachable, using in-memory path: %s', type(e).__name__)
+        _roll_day()
+        return (DAILY_BUDGET_MYR * IP_DAILY_SHARE) - _ip_spend.get(ip, 0.0)
 
 
 def _companion_quota() -> bool:
     """True if the free Gemini tier has room for one more line, right now."""
-    if _companion['day'] != _budget_day():
-        _companion['day'], _companion['used'] = float(_budget_day()), 0.0
-        _companion_minute.clear()
-    now = time.time()
-    _companion_minute[:] = [t for t in _companion_minute if now - t < 60]
-    if _companion['used'] >= COMPANION_DAILY or len(_companion_minute) >= COMPANION_PER_MIN:
-        return False
-    _companion['used'] += 1
-    _companion_minute.append(now)
-    return True
+    try:
+        return ledger.get_ledger().companion_quota(COMPANION_DAILY, COMPANION_PER_MIN, _companion, _companion_minute)
+    except _LEDGER_ERRORS as e:
+        logger.warning('ledger unreachable, using in-memory path: %s', type(e).__name__)
+        _companion_roll(_companion, _companion_minute)
+        now = time.time()
+        _companion_minute[:] = [t for t in _companion_minute if now - t < 60]
+        if _companion['used'] >= COMPANION_DAILY or len(_companion_minute) >= COMPANION_PER_MIN:
+            return False
+        _companion['used'] += 1
+        _companion_minute.append(now)
+        return True
 
 
 def _affordable(request: Request, calls: int) -> bool:
@@ -227,11 +258,15 @@ def _affordable(request: Request, calls: int) -> bool:
 
 
 def _charge(request: Request, calls: int = 1) -> None:
-    _roll_day()
-    cost = calls * MYR_PER_CALL
-    _spend['myr'] += cost
     ip = _client_ip(request)
-    _ip_spend[ip] = _ip_spend.get(ip, 0.0) + cost
+    cost = calls * MYR_PER_CALL
+    try:
+        ledger.get_ledger().charge(ip, cost, _spend, _ip_spend)
+    except _LEDGER_ERRORS as e:
+        logger.warning('ledger unreachable, using in-memory path: %s', type(e).__name__)
+        _roll_day()
+        _spend['myr'] += cost
+        _ip_spend[ip] = _ip_spend.get(ip, 0.0) + cost
 
 
 def _client_ip(request: Request) -> str:
@@ -249,20 +284,27 @@ TRUST_PROXY_HEADER = os.environ.get('TRUST_PROXY_HEADER', '').lower() in ('1', '
 
 
 def _rate_limit(bucket: str, request: Request) -> None:
-    """In-process, per-IP, sliding window.
+    """Per-IP, sliding window.
 
-    Deliberately not durable: one API process today, and a limiter that needs
-    Redis to exist is a limiter nobody turns on. It stops credential stuffing
-    from one host, not a distributed attack -- say so rather than imply more.
+    The window now persists across cold starts when a durable backend is
+    configured; when the ledger is unreachable it falls back to the in-memory
+    path so a database outage does not take the API down. It still stops
+    credential stuffing from one host, not a distributed attack -- say so rather
+    than imply more.
     """
     limit, window = RATE_LIMIT[bucket]
-    now = time.time()
-    key = (bucket, _client_ip(request))
-    hits = [t for t in _attempts.get(key, []) if now - t < window]
-    if len(hits) >= limit:
-        raise HTTPException(status_code=429, detail='Too many attempts, try again shortly.')
-    hits.append(now)
-    _attempts[key] = hits
+    ip = _client_ip(request)
+    try:
+        ledger.get_ledger().rate_limit(bucket, ip, limit, window, _attempts)
+    except _LEDGER_ERRORS as e:
+        logger.warning('ledger unreachable, using in-memory path: %s', type(e).__name__)
+        now = time.time()
+        key = (bucket, ip)
+        hits = [t for t in _attempts.get(key, []) if now - t < window]
+        if len(hits) >= limit:
+            raise HTTPException(status_code=429, detail='Too many attempts, try again shortly.') from None
+        hits.append(now)
+        _attempts[key] = hits
 
 
 class Credentials(BaseModel):
