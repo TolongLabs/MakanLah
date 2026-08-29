@@ -1,37 +1,8 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { SCRIPT, STEP_KEYS, scripted } from '../companion/lines'
 import { PITCH, pickVoice, RATE } from '../companion/voice'
 
-/** The Python source of truth, read rather than imported: there is no runtime that
-    can import both, so parity is asserted against the file itself. */
-function pythonScript(): Record<string, string[]> {
-  const src = readFileSync(join(__dirname, '../../../makanlah/companion.py'), 'utf8')
-  const block = src.slice(src.indexOf('SCRIPT: dict'), src.indexOf('SYSTEM = """'))
-  const out: Record<string, string[]> = {}
-  let key: string | null = null
-  for (const raw of block.split('\n')) {
-    const head = raw.match(/^\s{4}'([a-z]+)':\s*\($/)
-    if (head?.[1]) {
-      key = head[1]
-      out[key] = []
-      continue
-    }
-    const line = raw.match(/^\s{8}'(.*)',$/)
-    if (line?.[1] != null && key) out[key]?.push(line[1].replace(/\\'/g, "'"))
-  }
-  return out
-}
-
 describe('the companion script', () => {
-  it('says exactly what the server says', () => {
-    // Two copies of the same lines, in two languages, because the client speaks
-    // before the server answers. The copy is only safe while it is a copy, so a
-    // change to one side is a failing test rather than a silent divergence.
-    expect(pythonScript()).toEqual(SCRIPT)
-  })
-
   it('covers every step the wizard walks, plus the send-off', () => {
     for (const step of [...STEP_KEYS, 'done'] as const) {
       expect(SCRIPT[step].length).toBeGreaterThan(0)

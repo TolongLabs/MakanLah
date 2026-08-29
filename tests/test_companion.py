@@ -5,6 +5,8 @@ happens to a line AFTER a model writes it: the whole point of this module is
 that it lets a model be creative inside a box it cannot talk its way out of.
 """
 
+import pathlib
+import re
 import sys
 from pathlib import Path
 
@@ -75,6 +77,39 @@ class TestScript:
 
     def test_an_unknown_step_still_speaks(self):
         assert companion.scripted('nonsense', 0)
+
+
+class TestClientParity:
+    """The lines are duplicated in TypeScript. The copy is only safe while it is one.
+
+    The client speaks the instant a step changes, and a spoken question that lands
+    three hundred milliseconds after the question it is asking has already been read
+    is worse than one that never varies -- so it cannot wait for this module. That
+    makes the duplication deliberate, and this the thing that keeps it honest.
+
+    It lives on the Python side because the browser side cannot read a file: the
+    equivalent vitest assertion needed `node:fs`, which typechecked locally only
+    because the repo root carries a node_modules the CI web job never installs.
+    """
+
+    def test_the_typescript_says_exactly_the_same_lines(self):
+        ts = pathlib.Path(__file__).resolve().parents[1] / 'web/src/companion/lines.ts'
+        block = ts.read_text()
+        block = block[block.index('export const SCRIPT') : block.index('export const STEP_KEYS')]
+
+        found: dict[str, list[str]] = {}
+        key = None
+        for raw in block.splitlines():
+            head = re.match(r'^  ([a-z]+): \[$', raw)
+            if head:
+                key = head.group(1)
+                found[key] = []
+                continue
+            one = re.match(r"^    '(.*)',?$", raw)
+            if one and key:
+                found[key].append(one.group(1).replace(chr(92) + "'", "'"))
+
+        assert found == {k: list(v) for k, v in companion.SCRIPT.items()}
 
 
 class TestLine:
