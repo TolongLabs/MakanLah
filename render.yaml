@@ -1,0 +1,35 @@
+# Render blueprint for the MakanLah API. Singapore, free tier, no card.
+#
+# Cloudflare Python Workers was the recommendation in
+# docs/superpowers/research/2026-08-28-free-public-deployment.md and it does not
+# work: the Python Workers runtime ships no PostgreSQL driver at all -- not
+# psycopg, not asyncpg -- and documents only aiohttp and httpx for outbound. Our
+# db.py is psycopg throughout, so that path is a rewrite of the data layer, not a
+# deploy. Render is the documented fallback in the same file and it runs the app
+# unmodified.
+#
+# The cost is honest and it is the cold start: the free tier spins down after 15
+# minutes idle and takes 30-60s to come back. scripts/keep-warm is the mitigation.
+services:
+  - type: web
+    name: makanlah-api
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: '3.11'
+      # Set in the Render dashboard, never here. sync:false means Render prompts
+      # for them rather than reading a value out of this file -- a committed
+      # blueprint must never be able to carry a credential.
+      - key: DATABASE_URL
+        sync: false
+      - key: DASHSCOPE_API_KEY
+        sync: false
+      - key: CF_PAGES_PROJECT
+        sync: false
+      - key: ENABLE_DOCS
+        value: '0'
