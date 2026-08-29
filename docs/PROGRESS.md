@@ -1,13 +1,13 @@
 # Progress — 2026-08-29 · citations carry testimony, and the latency target is met
 
-**`main` is at `61325b4`.** 18 PRs merged — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30, #32, #35, #37, #38,
-#39, #40, #42. **256 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather than on a
-branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the
-corpus and admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `d48d3bb`.** 23 PRs merged — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30, #32, #35, #37, #38,
+#39, #40, #42, #43, #45, #47, #48, #49. **265 Python tests, 74 web tests, 13 guard cases, lint and format clean, CI
+green.** Verified on `main` rather than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}`
+serves a deep link, `/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
 **fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
-CLEAN, and refuses `--admin`. Nine cases in `tests/test_merge_guard.sh`. **The first autonomous merge was #27.** The
+CLEAN, and refuses `--admin`. Thirteen cases in `tests/test_merge_guard.sh`. **The first autonomous merge was #27.** The
 hook takes effect only after a session restart — the harness caches permissions at start.
 
 **Ranking is measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.982, wd@5 0.000, top1
@@ -161,14 +161,38 @@ Each was found by running something, not by reading code.
   without naming one
 - Growing the corpus is now one command: `ingest/capture_rednote.py --target N`, then `ingest/pipeline.py`
 
-**Open issues: #41** latency tail under burst · **#31** two branches read as a duplicate · **#15** 1,008 posts missing
-text · **#6** deploy. #25, #16, #26, #34 and #36 all closed today.
+**Open issues: #46** deployed site behind main · **#41** latency tail under burst · **#31** two branches read as a
+duplicate · **#15** 1,008 posts missing text · **#6** deploy. #16, #20, #22, #25, #26, #34 and #36 all closed.
 
 **#6 is not a technical blocker.** `wrangler` is installed and already authenticated to the account hosting the Pages
 site. It stops on a **platform-terms question**, which `AUTONOMY.md` names as one of the four things that end a run:
 deploying means serving cached third-party excerpts publicly, and putting a live Neon credential into Cloudflare. Both
 are the owner's call. **This also blocks the LinkedIn post** — the demo points at `127.0.0.1:8000`, so a reader who
 clicks through today reaches a client with no backend.
+
+## The Deploy Gap, And The Exhibit That Went Stale
+
+_Written by the frontend session, kept verbatim._
+
+> The staleness probe closes the gap that a skipped deploy left open. `guard-merge.sh` counts SKIPPED alongside SUCCESS,
+> so an unset or rotated Cloudflare token made "did not deploy" indistinguishable from a green review. The build now
+> stamps `dist/build.json` with its commit and a daily scheduled job reads it back, files one issue edited in place, and
+> closes it when the live site catches up. It never runs on `pull_request` and so cannot reach the merge gate. First run
+> red and correct: issue #46. It stays red until `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exist.
+>
+> The landing exhibit was re-frozen against the corpus after #40, #42 and #27. Both cited posts survived the repair —
+> the response went stale because chrome-stripping changed an excerpt and #27 changed which citation leads. A live URL
+> is not a live exhibit, and the check for one would have passed.
+
+## A Documented Contract Nothing Compared To The Code
+
+`TRD.md` described `match: {basis, dish_hit, lexical, vector}` while `/recommend` sent `{basis, dish, similarity}`. The
+web client's type was written **faithfully against the doc**, so the client was wrong about the response for as long as
+nothing read those fields — invisibly, until a real response met the type and `tsc` rejected it.
+
+**The drift was in the documentation, not the client.** `tests/test_api_contract.py` now parses that block and compares
+it against the response shape, with a second test pinning the parsed key set — because a comparison against an empty
+parse succeeds, which is the same hole as an absent check reading as a pass.
 
 ## Three Findings Worth Carrying Forward
 
