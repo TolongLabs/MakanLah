@@ -73,6 +73,16 @@ def ask(venue_id, question, *, con=None):
 
     venue_out = {'id': str(venue['id']), 'name': venue['name'], 'area': venue['area']}
     kept = with_live_citations([{'citations': raw}])
+    # Ground the answer in evidence a reader can open. with_live_citations
+    # orders live first but keeps dead rows, so the model could still quote a
+    # post that no longer resolves -- and an /ask answer is a paraphrase, which
+    # makes the post the only way to confirm it was not invented. Where a venue
+    # has any live evidence, offer only that. Where it has none, offer what
+    # there is: an honest quote behind a dead link beats refusing to answer.
+    if kept:
+        live_only = [c for c in kept[0]['citations'] if not c.get('dead')]
+        if live_only:
+            kept = [{'citations': live_only}]
     if not kept:
         return {
             'covered': False,
