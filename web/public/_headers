@@ -1,0 +1,6 @@
+# The staleness probe reads this file to learn which commit the site is serving. An
+# edge-cached copy would answer for the previous deploy, and the probe would report a
+# fresh site as stale -- so this one path is never cached. Everything else keeps the
+# Pages defaults.
+/build.json
+  Cache-Control: no-store
