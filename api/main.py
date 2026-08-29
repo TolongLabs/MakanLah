@@ -125,12 +125,19 @@ _attempts: dict[tuple[str, str], list[float]] = {}
 # nineteen requests a minute each are all individually polite and collectively
 # expensive. This meters money.
 #
-# MYR_PER_CALL is measured, not guessed: one /recommend is ~2,150 input and ~200
-# output tokens on the re-rank lane, and at the Singapore list price of $0.15/M
-# and $0.47/M that is USD 0.00042, or about RM 0.0019 at 4.4. Re-measure when a
-# lane is re-pinned -- docs/TRD.md carries the method.
+# MYR_PER_CALL is measured, not guessed. One /recommend is ~2,150 input and ~200
+# output tokens and spends two calls, one embedding and one re-rank. On
+# qwen3.7-flash-2026-07-15 at the Singapore 0-32K tier, $0.030/M and $0.130/M,
+# that is USD 0.00009 a request, about RM 0.0004, so RM 0.0002 a call.
+#
+# It is an average across the two calls rather than a per-lane price: the
+# embedding is 2-6 tokens and costs effectively nothing, the re-rank is the whole
+# bill. Splitting them would be more precise and would not change a decision.
+#
+# RE-MEASURE WHEN A LANE IS RE-PINNED. The previous lane cost 4.6x this, and
+# nothing in the code would have noticed.
 DAILY_BUDGET_MYR = float(os.environ.get('DAILY_BUDGET_MYR', '10'))
-MYR_PER_CALL = float(os.environ.get('MYR_PER_CALL', '0.0019'))
+MYR_PER_CALL = float(os.environ.get('MYR_PER_CALL', '0.0002'))
 
 # No single visitor may take more than this share of the day. The point is not to
 # be fair, it is that one troll with a loop should cost the other visitors

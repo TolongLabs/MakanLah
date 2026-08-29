@@ -1,40 +1,47 @@
 query                      lang           p@5   fp@5   wd@5   top1       n    sec
 ----------------------------------------------------------------------------------
-bak kut teh                en      1.00 ±0.00   0.00   0.00 3/3    9-9      3.48
-肉骨茶                        zh      1.00 ±0.00   0.00   0.00 3/3    8-8      2.94
-nasi lemak                 en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.31
-椰浆饭                        zh      1.00 ±0.00   0.00   0.00 3/3    10-10     3.68
-char kway teow             en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.26
-炒粿条                        zh      1.00 ±0.00   0.00   0.00 3/3    8-10     3.58
-laksa                      en      1.00 ±0.00   0.00   0.00 3/3    4-10     3.49
-叻沙                         zh      1.00 ±0.00   0.00   0.00 3/3    4-4      2.35
-kaya toast                 en      1.00 ±0.00   0.00   0.00 3/3    3-3      2.02
-satay                      en      1.00 ±0.00   0.00   0.00 3/3    2-2      2.60
-roti canai                 en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.67
-curry mee                  en      0.89 ±0.33   0.00   0.00 3/3    2-3      2.02
-pasta                      en      1.00 ±0.00   0.00   0.00 3/3    9-9      3.22
-pizza                      en      0.93 ±0.20   0.00   0.00 3/3    7-7      2.84
-steak                      en      1.00 ±0.00   0.00   0.00 3/3    3-3      2.06
-tiramisu                   en      1.00 ±0.00   0.00   0.00 3/3    10-10     3.40
-matcha                     en      0.87 ±0.20   0.00   0.00 1/3    10-10     4.09
+bak kut teh                en      1.00 ±0.00   0.00   0.00 3/3    8-8      2.66
+肉骨茶                        zh      1.00 ±0.00   0.00   0.00 3/3    8-8      2.34
+nasi lemak                 en      1.00 ±0.00   0.00   0.00 3/3    5-5      2.09
+椰浆饭                        zh      1.00 ±0.00   0.00   0.00 3/3    5-5     45.39
+char kway teow             en      1.00 ±0.00   0.00   0.00 3/3    5-7      2.05
+炒粿条                        zh      1.00 ±0.00   0.00   0.00 3/3    7-7      2.58
+laksa                      en      1.00 ±0.00   0.00   0.00 3/3    4-4      1.94
+叻沙                         zh      1.00 ±0.00   0.00   0.00 3/3    4-4      1.70
+kaya toast                 en      1.00 ±0.00   0.00   0.00 3/3    3-3      1.61
+satay                      en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.42
+roti canai                 en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.40
+curry mee                  en      1.00 ±0.00   0.00   0.00 3/3    2-2      1.57
+pasta                      en      1.00 ±0.00   0.00   0.00 3/3    8-8      2.67
+pizza                      en      0.80 ±0.00   0.00   0.00 0/3    7-7      2.30
+steak                      en      1.00 ±0.00   0.00   0.00 3/3    3-3     41.57
+tiramisu                   en      1.00 ±0.00   0.00   0.00 3/3    5-5      1.97
+matcha                     en      1.00 ±0.00   0.00   0.00 3/3    7-8      2.34
 ----------------------------------------------------------------------------------
-lead-with-testimony (citations ordered by what the excerpt says, not by extractor confidence):
-  mean p@5  0.982
+qwen3.7-flash-2026-07-15, run 1 (the table above):
+  mean p@5  0.988   top1 48/51
+  latency median 2.07s  p95 2.78s  max 131.88s
+
+qwen3.7-flash-2026-07-15, run 2 (same config, immediately after):
+  mean p@5  0.992   top1 49/51
   mean fp@5 0.000  (opposite cuisine -- blind to the reported bug)
   mean wd@5 0.000  (tagged, but not with the dish asked for)
-  top1 correct 49/51
-  latency median 3.04s  p95 4.36s  max 4.72s
+  latency median 2.05s  p95 2.89s  max 3.17s
 
 unscored (no dish ground truth; reported so a regression in shape is visible):
-  somewhere light for breakfast        n= 6   2.56s
-  想吃辣的东西                               n= 6   2.60s
-  tempat makan yang sedap dan murah    n= 7   3.05s
+  somewhere light for breakfast        n= 5   1.96s
+  想吃辣的东西                               n= 6   2.57s
+  tempat makan yang sedap dan murah    n= 5   1.76s
 
-previous, for comparison -- "rerank bounded to a 4s interactive budget" (2026-08-28):
-  mean p@5 0.984   top1 51/51   median 3.12s   p95 4.66s
-  The whole difference is `matcha`, which fell from 1.00 +/-0.00 and 3/3 to
-  0.87 +/-0.20 and 1/3. Under the old ordering the re-rank was shown the
-  highest-confidence excerpts, which are disproportionately pin lines and
-  addresses -- text that names the venue and its dish and so matches a keyword
-  query well while telling a reader nothing. Ranking was leaning on that.
-  Tracked as #26.
+previous lane, qwen3.8-flash (2026-08-29):
+  mean p@5 0.982   top1 49/51   median 3.04s   p95 4.36s   max 4.72s
+
+  Better on p@5, level on top1, and p95 falls 4.36s -> 2.89s, which meets the 3s
+  target in PRD.md for the first time. `matcha` recovers to 1.00 and 3/3, closing
+  the regression tracked as #26; `pizza` is the one that moved the other way.
+
+  The 131.88s max in run 1 did NOT reproduce. Six consecutive runs of the two
+  queries it hit stayed at 1.7-3.0s, and run 2's max was 3.17s. It looks like a
+  transient during the eval's burst of 54 rapid calls rather than a property of
+  the lane -- recorded rather than deleted, because one clean re-run is evidence
+  and not proof.
