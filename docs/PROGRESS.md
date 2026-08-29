@@ -24,6 +24,66 @@ console before repinning.
 
 ---
 
+## 2026-08-29 (UAT Round One) — The Same Failure, Now Four Times
+
+**Prod is at `4d1ef4f`.** PRs #74, #77, #89 merged. Peer 3 ran UAT as three personas; eight frontend findings fixed, one
+rejected with evidence.
+
+### The Pattern, Fourth Sighting
+
+Every one of these was **a check that ran, reported success, and was measuring nothing** — and in every case the fix to
+the check was to assert a **difference** rather than a **presence**.
+
+| Bug                          | The check asserted     | Why it passed anyway                           | What the check asserts now       |
+| ---------------------------- | ---------------------- | ---------------------------------------------- | -------------------------------- |
+| **Mascot rendered nothing**  | A live WebGL context   | A blank canvas has one                         | Painted pixels against a floor   |
+| **Dark theme entirely dead** | The tokens exist       | They did, resolving to the light values        | The colours move between schemes |
+| **Spend ledger** (Peer 1)    | The counter increments | It did, in a container nobody would see again  | It survives a cold start         |
+| **Drop The Craving**         | The label updates      | It did — the request still carried the craving | The claim and the request AGREE  |
+
+A presence assertion agrees with itself. A difference assertion has to be shown two states and cannot.
+
+### The Blocker That Was Not One
+
+Peer 3 reported "Ask About This never renders an answer" as the launch blocker. **It renders.** Reproduced twice against
+prod — logged out and as a guest signed in through the UI — answer and citations both painted; Peer 1 confirmed `/ask`
+independently.
+
+The symptom matched **a tab crash under memory pressure**, which the same report separately excluded as the reporter's
+own machine. This box was at 631 MB free with swap 100% full and crashed three times. **A dead renderer emits no console
+errors, and a completed POST that never paints is indistinguishable from being ignored.** Two findings, one cause, and
+the cause was the environment.
+
+The lesson survived the rejection: the Ask panel showed in-flight state only in a button label, so waiting and
+finished-with-nothing looked identical. They are different claims and now look different. Measured on prod:
+`.ask-waiting` at 0 ms, answer at ~900 ms.
+
+### Two Bugs My Own Fixes Introduced
+
+Both caught before shipping, both worth keeping:
+
+**The new empty state claimed "within 3 km of you" from the radius control** — but `run()` drops the radius when
+geolocation never resolved. That is #82 inverted: a false blame replaced by a false precision. Gated on the radius
+actually sent.
+
+**Drop The Craving cleared the label while still sending the craving.** `run()` reads its ref synchronously and React
+had not re-rendered. This is the fourth row in the table above.
+
+### Worktree Collisions: Three, Now Ended
+
+The main checkout was shared with Peer 1 and moved under me twice. The third time was the worst — my files sat
+uncommitted on their branch and **their in-progress code reported as 17 failures in my test run**, which costs judgement
+rather than minutes. Peer 1 has relocated to `MakanLah-p1` with its own copy of the gitignored dotenv, which was the
+whole reason they kept being pulled back. **Commit early when sharing a checkout, and check `git branch --show-current`
+before trusting a test run.**
+
+### Still Open
+
+**#83 is half-done.** `prefer_live` selection is merged, but `dead_at` is filled by a prober that does not exist yet, so
+every dead link Peer 3 measured is still dead on prod. **#87** needs `corroboration` and `shared_with` from the API; the
+client renders them the moment they arrive and claims nothing without them. **#86** halal has no corpus signal. **#78**
+the Cubism shader warning, non-fatal.
+
 ## 2026-08-29 (Round Three) — One Failure Pattern, Found Three Times In One Afternoon
 
 **PR #71 merged** (mascot framing). **PR for the six-item batch open on `feat/round-three`.** Three peers now: Peer 1
