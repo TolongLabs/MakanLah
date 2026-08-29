@@ -1,10 +1,26 @@
 # Deploying MakanLah Publicly, For Free
 
 **Date:** 2026-08-28 · **Decides:** [#6](https://github.com/TolongLabs/MakanLah/issues/6), the unfunded Fly card ·
-**Status:** recommendation, not yet executed
+**Status:** **resolved 2026-08-29 — option 1 is dead, option 2 is the answer**
 
-**Recommendation: put the API on Cloudflare Workers (Python) with Hyperdrive in front of Neon, and keep the client on
-Cloudflare Pages where it already is.** Fall back to Render's Singapore free tier if Python Workers cannot reach Neon.
+> **Verified 2026-08-29: Python Workers cannot reach Neon, so the fallback is the plan.** Cloudflare's Python Workers
+> package list ships **no PostgreSQL driver at all** — not `psycopg`, not `psycopg2`, not `asyncpg`. The runtime
+> documents `aiohttp` and `httpx` for outbound work and the JavaScript `fetch()` FFI, and nothing else. `makanlah/db.py`
+> is `psycopg` throughout, so option 1 is a rewrite of the data layer onto Neon's HTTP SQL endpoint rather than a
+> deploy. That rewrite touches every query on the citation path, which is the one path that must not acquire a new class
+> of bug before a launch.
+>
+> **The plan is now option 2, Render Singapore**, blueprinted in [`render.yaml`](../../../render.yaml). The build and
+> start path is verified: a clean Python 3.11 venv installs `requirements.txt`, imports `fastapi`, `uvicorn`, `psycopg`
+> and `websockets`, and loads `api.main:app` with `/health`, `/recommend` and `/ask` present.
+>
+> One correction to the option 2 write-up below: **`pip install .` does not work.** `pyproject.toml` declares no build
+> backend — it is a `uv` manifest, not an installable package — so the blueprint installs from `requirements.txt`, and
+> `tests/test_deploy_manifest.py` asserts the two dependency lists cannot drift apart.
+
+**Superseded recommendation: put the API on Cloudflare Workers (Python) with Hyperdrive in front of Neon, and keep the
+client on Cloudflare Pages where it already is.** Fall back to Render's Singapore free tier if Python Workers cannot
+reach Neon.
 
 ---
 
@@ -53,10 +69,10 @@ candidates — is well inside 10ms.
 answer is **Hyperdrive**, a pooler that keeps warm connections near the origin database. Hyperdrive itself is built on
 Workers' TCP socket support and allows ~20 connections per config on the free plan, which is ample for one API.
 
-**Verify before committing**, because the searchable documentation covers the JavaScript drivers well and Python less
-so: does `psycopg` work over Hyperdrive from a **Python** Worker? If it does, this is the answer — same vendor as the
-client, no cold-start penalty on a warmed edge, no card, and the lowest latency of anything here. If it does not,
-option 2.
+**Verified 2026-08-29, and the answer is no.** There is no PostgreSQL driver in the Python Workers package set, so the
+question below is settled against this option. The original framing is kept because it is why the check was run: does
+`psycopg` work over Hyperdrive from a **Python** Worker? If it does, this is the answer — same vendor as the client, no
+cold-start penalty on a warmed edge, no card, and the lowest latency of anything here. If it does not, option 2.
 
 **Also check:** a 6-simultaneous-outbound-connection cap per invocation. We need two — Neon and DashScope — so this is
 comfortable, but it constrains any future fan-out.
