@@ -1,8 +1,8 @@
-# Progress — 2026-08-29 · citations carry testimony, and the latency target is met
+# Progress — 2026-08-29 · the citation trail holds on every surface, and the dish lane reads the corpus
 
-**`main` is at `d48d3bb`.** 23 PRs merged — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30, #32, #35, #37, #38,
-#39, #40, #42, #43, #45, #47, #48, #49. **265 Python tests, 74 web tests, 13 guard cases, lint and format clean, CI
-green.** Verified on `main` rather than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}`
+**`main` is at `810f844`.** Client `dc68121`, API commit reported by `/health` — the two deploy independently and were
+observed one commit apart during this session. **435 Python tests, 134 web tests, 13 guard cases, lint and format clean,
+CI green.** Verified on `main` rather than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}`
 serves a deep link, `/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
@@ -21,6 +21,98 @@ measured against a 3s target in [`PRD.md`](PRD.md)** and still not met, delibera
 console before repinning.
 
 **Web client is live:** <https://makanlah-b5h.pages.dev> · **API is local only** — see Blocked.
+
+---
+
+## 2026-08-29 (UAT Rounds Two And Three) — Six Merges, And Five Instruments Caught Measuring Themselves
+
+**Merged and on prod: #94, #95, #97, #99, #101, #103, #104, #106.** Peers shipped #92, #96, #100, #102, #105 alongside.
+Client `dc68121`, API commit now reported by `/health` (#102) — the two deploy independently and **were observed one
+commit apart**, which is why that endpoint exists.
+
+**The largest thing fixed: the lexical lane could see 12% of the corpus.** `dishes.py` hand-listed **15** dishes against
+**838 distinct dish strings across 1033 dish-mentions** — 12.3% of strings, 18.1% of mentions, **0 of 10 mixed-script
+strings**. The vocabulary is now the corpus (810 keys), with the alias table kept for the one job folding cannot do.
+Measured on prod, before and after:
+
+| Query        | Before                                       | After                                    |
+| ------------ | -------------------------------------------- | ---------------------------------------- |
+| `蛋挞`       | Gu On Korean BBQ, ALVA, The Tokyo Restaurant | **华阳 Oriental Kopi**, `basis=dish`     |
+| `char siew`  | 1 result, `basis=semantic`                   | **5 results, all `basis=dish`**          |
+| `叉烧`       | `basis=semantic`, `dish=None`                | `basis=dish`, incl. 碧華樓 tagged `叉燒` |
+| mood queries | —                                            | byte-identical, deliberately untouched   |
+
+**A negative result worth more than the fix, recorded on #85 so nobody re-derives it: a similarity floor cannot separate
+answerable from unanswerable queries.** `蛋挞` scores **0.5651** while `ayam goreng berempah` scores 0.5877 and
+`kimchi jjigae` 0.6088 — the answerable query scores _below_ two that are not in the corpus at all. Any threshold
+rejecting the misses rejects the hits.
+
+**#98 is the half that was split out, and it is the launch-relevant one.** The app answers confidently where the honest
+answer is that nobody wrote about it. The sharpest case is `roti canai`: the corpus **does** carry the dish, both venues
+carrying it have only dead citations, `with_live_citations` correctly drops them, and the user gets Potato Corner. **The
+app is most misleading exactly where it knows most**, and every citation that dies converts a good answer into this
+silently.
+
+**Three citation-trail fixes, three different surfaces, three different right answers.** The card is a pointer, the
+audit page is a record, and the payload is a contract:
+
+| Surface      | Defect                                                                  | Fix                                            |
+| ------------ | ----------------------------------------------------------------------- | ---------------------------------------------- |
+| Result card  | 3 of 5 cards rendered a dead RedNote chip                               | Drop the chip; a dead pointer is worth nothing |
+| `/r/:id`     | 5 of 8 visible RedNote links dead, unlabelled                           | Keep the row, lose the link, say so            |
+| `match.dish` | Per-query while `basis` was per-row, so 5 rows named a dish they missed | Per-row                                        |
+
+Hiding rows on the audit page was rejected: a stamp reading `posts: 4` over a page showing one row invites the doubt the
+stamp exists to answer.
+
+**The corroboration stamp was inverted and punished its own best evidence.** `independentlyBacked()` required
+`c.authors >= 2`, and Maps citations carry `author_handle: null`. Four RedNote posts by two handles were stamped; two
+RedNote posts plus a Maps review were not. Now `posts >= 2 && (authors >= 2 || platforms >= 2)`. **Verified 17 of 17
+rows across three queries on prod, moving in both directions.** One caveat travels with it: no `posts=1, platforms=2`
+venue exists, so **the floor clause is not exercisable through the UI** and is covered by mutation tests only.
+
+**An unhandled 500 lost its CORS header** (#81). Starlette's `ServerErrorMiddleware` sits outside `CORSMiddleware`, so a
+server fault read in the browser as a CORS misconfiguration. Caught one layer inside instead — **the registration order
+is the fix**, and there is a comment at the call saying so.
+
+**The companion had two gates on two screens and only one was ever measured.** `/discover` mounted her from 48rem;
+`/taste` held out until 56rem. Measured at 834:
+
+|                     | Before            | After                                         |
+| ------------------- | ----------------- | --------------------------------------------- |
+| `/taste` canvas     | NONE              | **288×220**, CI ink **56.9%**, head at row 14 |
+| `/taste` dead space | 549px             | 321px                                         |
+| `/discover` stage   | 720×180 letterbox | 288×200                                       |
+| `/discover` aside   | 770×419           | 770×322                                       |
+
+`Live2DStage.frame()` scales purely by height and centres on `w / 2`, so an uncapped stage does not enlarge her — it
+parks her in a 4:1 letterbox with the bubble's tail pointing at 41px of nothing.
+
+### Five Instruments Caught Measuring Themselves, In One Afternoon
+
+The rate says this is the default failure of this work, not carelessness. **Every one was caught by a control, except
+the one caught by a peer.**
+
+1. `taste_tablet_check.mjs` printed **four green ticks at four widths while measuring nothing** — `.option` matched
+   hidden step panels, so the clearance assertion read `0 <= 1031`
+2. A peer's 834 mascot run blocked the `image` resource type; Live2D textures are `texture_00.png`, so the probe
+   measured its own blocking
+3. A peer's S1 "crash" was DOM text slicing in the reader, not the app
+4. A peer computed dead chips from the **API payload** rather than the rendered DOM — the payload carries dead citations
+   by design, and the question that matters is what the reader saw
+5. A peer reported the tablet mascot broken from `/taste` alone. **No control caught this one**; bundle evidence from a
+   second session did
+
+**And one of my own reports deserved the distrust it got.** I wrote "measured against prod" for #99 when what I ran was
+`rank.recommend()` in-process against the prod _database_. That verifies the code and does **not** verify that
+production serves it — which is precisely where a green check hides a broken deploy.
+
+**Neither machine can verify that the mascot paints.** Headless Chromium here reports `coverage=0.0%` at every width
+**including 1440** — its WebGL will not run Cubism. Geometry is verified locally, ink by CI, and `mascot_check.mjs` now
+carries the 834 case so the pixel count happens where the instrument works.
+
+**Closed:** #81, #84, #93. **Filed:** #93, #98. **Still open and not mine:** #86 (no halal corpus signal — the tablet
+persona's blocker is data, not frontend), #78 (Cubism shader warning), #83's remaining API-side work.
 
 ---
 
