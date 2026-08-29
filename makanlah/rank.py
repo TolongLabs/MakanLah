@@ -13,7 +13,7 @@ import math
 
 from makanlah import config, db, models
 from makanlah.dishes import canonical, canonical_for_query
-from makanlah.text import fold_variants, normalize
+from makanlah.text import fold_variants
 
 
 def _distance_m(lat1, lng1, lat2, lng2):
@@ -83,18 +83,32 @@ def dedupe(candidates):
 
     Containment only — "Village Park" inside "Village Park Nasi Lemak". Two names
     that merely share a word are left alone.
+
+    Matching folds Han script variants, because normalize() cannot see that 强记炖汤
+    and 強记炖汤 are the same three characters and so left one shop on the shortlist
+    twice (#59).
+
+    **A distinct place_id outranks any name match.** Measured on the live corpus:
+    of six groups that fold to one name, 兴记肉骨茶 has two place_ids 914m apart and
+    华阳 has two 11,970m apart — Oriental Kopi is a chain, not one kopitiam. Those
+    are different businesses and collapsing them would hide one of them. Only rows
+    with nothing contradicting the name match are folded together.
     """
     kept = []
     for c in candidates:
-        norm = normalize(c['name'])
+        norm = fold_variants(c['name'])
         if not norm:
             continue
         dup_of = None
         for i, k in enumerate(kept):
-            kn = normalize(k['name'])
-            if norm == kn or norm.startswith(kn + ' ') or kn.startswith(norm + ' '):
-                dup_of = i
-                break
+            kn = fold_variants(k['name'])
+            if not (norm == kn or norm.startswith(kn + ' ') or kn.startswith(norm + ' ')):
+                continue
+            a, b = k.get('place_id'), c.get('place_id')
+            if a and b and a != b:
+                continue
+            dup_of = i
+            break
         if dup_of is None:
             kept.append(c)
             continue
