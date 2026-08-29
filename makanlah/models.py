@@ -138,11 +138,19 @@ def embed(texts):
     if not s.embed_api_key:
         raise RuntimeError('no embedding key configured')
     out = []
+    # One deadline for the whole call, spent down batch by batch. A per-call
+    # timeout on a three-batch embed is three times the budget -- the same
+    # arithmetic that turned a "4 second" re-rank bound into eight.
+    deadline = time.monotonic() + s.embed_timeout
     for i in range(0, len(texts), EMBED_BATCH):
+        left = deadline - time.monotonic()
+        if left <= 0:
+            raise RuntimeError(f'embedding budget of {s.embed_timeout}s exhausted after {len(out)}/{len(texts)} rows')
         body = _post(
             f'{s.embed_base_url}/embeddings',
             {'model': s.embed_model, 'input': texts[i : i + EMBED_BATCH], 'encoding_format': 'float'},
             s.embed_api_key,
+            timeout=left,
         )
         out.extend(d['embedding'] for d in sorted(body['data'], key=lambda d: d['index']))
     return out
