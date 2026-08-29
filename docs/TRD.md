@@ -239,6 +239,44 @@ user waiting. Free-quota alternatives measured the same way: `qwen-plus-2025-07-
 **Enable Stop-on-Exhaust in the console** so an exhausted lane returns `403 AllocationQuota.FreeTierOnly` rather than
 billing silently.
 
+### What A Request Costs, And The Ceiling That Bounds It
+
+Measured 2026-08-29 by recording `usage` from the DashScope response, not estimated:
+
+| Lane                     | Per `/recommend`              |
+| ------------------------ | ----------------------------- |
+| `text-embedding-v3`      | 2–6 input tokens. Immaterial  |
+| `qwen3.8-flash`, re-rank | **~2,150 input, ~200 output** |
+
+At Singapore list price — **$0.15/M input, $0.47/M output** for `qwen3.8-flash`, **$0.40/M and $1.20/M** for `qwen-plus`
+— that is **$0.00042 per `/recommend`**.
+
+| Workload                           | Cost        |
+| ---------------------------------- | ----------- |
+| A few visitors a day (~30 queries) | ~$0.013/day |
+| One full eval run (54 calls)       | **~$0.02**  |
+| Re-extracting the whole corpus     | **~$0.39**  |
+
+**The free allowance is worth about $0.15**, so rationing eval runs is a false economy once billing is on. It is a cap
+on availability, not a meaningful cost saving.
+
+**The exposure is abuse, not usage.** An unbounded public `/recommend` at 10 req/s costs **~$363/day**. Three controls,
+in order of how much they actually bound the bill:
+
+1. **Stop-on-Exhaust in the console.** With billing off, the ceiling is the free quota and the failure mode is downtime,
+   never an invoice. Strongest control, and the one outside our code
+2. **`DAILY_CALL_BUDGET`**, default **2000 model calls** — 1000 `/recommend` a day, about **$0.42**. Every model call is
+   counted, and the API degrades honestly when it is gone. Per-IP limits do not bound spend: a hundred hosts at nineteen
+   requests a minute are each individually polite
+3. **Per-IP rate limits**, 20/min on `/recommend` and 10/min on `/ask`. Stops one noisy host, not a distributed one
+
+**`ENABLE_DOCS`** keeps `/docs` and `/openapi.json` off unless asked for; there is no third-party developer audience,
+and an endpoint map is free reconnaissance.
+
+**CORS is a cost control here, not a credential one.** Auth is a `Bearer` header rather than a cookie, so
+`allow_credentials` is off and no site can ride a signed-in session. Pinning `CORS_ORIGINS` to the Pages domain raises
+the bar for a browser-based abuser and does nothing to `curl`, which is why the budget above is the real control.
+
 ### The Latency Budget, And Why It Is Still Missed
 
 `PRD.md` asks for **p95 < 3s**. The measured p95 is **4.66s**. That is a stated trade, not an oversight.

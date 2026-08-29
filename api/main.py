@@ -4,6 +4,7 @@ Separate process and separate host from ingest/ (docs/TRD.md). It shares the
 makanlah/ library and shares nothing at runtime.
 """
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -21,7 +22,18 @@ from makanlah import auth, config, copilot, db, rank
 # or a KeyError is our own bug and must not be dressed up as one.
 CORPUS_UNREACHABLE = (psycopg.OperationalError, psycopg.InterfaceError)
 
-app = FastAPI(title='MakanLah API', version='0.1.0')
+# /docs and /openapi.json hand a reader the full endpoint map, including the auth
+# routes. There is no third-party developer audience for this API, so they are on
+# only when explicitly asked for.
+_DOCS = os.environ.get('ENABLE_DOCS', '').lower() in ('1', 'true', 'yes')
+
+app = FastAPI(
+    title='MakanLah API',
+    version='0.1.0',
+    docs_url='/docs' if _DOCS else None,
+    redoc_url=None,
+    openapi_url='/openapi.json' if _DOCS else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,9 +72,20 @@ def health():
 
 
 @app.post('/recommend')
-def recommend(req: RecommendRequest):
+def recommend(req: RecommendRequest, request: Request):
     """Every entry cites a real post. An entry that cannot be cited is dropped
     before the response is built, never returned with a caveat."""
+    _rate_limit('recommend', request)
+    # Two calls: one embedding, one re-rank. Charged before the work, so a
+    # request that fails halfway still counts what it spent.
+    if _spend_left() < 2:
+        return {
+            'results': [],
+            'degraded': True,
+            'degraded_reasons': ['daily model budget reached'],
+            'sources_used': [],
+        }
+    _charge(2)
     try:
         out = rank.recommend(req.query, lat=req.lat, lng=req.lng, radius_m=req.radius_m, limit=req.limit)
     except CORPUS_UNREACHABLE as e:
@@ -83,8 +106,45 @@ def recommend(req: RecommendRequest):
 # Auth persists preferences. It never gates /recommend: the product promises a
 # decision in under two minutes, and a login wall in front of search breaks that.
 
-RATE_LIMIT = {'login': (10, 300), 'guest': (20, 300), 'signup': (5, 3600)}
+# The auth buckets exist to stop credential stuffing. `recommend` and `ask` exist
+# for a different reason: each one spends a model call, so an unbounded endpoint
+# converts someone else's spare bandwidth into our bill.
+RATE_LIMIT = {
+    'login': (10, 300),
+    'guest': (20, 300),
+    'signup': (5, 3600),
+    'recommend': (20, 60),
+    'ask': (10, 60),
+}
 _attempts: dict[tuple[str, str], list[float]] = {}
+
+# The ceiling that actually bounds the bill.
+#
+# Per-IP limits do not bound spend: they bound one host. A hundred hosts at
+# nineteen requests a minute each are all individually polite. This counts every
+# model call the process makes, against a budget stated in calls per day, and
+# stops serving when it is gone.
+#
+# Deliberately a hard stop rather than a throttle. Degrading is what this product
+# already does when the corpus is unreachable, and the client already renders it
+# honestly. An unexpected invoice has no such affordance.
+DAILY_CALL_BUDGET = int(os.environ.get('DAILY_CALL_BUDGET', '2000'))
+_spend: dict[str, int] = {'day': -1, 'calls': 0}
+
+
+def _budget_day() -> int:
+    return int(time.time() // 86400)
+
+
+def _spend_left() -> int:
+    if _spend['day'] != _budget_day():
+        _spend['day'], _spend['calls'] = _budget_day(), 0
+    return DAILY_CALL_BUDGET - _spend['calls']
+
+
+def _charge(calls: int = 1) -> None:
+    _spend_left()
+    _spend['calls'] += calls
 
 
 def _rate_limit(bucket: str, request: Request) -> None:
@@ -225,13 +285,17 @@ class AskRequest(BaseModel):
 
 
 @app.post('/ask')
-def ask(req: AskRequest):
+def ask(req: AskRequest, request: Request):
     """One question about one venue, answered from the corpus or not at all.
 
     `covered: false` is a correct answer, not an error -- saying the posts do not
     cover something is the honesty the citation trail exists to support. Like
     /recommend, this is not gated by auth.
     """
+    _rate_limit('ask', request)
+    if _spend_left() < 1:
+        return {'covered': False, 'answer': 'The assistant is resting for today.', 'citations': []}
+    _charge(1)
     try:
         out = copilot.ask(req.venue_id, req.question)
     except CORPUS_UNREACHABLE as e:
