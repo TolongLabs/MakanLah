@@ -17,6 +17,7 @@ type Live2DModelLike = PIXI.DisplayObject & {
   y: number
   expression(name: string): Promise<unknown>
   destroy(): void
+  autoUpdate: boolean
   internalModel?: { coreModel?: CoreModel }
 }
 
@@ -120,12 +121,36 @@ export class Live2DStage {
 
   destroy(): void {
     this.destroyed = true
+    if (this.model != null) {
+      // ORDER MATTERS, AND THIS ONE CRASHED THE TAB.
+      //
+      // `autoUpdate: true` registers the model on PIXI.Ticker.shared, which is a
+      // global and is NOT torn down with the Application. Destroying the app first
+      // left the shared ticker still updating a model whose renderer was gone, and
+      // the next frame threw
+      //
+      //   getAttribLocation: parameter 1 is not of type 'WebGLProgram'
+      //
+      // on every route change between the two screens that host her. Measured:
+      // without this, six client-side round trips between /taste and /discover
+      // CRASH THE TAB; with it, six round trips survive with the canvas still
+      // rendering. Unregister from the ticker and release the model before the
+      // renderer it draws through.
+      //
+      // A non-fatal `getAttribLocation` error still logs on each mount, from
+      // Cubism's own shader singleton being keyed to a WebGL context that every
+      // mount replaces. She renders correctly through it. Tracked separately --
+      // it is in the vendored runtime, not here, and fixing it means either
+      // reusing one context across mounts or reaching into Cubism internals.
+      this.model.autoUpdate = false
+      this.model.destroy()
+      this.model = null
+    }
     if (this.app != null) {
       // removeView=true drops the canvas element, so the next mount appends a fresh one.
       this.app.destroy(true, { children: true })
       this.app = null
     }
-    this.model = null
   }
 
   private frame(w: number, h: number): void {
