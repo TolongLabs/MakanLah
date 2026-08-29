@@ -254,3 +254,30 @@ class TestTheDocumentedContractMatchesTheResponse:
         # An empty set would make the comparison above pass against anything,
         # which is the failure this whole class exists to catch.
         assert self._documented_match_keys() == {'basis', 'dish', 'similarity'}
+
+
+class TestHealthCountsWhatCanBeShown:
+    """`venues` is printed on the landing page under "Places somebody wrote
+    about". After the #42 replay nine venues have no surviving mention: they sit
+    in `uncited_venue`, are unrankable, and no other surface can reach them.
+
+    Counting them overstated the evidence on the one page whose whole argument is
+    that the evidence is not overstated -- which is a smaller version of the bug
+    the replay existed to fix.
+    """
+
+    def test_the_count_excludes_venues_with_nothing_to_cite(self):
+        sql = _health_venue_sql()
+        assert 'join mention' in sql, 'a bare count over venue counts rows nobody can see'
+        assert 'excerpt is not null' in sql, 'a mention with no excerpt is not something somebody wrote'
+
+    def test_it_is_not_a_bare_table_count(self):
+        # The exact statement this replaced. Asserting its absence is what makes
+        # the test above more than a restatement of whatever is currently there.
+        assert 'select count(*) c from venue' not in _health_venue_sql().replace('\n', ' ')
+
+
+def _health_venue_sql():
+    src = (Path(__file__).resolve().parents[1] / 'api' / 'main.py').read_text()
+    body = src.split("out['venues'] =", 1)[1]
+    return body.split('.fetchone()', 1)[0]
