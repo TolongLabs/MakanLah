@@ -114,6 +114,20 @@ jobs:
             sleep 0.5
           done
 
+      # Playwright lives at the repo root, not in web/, because it drives the browsers
+      # rather than shipping in the client bundle.
+      - name: Install the engines
+        run: bun install --frozen-lockfile
+
+      - uses: actions/cache@v4
+        id: engines
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock', 'package.json') }}
+
+      - if: steps.engines.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium firefox
+
       # Chrome is preinstalled on ubuntu-latest and websockets is already a project
       # dependency, so this needs nothing new. The binary is named google-chrome in
       # some runner images and google-chrome-stable in others.
@@ -126,6 +140,16 @@ jobs:
           # --with rather than the project: the script needs websockets and stdlib,
           # and resolving the whole project would drag in psycopg and fastapi for nothing.
           CHROME="$CHROME" uv run --no-project --with websockets python scripts/layout_check.py
+
+      # Windows "Animation effects" off and macOS "Reduce motion" both land on
+      # prefers-reduced-motion, and people flip them for performance as often as for
+      # vestibular reasons. Both engines are checked because they are two separate
+      # implementations of the same query, and the failure that matters -- content left
+      # invisible because its entrance never ran -- would be silent in either.
+      - name: Motion must survive reduced-motion, in both engines
+        env:
+          WEB_BASE: http://127.0.0.1:4188
+        run: node scripts/motion_check.mjs
 
   # Publishing the client. Gated on `check`, so nothing ships that CI has not passed.
   #

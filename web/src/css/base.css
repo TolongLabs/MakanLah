@@ -276,23 +276,48 @@ a {
   }
 }
 
+/* Reduced motion is not no motion, and treating it as "off" is how an interface ends
+   up feeling broken rather than calm.
+
+   Both of the switches that land here are flipped for ordinary reasons as often as
+   medical ones: Windows Settings > Accessibility > Visual effects > Animation effects,
+   and macOS Reduce motion. Chromium and Gecko both map them to this query. A Windows
+   user who turned animations off for performance should still get an interface that
+   acknowledges their clicks.
+
+   THE RULE: MOVEMENT GOES, FADING STAYS. Translation, scale and parallax are what
+   provoke vestibular symptoms; an opacity change moves nothing in the visual field.
+   So entrances become plain crossfades and state feedback keeps its colour transition
+   in full. The previous version set `animation: none` and `transition-duration: 1ms`,
+   which removed every cue in the product rather than the harmful ones. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
-  .rise-in,
-  .fade-in,
-  .skeleton {
+  /* Swapping the keyframes rather than cancelling them: the 8px travel disappears and
+     the fade survives, so content still arrives instead of snapping into place. The
+     resting state is identical either way, because both keyframes declare only `from`
+     and the natural state is the destination. Nothing here can leave content hidden. */
+  .rise-in {
+    animation-name: fade-in;
+    animation-duration: var(--dur-ui);
+  }
+
+  .fade-in {
+    animation-duration: var(--dur-ui);
+  }
+
+  /* Looping motion is the one kind that must stop outright. It repeats forever at the
+     edge of vision, which is the complaint the preference actually encodes. The bars
+     keep their fill and border, so the loading state stays legible while still. */
+  .skeleton,
+  .skeleton-bar {
     animation: none;
   }
 
-  /* Transitions are all hover and press feedback on interactive chrome, which is
-     where reduced motion still wants an instant state change rather than none. */
-  .btn,
-  .option,
-  .nav-link,
-  .index-link {
-    transition-duration: 1ms;
-  }
+  /* Hover and press feedback on .btn, .option, .nav-link and .index-link transitions
+     colour, border and background only -- never position or size -- so it is left at
+     full duration deliberately. Cutting it to 1ms was the bug: it made every control
+     feel dead to the people least able to afford ambiguous feedback. */
 }
