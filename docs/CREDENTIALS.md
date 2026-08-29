@@ -115,6 +115,34 @@ a card.
 
 ---
 
+## The ModelStudio Console Session
+
+Free-quota state is not readable from the DashScope API key. It lives in the Alibaba Cloud console behind an account
+login, so `scripts/quota.py` reads it through the same CDP Chrome the scraper uses:
+
+```bash
+scripts/chrome-session.sh start   # sign in to Alibaba Cloud once, in that window
+scripts/quota.py                  # prints free quota for every lane config.py can resolve
+```
+
+**The login persists in `~/.cache/makanlah/chrome-session`, outside the repo, at mode 700.** `chrome-session.sh stop`
+deletes it, so do not run `stop` if the point is to keep checking quota. It is a duplicated live credential either way:
+treat that directory the way you would treat the browser profile it came from.
+
+**Why a dashboard scrape rather than an API.** The console's own endpoints need a session token that is not the
+DashScope key. The script therefore breaks when the console is redesigned, which is an accepted cost — the alternative
+is a number nobody checks until a card is charged.
+
+**It reads the model tabs separately on purpose.** The console splits LLM / Vision / Multimodal / Audio / Embedding and
+a search only matches inside the active tab, so an embedding model looked up under LLM reports "not listed" — which
+reads exactly like "no quota" and is not the same thing.
+
+**Measured 2026-08-29, and the reason this exists:** `qwen3.8-flash`, the lane behind every `/recommend`, reads
+**`Not Supported`** — no free quota at all, every call billed. `qwen-plus-2025-07-28` had 954,215 tokens left and
+`text-embedding-v3` 956,723. Nothing in the repo said so ([#34](https://github.com/TolongLabs/MakanLah/issues/34)).
+
+---
+
 ## What Never Lands In The Repo
 
 - **No `.env`.** `.env.example` carries key names, never values. The git guard blocks `git add .env`
