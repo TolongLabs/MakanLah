@@ -130,7 +130,14 @@ class TestFailureIsHonest:
     def test_a_bug_in_our_own_code_is_not_dressed_up_as_an_outage(self, client, monkeypatch):
         """Catching every exception here hid issue #13 for the life of the project:
         a 5-placeholder/6-parameter query raised ProgrammingError on every request
-        carrying a radius, and the client was told the corpus was unavailable."""
+        carrying a radius, and the client was told the corpus was unavailable.
+
+        The fault used to escape the app entirely and this asserted that it did.
+        Since #81 it is caught one layer inside CORSMiddleware so the 500 keeps its
+        header, which means the assertion has to move from "it propagates" to "it
+        arrives as a 500 that names itself and claims nothing" -- the discrimination
+        #13 needs, still measured from the client where it is actually read.
+        """
         import psycopg
 
         for exc in (psycopg.ProgrammingError('5 placeholders but 6 parameters'), TypeError('nope'), KeyError('lat')):
@@ -139,8 +146,12 @@ class TestFailureIsHonest:
                 raise _e
 
             monkeypatch.setattr(api_main.rank, 'recommend', boom)
-            with pytest.raises(type(exc)):
-                client.post('/recommend', json={'query': 'x'})
+            res = client.post('/recommend', json={'query': 'x'})
+            assert res.status_code == 500, type(exc).__name__
+            body = res.json()
+            assert body['error'] == type(exc).__name__
+            assert body.get('degraded') is not True
+            assert body.get('results') is None
 
     def test_degraded_is_passed_through_not_overwritten(self, client, monkeypatch):
         monkeypatch.setattr(
@@ -401,3 +412,71 @@ class TestSuggestionsAreMeteredAndCannotInvent:
         # Every call spends a model request. An unmetered endpoint converts
         # somebody else's bandwidth into our quota.
         assert 'suggestions' in api_main.RATE_LIMIT
+
+
+class TestAServerFaultIsReportedAsAServerFault:
+    """Issue #81. An unhandled exception used to escape past `CORSMiddleware`, so
+    the browser saw `No 'Access-Control-Allow-Origin' header` and reported a CORS
+    misconfiguration that did not exist. The CORS config was measured correct in
+    the same session; only the error path skipped it.
+
+    Both halves matter and each is asserted separately below: the header has to
+    survive, AND the 500 has to stay a 500. Adding the header by turning the fault
+    into a 200 would satisfy the first assertion and be a worse lie than the bug.
+    """
+
+    ORIGIN = 'https://makanlah-b5h.pages.dev'
+
+    def _raising(self, client, monkeypatch):
+        def boom(*a, **k):
+            raise TypeError('a bug in our own code')
+
+        monkeypatch.setattr(api_main.rank, 'recommend', boom)
+        return client.post('/recommend', json={'query': 'x'}, headers={'Origin': self.ORIGIN})
+
+    def test_an_unhandled_fault_keeps_its_cors_header(self, client, monkeypatch):
+        res = self._raising(client, monkeypatch)
+        assert res.headers.get('access-control-allow-origin') == self.ORIGIN
+
+    def test_it_is_still_a_500(self, client, monkeypatch):
+        res = self._raising(client, monkeypatch)
+        assert res.status_code == 500
+
+    def test_the_body_names_the_fault_without_leaking_its_message(self, client, monkeypatch):
+        res = self._raising(client, monkeypatch)
+        body = res.json()
+        assert body['error'] == 'TypeError'
+        # The message can carry SQL, a row, or a path. The class name is enough to
+        # tell a client-side debugger this is ours and not theirs.
+        assert 'a bug in our own code' not in res.text
+
+    def test_a_fault_is_never_dressed_up_as_a_corpus_outage(self, client, monkeypatch):
+        """The discrimination #13 cost us: an OperationalError is an outage and
+        degrades to 200; a ProgrammingError is our bug and must not borrow that
+        costume."""
+        res = self._raising(client, monkeypatch)
+        assert res.json().get('degraded') is not True
+
+    def test_a_preflight_is_untouched(self, client):
+        res = client.options(
+            '/recommend',
+            headers={
+                'Origin': self.ORIGIN,
+                'Access-Control-Request-Method': 'POST',
+                'Access-Control-Request-Headers': 'content-type',
+            },
+        )
+        assert res.status_code == 200
+        assert res.headers.get('access-control-allow-origin') == self.ORIGIN
+
+    def test_a_hostile_origin_is_still_refused_on_a_fault(self, client, monkeypatch):
+        """The fix must not become a CORS bypass: the handler adds the header the
+        middleware would have added, and the middleware adds none for an origin it
+        does not know."""
+
+        def boom(*a, **k):
+            raise TypeError('a bug in our own code')
+
+        monkeypatch.setattr(api_main.rank, 'recommend', boom)
+        res = client.post('/recommend', json={'query': 'x'}, headers={'Origin': 'https://evil.example'})
+        assert res.headers.get('access-control-allow-origin') is None
