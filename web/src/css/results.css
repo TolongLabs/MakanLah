@@ -474,3 +474,52 @@
   margin-top: var(--s1);
   max-width: 54ch;
 }
+
+/* ------------------------------------------------------------------- the stamp */
+
+/* Two independent platforms agreeing is the strongest claim the product makes, and
+   the layout alone was the only thing saying so. A chop is what attested looks like.
+
+   It is not decoration and it is not on every row: it appears exactly when
+   evidenceOf() returns 'corroborated', which is the same function the mascot and the
+   pair layout read, so the three can never disagree.
+
+   Rotated, because a seal pressed by hand never lands square, and a perfectly
+   axis-aligned stamp reads as a badge component instead. */
+.stamp {
+  position: absolute;
+  top: calc(var(--s5) * -1);
+  right: 0;
+  color: var(--seal);
+  opacity: 0.9;
+  transform: rotate(-7deg);
+  pointer-events: none;
+  animation: press var(--dur-step) var(--ease) both;
+}
+
+.result-body {
+  position: relative;
+}
+
+@keyframes press {
+  from {
+    opacity: 0;
+    transform: rotate(-7deg) scale(1.35);
+  }
+}
+
+/* The pair already fills the row at this width and the stamp would sit on the
+   excerpt, so it steps out of the way rather than shrinking into an unreadable dot. */
+@media (max-width: 30rem) {
+  .stamp {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Scale is travel. The fade is kept, per the contract in base.css. */
+  .stamp {
+    animation-name: fade-in;
+    animation-duration: var(--dur-ui);
+  }
+}

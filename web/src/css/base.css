@@ -321,3 +321,42 @@ a {
      full duration deliberately. Cutting it to 1ms was the bug: it made every control
      feel dead to the people least able to afford ambiguous feedback. */
 }
+
+/* ------------------------------------------------------------------ the ground */
+
+/* Shippou (七宝), interlocking circles. It is a classic Japanese komon and it is also
+   the geometry under a Peranakan floor tile, which is the whole reason this motif and
+   not another: the two traditions genuinely rhyme here, so the pattern is Malaysian
+   and Japanese at once rather than one wearing the other as a costume.
+
+   Drawn as a mask rather than a background image so it takes a token colour and
+   follows the theme. A background-image data URI cannot read var(--rule) and would
+   have needed a second hard-coded copy for dark. */
+.ground {
+  position: relative;
+  isolation: isolate;
+}
+
+.ground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--rule);
+  opacity: 0.55;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='22'/%3E%3Ccircle cx='44' cy='0' r='22'/%3E%3Ccircle cx='0' cy='44' r='22'/%3E%3Ccircle cx='44' cy='44' r='22'/%3E%3Ccircle cx='22' cy='22' r='22'/%3E%3C/g%3E%3C/svg%3E");
+  mask-size: 44px 44px;
+}
+
+/* Fades the motif out before it reaches the content, so it reads as a ground the page
+   sits on rather than a texture printed over the words. */
+.ground-fade::before {
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='22'/%3E%3Ccircle cx='44' cy='0' r='22'/%3E%3Ccircle cx='0' cy='44' r='22'/%3E%3Ccircle cx='44' cy='44' r='22'/%3E%3Ccircle cx='22' cy='22' r='22'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg, #000 0%, #000 42%, transparent 88%);
+  mask-size:
+    44px 44px,
+    100% 100%;
+  mask-composite: intersect;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Health, health } from '../api'
+import { Chop } from '../components/Chop'
 import { Testimony } from '../components/Testimony'
 import { leadPair } from '../evidence'
 import { dishLine } from '../format'
@@ -9,18 +10,20 @@ import { MIXED_SCRIPT, SPECIMEN } from './landingSpecimen'
 export function Landing() {
   return (
     <>
-      <section className="page hero">
-        <div className="hero-copy">
-          <h1 className="display">Somebody Already Ate There</h1>
-          <p className="lede">Every pick comes with the post it came from, in the language it was written in.</p>
-          <div className="hero-actions">
-            <Link className="btn btn-primary" to="/taste">
-              Find Food
-            </Link>
+      <div className="hero-band ground ground-fade">
+        <section className="page hero">
+          <div className="hero-copy rise-in">
+            <h1 className="display">Somebody Already Ate There</h1>
+            <p className="lede">Every pick comes with the post it came from, in the language it was written in.</p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" to="/taste">
+                Find Food
+              </Link>
+            </div>
           </div>
-        </div>
-        <Specimen />
-      </section>
+          <Specimen />
+        </section>
+      </div>
 
       <MixedLanguage />
       <Corpus />
@@ -72,7 +75,11 @@ function Specimen() {
   const dishes = dishLine(venue.dishes)
 
   return (
-    <figure className="specimen">
+    <figure className="specimen rise-in specimen-enter">
+      <span className="stamp" title="Two independent sources">
+        <Chop size={58} />
+        <span className="sr-only">Corroborated by two independent sources.</span>
+      </span>
       <figcaption className="specimen-caption">A pick, as it arrives.</figcaption>
       <div className="specimen-head">
         <p className="h-sub" lang="und">
