@@ -409,34 +409,6 @@
   }
 }
 
-/* A tablet has the room and was not getting her: she was cut at 64rem along with
-   the phone, which put the character on desktop only. Here she sits above the
-   results at full width rather than in a column, which is what fits 834px. */
-@media (min-width: 48rem) and (max-width: 63.99rem) {
-  .ask-companion {
-    grid-template-columns: 200px minmax(0, 1fr);
-    grid-template-areas: "stage bubble" "stage form" "stage voice";
-    align-items: start;
-    column-gap: var(--s5);
-  }
-
-  .ask-stage {
-    grid-area: stage;
-  }
-
-  .is-live .ask-stage {
-    height: 200px;
-  }
-
-  .ask-bubble {
-    grid-area: bubble;
-  }
-}
-
-/* On a phone she keeps the job and loses the stage. A 200px character above ten
-   results pushes the picks off the screen, which is the same trade the wizard makes
-   -- but her reading of the evidence and the Ask box are the useful half, and both
-   cost four rows. She sits above the results because what she says is about them. */
 @media (max-width: 63.99rem) {
   .discover-body {
     display: flex;
@@ -737,6 +709,21 @@
 
 .ask-companion canvas {
   display: block;
+}
+
+/* A tablet has the room and was not getting her: she was cut at 64rem along with
+   the phone, which put the character on desktop only.
+
+   This was briefly a two-column grid with named areas, and at 834 the canvas never
+   appeared at all -- an empty 200px stage on every portrait tablet. Only .ask-stage
+   had a grid-area, so the other three children auto-placed into implicit tracks and
+   the layout the stage was measured inside was not the one intended. Reverted to the
+   desktop treatment at a smaller height: stage on top, everything under it, one
+   column. Fewer moving parts and nothing to get wrong at one width and not another. */
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  .is-live .ask-stage {
+    height: 180px;
+  }
 }
 
 .ask-bubble {

@@ -182,6 +182,26 @@ describe('what may be called independent', () => {
     expect(independentlyBacked(result([cite('https://a', 'rednote'), cite('https://b', 'rednote')], two))).toBe(true)
   })
 
+  it('counts an anonymous Maps reviewer as a second voice', () => {
+    // THE INVERSION. Google Maps citations carry author_handle: null, so
+    // `authors >= 2` alone withheld the stamp from every venue backed by a RedNote
+    // post AND a Maps review -- while stamping RedNote-only venues, and while the
+    // companion beside it said "two platforms, written by different people".
+    const crossPlatform = venue({ corroboration: { posts: 2, authors: 1, platforms: 2 } })
+    expect(
+      independentlyBacked(result([cite('https://a', 'rednote'), cite('https://b', 'google_maps')], crossPlatform))
+    ).toBe(true)
+  })
+
+  it('still refuses a single post however many platforms carry it', () => {
+    // #87's actual shape: one listicle backing several venues gives each of them
+    // one post, and one post is never corroboration.
+    const onePost = venue({ corroboration: { posts: 1, authors: 1, platforms: 2 } })
+    expect(independentlyBacked(result([cite('https://a', 'rednote'), cite('https://a', 'google_maps')], onePost))).toBe(
+      false
+    )
+  })
+
   it('lets the server signal veto a pair that only looks independent', () => {
     const one = venue({ corroboration: { posts: 1, authors: 1, platforms: 2 } })
     expect(independentlyBacked(result([cite('https://a', 'rednote'), cite('https://b', 'google_maps')], one))).toBe(
