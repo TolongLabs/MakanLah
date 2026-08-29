@@ -1,9 +1,10 @@
 # Progress — 2026-08-29 · the citation trail holds on every surface, and the dish lane reads the corpus
 
-**`main` is at `810f844`.** Client `dc68121`, API commit reported by `/health` — the two deploy independently and were
-observed one commit apart during this session. **435 Python tests, 134 web tests, 13 guard cases, lint and format clean,
-CI green.** Verified on `main` rather than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}`
-serves a deep link, `/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `0d9a933`.** Client `0d9a933`, API `/health` reports `0d9a933` — **all three aligned**, after this
+session found the API running two commits behind a client that had already shipped the UI for #110. **435 Python tests,
+134 web tests, 13 guard cases, lint and format clean, CI green.** Verified on `main` rather than on a branch:
+`/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the corpus and
+admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
 **fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
@@ -20,7 +21,57 @@ measured against a 3s target in [`PRD.md`](PRD.md)** and still not met, delibera
 **Every model lane is pinned to a dated free-quota snapshot.** The rolling DashScope aliases carry none. Re-check the
 console before repinning.
 
-**Web client is live:** <https://makanlah-b5h.pages.dev> · **API is local only** — see Blocked.
+**Web client is live:** <https://makanlah-b5h.pages.dev> · **API is live:** <https://makanlah-api.vercel.app>
+
+---
+
+## 2026-08-29 (Launch Call) — The Product Is Launch-Ready, And The Recorder Was Telling The Truth
+
+**MakanLah is declared launch-ready and the launch video is recorded.** `makanlah-demo.mp4`, 1920x1080, 56.7s, 5.1 MB,
+English subtitles bottom-centred, narrated by Kokoro `jf_nezumi`. It lives in the scratch run directory and is
+deliberately **not** committed. Peer 3 closed the last blocking condition (#106) before filming.
+
+**The recording was blocked by memory, and the fix was not to kill anything.** Two runs died on
+`page.goto: Page crashed` with `ERR_INSUFFICIENT_RESOURCES`. `/dev/shm` was clear at 10%, so it was real RAM: 564 MB
+free against a swap partition of 1024 MB that was **1023.8 MB used, 172 kB free**. Both long-lived Chrome profiles were
+accounted for — `makanlah/chrome-session` is the 23-hour signed-in RedNote CDP credential, and `ms-playwright-mcp`
+belongs to another session — so there were no orphans to reclaim. A **6 GB swapfile on `/home`** (103 GB idle) cleared
+it on the next attempt. It is deliberately **not** in `/etc/fstab`: it evaporates on reboot, so nothing permanent
+changed.
+
+### The Corroboration Frame Read Zero, And Zero Was Correct
+
+The first successful capture reported `corroboration pairs on screen: 0`, which `scripts/demo/README.md` says is a
+recorded bug. It was not. Three checks, each against something the previous one did not own:
+
+| Check                                                                     | Result                                                                        |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Deployed bundle still contains `evidence-pair`, `testimony`, `corroborat` | Yes — the selector survived the redesign                                      |
+| API returns corroborated venues                                           | Yes — `nasi lemak` returns 5 two-platform venues                              |
+| The filmed dish's second platform is alive                                | **No** — every bak kut teh venue with 2 platforms has its RedNote post `dead` |
+
+`cravingOptions` is deterministic from the clock; at 19:00 it leads with `肉骨茶 bak kut teh`, and `leadPair` correctly
+refuses to pair a dead post with a live one. **The recorder was honest and the data was the constraint.** Renderable
+pairs for that hour's three cravings, measured by mirroring `leadPair`'s own rule rather than the API's looser
+`platforms >= 2`: bak kut teh **0 of 4**, ayam goreng **1 of 2**, `海鲜 seafood 大排档` **3 of 4**. Re-recorded with
+`DEMO_CRAVING=2` (PR **#112**): 3 pairs, a `corroboration` beat at 37.6s, matching the independently predicted three
+(肥肥蟹, Talkcrab Subang, 海脚人). Frames were checked **by eye**, not by pixel arithmetic — the mistake that passed a
+subtitle check on type twice the correct size.
+
+### Prod Was Drifting And A 200 Would Not Have Shown It
+
+The client reported `0d9a933` while `/health` reported `665cbaf` — **the API was two commits behind a client already
+shipping the UI for #110**, so `evidence_gap` was inert on prod. Deployed and verified: `/health` now reports `0d9a933`.
+**#110 then verified against its own test matrix on prod**: `roti canai` returns `results=0` with `evidence_gap` naming
+**Devi's Corner** and **Kapitan**, Potato Corner correctly excluded, neither pickable.
+
+### #111 — `evidenceOf` Counts A Dead Post Toward "Two Sources"
+
+`citable()` dedupes by `post_url` and does **not** filter `dead`, so `evidenceOf` reads `corroborated` where `leadPair`
+renders one testimony. **7 of 48 results across 15 dish queries.** Latent rather than live: `Discover.tsx:320` passes
+`evidenceOf(results[0])`, and no top pick overclaimed in that sample. Left with peer 2 rather than opening a second PR
+into `web/src` mid-redesign. Fix is one line; the test must assert `evidenceOf` and `leadPair` **agree**, because a
+check consulting only the changed function agrees with itself.
 
 ---
 
