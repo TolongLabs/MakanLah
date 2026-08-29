@@ -98,7 +98,21 @@ class RecommendRequest(BaseModel):
 @app.get('/health')
 def health():
     """Reports corpus state, and key presence by name only — never a value."""
-    out = {'ok': True, 'corpus_size': 0, 'venues': 0, 'oldest_capture': None, 'newest_capture': None}
+    # Which commit is answering. Vercel injects VERCEL_GIT_COMMIT_SHA at build
+    # time; absent it, the process cannot know and says so rather than
+    # guessing. Without this, 'is the fix deployed?' is unanswerable from
+    # outside -- two sessions disagreed about a ranking change for seven
+    # minutes with no way to tell whether they were hitting the same build.
+    # The client has carried build.json for exactly this reason.
+    commit = os.environ.get('VERCEL_GIT_COMMIT_SHA') or os.environ.get('GIT_COMMIT_SHA')
+    out = {
+        'ok': True,
+        'commit': commit,
+        'corpus_size': 0,
+        'venues': 0,
+        'oldest_capture': None,
+        'newest_capture': None,
+    }
     try:
         with db.connect() as con:
             r = con.execute('select count(*) c, min(captured_at) lo, max(captured_at) hi from source_post').fetchone()
