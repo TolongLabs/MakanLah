@@ -508,11 +508,20 @@
   }
 }
 
-/* The pair already fills the row at this width and the stamp would sit on the
-   excerpt, so it steps out of the way rather than shrinking into an unreadable dot. */
+/* On a phone the seal moves inside the plate instead of disappearing. Hiding it was
+   the easy answer and the wrong one: most people meet this product on a phone, so
+   suppressing the one device that carries the brand idea there loses it for the
+   majority. Inside the top-right corner it clears the venue name on the left and the
+   excerpt below, and 38px still reads as a pressed chop rather than a dot. */
 @media (max-width: 30rem) {
   .stamp {
-    display: none;
+    top: 0;
+    right: var(--s2);
+  }
+
+  .stamp .chop {
+    width: 38px;
+    height: 38px;
   }
 }
 
