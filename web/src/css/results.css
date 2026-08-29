@@ -264,6 +264,16 @@
   color: var(--ink-soft);
 }
 
+/* The placeholder rendered as "What are you hungry fo" -- it needs 220px and the
+   field gives 200 on a phone. A smaller type size there fits it with room to spare,
+   and it stays at 16px everywhere the iOS focus-zoom rule cares about. */
+@media (max-width: 26rem) {
+  .find-input {
+    font-size: var(--t-md);
+    padding-inline: var(--s4);
+  }
+}
+
 .find-input:focus-visible {
   outline: 2px solid var(--seal);
   outline-offset: 2px;
@@ -399,6 +409,30 @@
   }
 }
 
+/* A tablet has the room and was not getting her: she was cut at 64rem along with
+   the phone, which put the character on desktop only. Here she sits above the
+   results at full width rather than in a column, which is what fits 834px. */
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  .ask-companion {
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-areas: "stage bubble" "stage form" "stage voice";
+    align-items: start;
+    column-gap: var(--s5);
+  }
+
+  .ask-stage {
+    grid-area: stage;
+  }
+
+  .is-live .ask-stage {
+    height: 200px;
+  }
+
+  .ask-bubble {
+    grid-area: bubble;
+  }
+}
+
 /* On a phone she keeps the job and loses the stage. A 200px character above ten
    results pushes the picks off the screen, which is the same trade the wizard makes
    -- but her reading of the evidence and the Ask box are the useful half, and both
@@ -416,7 +450,12 @@
   .ask-companion {
     padding: var(--s4);
   }
+}
 
+/* Only the phone loses her stage. Two hundred pixels of character above ten results
+   is the picks pushed off a 390px screen, and her reading of the evidence plus the
+   Ask box are the useful half. */
+@media (max-width: 47.99rem) {
   .is-live .ask-stage {
     height: 0;
   }
@@ -821,4 +860,35 @@
 
 .ask-trigger:hover {
   color: var(--ink);
+}
+
+/* Two venues in the corpus share a name and are genuinely different places. Set at
+   full ink, not as fine print: it is the difference between a duplicate and a real
+   second restaurant. */
+.ambiguous {
+  margin-top: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink);
+  border-left: 0;
+  max-width: 54ch;
+}
+
+/* When one post backs several picks, the list is narrower than its length. */
+.shared-source {
+  color: var(--warn);
+}
+
+.ask-waiting {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* A button that reads as a link, for an action that changes this page rather than
+   navigating. */
+.link-button {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }

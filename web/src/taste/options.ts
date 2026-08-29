@@ -3,7 +3,12 @@ import type { Prefs } from '../api'
 export type Choice<T> = { value: T; label: string; note?: string }
 
 /**
- * Craving options, generated deterministically from the clock. No API call and no
+ * Craving options, generated deterministically from the clock.
+ *
+ * A `value` is a SEARCH QUERY and must describe a DISH, never a place. "nasi lemak
+ * bumbung supper" shipped here and carried a venue name, so the first thing a new
+ * user tapped returned that one venue under "None of these match your words
+ * exactly" -- the chip apologised for itself. No API call and no
  * randomness, so the same hour always produces the same four.
  *
  * The clock is real information rather than a gimmick: somebody hungry at 08:00 and
@@ -36,7 +41,7 @@ export function cravingOptions(now: Date = new Date()): Choice<string>[] {
     ]
   }
   return [
-    { value: 'nasi lemak bumbung supper', label: 'Nasi Lemak, Late' },
+    { value: 'nasi lemak', label: 'Nasi Lemak, Late' },
     { value: '牛肉粉 beef noodles 粥', label: '牛肉粉, Beef Noodles' },
     { value: '炒粿条 char kuey teow', label: '炒粿条, Char Kuey Teow' }
   ]

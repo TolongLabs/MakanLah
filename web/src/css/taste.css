@@ -63,6 +63,10 @@
 
 /* Vertically centred against the space between the nav and the island, so a four
    option step does not sit in the top third with a void beneath it. */
+/* Centring the panel in the remaining viewport is right where the rail is beside it
+   and wrong at tablet width, where four options and 600px of nothing read as a page
+   that failed to finish loading. Below the rail breakpoint the panel just sits at
+   the top under the companion. */
 @media (min-width: 56rem) {
   .step-panel:not([hidden]) {
     display: flex;
