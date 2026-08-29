@@ -104,3 +104,80 @@ describe('the search field', () => {
     expect(first?.query).toBe('肉骨茶')
   })
 })
+
+/**
+ * #98, the half that is decidable without a model.
+ *
+ * Measured on prod: `roti canai` returned Mon Beef Roti, RAYs @ B.LAND, Potato
+ * Corner, kaiia kanteen and Menya Aburi. The lane had resolved the dish and found
+ * exactly the two venues carrying it, Devi's Corner and Kapitan; both were dropped
+ * because each has a single RedNote citation and both are dead.
+ *
+ * The design question this settles is whether to name the venues or count them.
+ * Naming: the two claims are not equally checkable — that a post said something is
+ * unverifiable once the post is gone, while the restaurant's existence is checkable
+ * in ten seconds from its place_id. A bare number is no more provable and gives a
+ * hungry person nothing.
+ */
+const GAP = {
+  results: [],
+  degraded: false,
+  sources_used: [],
+  evidence_gap: {
+    term: 'roti canai',
+    total: 2,
+    venues: [
+      { name: 'Devi’s Corner', area: 'PJ', maps_url: 'https://maps/?query_place_id=p1' },
+      { name: 'Kapitan', area: 'Bangsar', maps_url: 'https://maps/?query_place_id=p2' }
+    ]
+  }
+}
+
+describe('when the corpus knows the dish and cannot show the writing', () => {
+  beforeEach(() => {
+    recommend.mockReset().mockResolvedValue(GAP)
+  })
+
+  it('names the venues rather than counting them', async () => {
+    show({ prefs: { craving: ['roti canai'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText('Devi’s Corner')).toBeTruthy())
+    expect(screen.getByText('Kapitan')).toBeTruthy()
+  })
+
+  it('hands over a link the reader can check the restaurant with', async () => {
+    // The justification for naming at all. If the link were a name search rather
+    // than the exact place, the user could not confirm the venue either, and then
+    // counting would have been the honest choice.
+    show({ prefs: { craving: ['roti canai'], range_m: 0 } })
+    const link = await screen.findByRole('link', { name: 'Devi’s Corner' })
+    expect(link.getAttribute('href')).toContain('query_place_id=')
+  })
+
+  it('says plainly that it cannot show the writing', async () => {
+    show({ prefs: { craving: ['roti canai'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText(/cannot show you what people wrote/i)).toBeTruthy())
+    expect(screen.getByText(/no longer open/i)).toBeTruthy()
+  })
+
+  it('says these are not picks', async () => {
+    // The failure mode is this reading as a third confident register beside
+    // "naming that dish" and "closest in meaning". It has to disclaim itself.
+    show({ prefs: { craving: ['roti canai'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText(/these are not picks/i)).toBeTruthy())
+  })
+
+  it('does not also show the generic empty state guessing a different reason', async () => {
+    // #82 all over again if both render: two explanations, one of them invented.
+    show({ prefs: { craving: ['roti canai'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText(/cannot show you what people wrote/i)).toBeTruthy())
+    expect(screen.queryByText(/anywhere in the corpus/i)).toBeNull()
+    expect(screen.queryByText(/Search All Of KL/i)).toBeNull()
+  })
+
+  it('leaves the ordinary empty state alone when there is no gap', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    show({ prefs: { craving: ['poutine'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText(/anywhere in the corpus/i)).toBeTruthy())
+    expect(screen.queryByText(/cannot show you what people wrote/i)).toBeNull()
+  })
+})

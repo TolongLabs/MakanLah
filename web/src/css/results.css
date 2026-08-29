@@ -519,6 +519,38 @@
   margin-top: var(--s3);
 }
 
+/* The one empty state that is not empty-handed: the corpus has the answer and can
+   only give half of it. The lede carries the weight because the substance is the
+   admission, not the list under it. */
+.gap-lede {
+  font-size: var(--t-lg);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+/* Named venues, deliberately not shaped like results. A result is a ranked pick
+   with testimony behind it and these have neither, so they get no rank, no rule
+   and no card -- a plain list of places you can go and verify yourself. Reading
+   as a pick is the failure mode: the whole point is that these are not picks. */
+.gap-venues {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s2) var(--s5);
+  list-style: none;
+}
+
+.gap-venues li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
+
+.gap-more {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
 .skeleton {
   border-bottom: 1px solid var(--rule);
   padding-block: var(--s6);
