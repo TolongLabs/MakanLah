@@ -149,7 +149,19 @@ export function citationHref(citation: Citation, venue?: { maps_url?: string; pl
  */
 export function independentlyBacked(result: Result): boolean {
   const c = result.venue.corroboration
-  if (c) return c.authors >= 2 && c.posts >= 2
+  // TWO DISTINCT POSTS IS THE FLOOR, and then two distinct VOICES.
+  //
+  // `authors >= 2` alone was wrong and inverted the claim: Google Maps citations
+  // carry `author_handle: null`, so an anonymous reviewer never counts. The stamp
+  // ended up rewarding RedNote-only venues and withholding itself from four venues
+  // backed by BOTH a RedNote post and a Maps review -- while the companion beside
+  // it said "Two platforms carry this one, written by different people".
+  //
+  // A Maps reviewer we cannot name is still not the person who wrote the RedNote
+  // post, so two platforms is two voices even when one of them is anonymous.
+  // `posts >= 2` is what actually fixes #87: one listicle backing three venues
+  // gives each of them one post, and one post is never corroboration.
+  if (c) return c.posts >= 2 && (c.authors >= 2 || c.platforms >= 2)
   const posts = new Set(result.citations.map((x) => x.post_url))
   const platforms = new Set(result.citations.map((x) => x.platform))
   return posts.size >= 2 && platforms.size >= 2

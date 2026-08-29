@@ -63,10 +63,14 @@
 
 /* Vertically centred against the space between the nav and the island, so a four
    option step does not sit in the top third with a void beneath it. */
-/* Centring the panel in the remaining viewport is right where the rail is beside it
-   and wrong at tablet width, where four options and 600px of nothing read as a page
-   that failed to finish loading. Below the rail breakpoint the panel just sits at
-   the top under the companion. */
+/* NOT FIXED, AND DELIBERATELY LEFT ALONE. At 834 there are 549 px between the last
+   option and the bottom island -- measured by UAT, the worst of the three widths.
+   Lowering this breakpoint to 48rem does centre the panel there, and it also drives
+   the panel 50 px UNDER the fixed island, because the min-height below is written
+   against the >=56rem chrome (72px nav, 140px island clearance) and the tablet band
+   has neither. Dead space is cosmetic; content hidden behind a fixed bar is not, so
+   this stays at 56rem until the min-height can be made band-aware and verified in a
+   browser. Tracked as #93 rather than guessed at. */
 @media (min-width: 56rem) {
   .step-panel:not([hidden]) {
     display: flex;
