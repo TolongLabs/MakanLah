@@ -1,0 +1,91 @@
+# Is the site people actually load the site we think we shipped?
+#
+# The deploy job in ci.yml skips when the Cloudflare credentials are absent, and
+# .claude/hooks/guard-merge.sh counts SKIPPED alongside SUCCESS when it decides whether
+# CI stood in for a reviewer. A rotated token therefore turns "did not deploy" into a
+# green review and the hosted build drifts behind main with nothing reporting it, which
+# is issue #36 over again through a door in our own workflow.
+#
+# It runs on a schedule and never on pull_request, so it cannot block a merge: a red run
+# here is a notification and the issue it files is the durable record. Deliberately the
+# opposite trade to the deploy job, which stays skippable precisely so it can be a gate.
+name: Staleness
+
+on:
+  schedule:
+    - cron: '17 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: staleness
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TITLE: The deployed site is behind main
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Full history: the probe reports how far behind the live commit is, and a shallow
+      # clone cannot tell "three commits behind" from "never heard of it".
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Stdlib only, so no uv and no install step.
+      - id: probe
+        continue-on-error: true
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+        run: |
+          set -o pipefail
+          python3 scripts/staleness_probe.py 2>&1 | tee report.txt
+
+      - id: issue
+        name: Find the open report, if there is one
+        run: |
+          number=$(gh issue list --state open --json number,title \
+            --jq "[.[] | select(.title == \"$TITLE\")] | first | .number // empty")
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # One issue, edited in place. A daily comment on a condition that has not changed
+      # is how a real signal becomes something everyone filters.
+      - if: steps.probe.outputs.state != 'current'
+        name: Report it
+        run: |
+          run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          {
+            echo "\`\`\`"
+            cat report.txt
+            echo "\`\`\`"
+            echo
+            echo "Checked by [\`staleness.yml\`]($run). This issue is rewritten on each run and closes itself"
+            echo "when the live site catches up, so its body is always the current state rather than a history."
+            echo
+            echo "The usual cause is \`CLOUDFLARE_API_TOKEN\` or \`CLOUDFLARE_ACCOUNT_ID\` being unset or expired,"
+            echo "which makes the deploy job in \`ci.yml\` skip. A skipped deploy is a green check (see #36)."
+          } > body.md
+          if [ -n "${{ steps.issue.outputs.number }}" ]; then
+            gh issue edit "${{ steps.issue.outputs.number }}" --body-file body.md
+          else
+            gh issue create --title "$TITLE" --body-file body.md
+          fi
+
+      - if: steps.probe.outputs.state == 'current' && steps.issue.outputs.number != ''
+        name: Close it, the site caught up
+        run: |
+          gh issue close "${{ steps.issue.outputs.number }}" \
+            --comment "The live site is serving main again: ${{ steps.probe.outputs.headline }}"
+
+      # Last, so the issue is always filed before the run goes red.
+      - if: steps.probe.outputs.state != 'current'
+        name: Fail, because the site is not what main says it is
+        run: |
+          echo "::error::${{ steps.probe.outputs.headline }}"
+          exit 1
