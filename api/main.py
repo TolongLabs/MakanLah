@@ -63,7 +63,20 @@ def health():
             out['corpus_size'] = r['c']
             out['oldest_capture'] = r['lo'].isoformat() if r['lo'] else None
             out['newest_capture'] = r['hi'].isoformat() if r['hi'] else None
-            out['venues'] = con.execute('select count(*) c from venue').fetchone()['c']
+            # Venues the product can actually show, not rows in the table. The
+            # landing page prints this under "Places somebody wrote about", and
+            # after the #42 replay nine venues have no surviving mention -- they
+            # are in `uncited_venue`, unrankable, and invisible to every other
+            # surface. Counting them overstates the evidence on the one page
+            # whose argument is that the evidence is not overstated.
+            out['venues'] = con.execute(
+                """select count(*) c from (
+                     select v.id from venue v
+                     join mention m on m.venue_id = v.id
+                     where m.excerpt is not null
+                     group by v.id
+                   ) t"""
+            ).fetchone()['c']
     except Exception as e:
         out['ok'] = False
         out['error'] = type(e).__name__
