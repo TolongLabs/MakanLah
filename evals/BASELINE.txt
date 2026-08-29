@@ -45,3 +45,24 @@ previous lane, qwen3.8-flash (2026-08-29):
   transient during the eval's burst of 54 rapid calls rather than a property of
   the lane -- recorded rather than deleted, because one clean re-run is evidence
   and not proof.
+
+after the RedNote re-extraction replay (2026-08-29), same lane, same truth file:
+  mean p@5  0.976   top1 50/51
+  mean fp@5 0.000   mean wd@5 0.000
+  latency median 2.14s  p95 3.13s  max 122.14s
+
+  p@5 0.992 -> 0.976 and top1 49/51 -> 50/51, against a corpus that deliberately
+  lost 52 mentions and 9 venues for having no testimony behind them. Essentially
+  flat, and the drop is not a ranking regression: `Quackteow` and
+  `Robert's Char Kuey Teow` are still labelled correct in truth.json and are now
+  unrankable, because their only excerpts were pin lines.
+
+  TRUTH.JSON IS NOW ONE STEP BEHIND THE CORPUS ON PURPOSE. It is left alone here
+  so this run stays comparable to the one above it. Regenerating it with
+  build_truth.py is a deliberate act that needs its own baseline run.
+
+  THE LATENCY TAIL IS NOW A PATTERN, NOT A ONE-OFF. A 122.14s max here and a
+  131.88s max in the re-pin run, both inside a full eval, and never in isolated
+  runs of the same queries. Two occurrences in two of four full runs. It looks
+  like throttling under the eval's burst of 54 rapid calls rather than anything
+  about a lane, but it is no longer safe to call it transient. Tracked as #41.
