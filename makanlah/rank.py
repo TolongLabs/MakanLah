@@ -11,8 +11,7 @@ distance wastes the index and returns a great match forty minutes away.
 
 import math
 
-from makanlah import config, db, models
-from makanlah.dishes import canonical, canonical_for_query
+from makanlah import config, db, dishes, models
 from makanlah.text import fold_variants
 
 
@@ -218,11 +217,18 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         # carries 咖喱干拌面 and the vector lane never surfaced it, returning
         # 东京咖喱油拌面 instead -- curry, and noodles, and not the dish asked
         # for. An exact tag match finds the first; no embedding separates the second.
-        dish = canonical_for_query(query)
-        lexical = []
-        if dish:
-            tags = db.venue_dishes(con, candidate_ids)
-            lexical = [vid for vid, ds in tags.items() if any(canonical(d) == dish for d in ds)]
+        #
+        # The vocabulary is the CORPUS, not the fifteen-dish table in dishes.py.
+        # That table recognised 12.3% of the 838 dish strings the corpus carries
+        # and none of the ten mixed-script ones, so `蛋挞` -- written about by two
+        # venues -- had no lexical lane and fell to the vector lane, which returned
+        # a Korean BBQ and a venue whose only tie to the query is an author handle
+        # spelled 蛋挞. See #85 for the numbers. `venue_dishes` costs 75ms on 247
+        # candidates and is now paid on every query rather than only on the fifteen.
+        tags = db.venue_dishes(con, candidate_ids)
+        vocabulary = frozenset(dishes.fold(d) for ds in tags.values() for d in ds if dishes.fold(d))
+        named, dish = dishes.named_in(query, vocabulary)
+        lexical = [vid for vid, ds in tags.items() if any(dishes.fold(d) in named for d in ds)] if named else []
 
         try:
             qvec = models.embed([query])[0]
