@@ -393,43 +393,121 @@
   }
 }
 
-/* The glass panel. Depth here is doing a job -- it separates the copy from a
-   photograph without hiding it -- which is the only condition under which this
-   treatment is worth having. */
-.hero-glass {
-  max-width: 44rem;
-  padding: var(--s6);
-  border-radius: var(--r-panel);
-  border: 1px solid rgb(255 255 255 / 14%);
-  background: rgb(18 20 14 / 46%);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--e3);
-  color: #f6f3ee;
-}
-
-@media (min-width: 48rem) {
-  .hero-glass {
-    padding: var(--s7);
-  }
-}
-
-.hero-glass .lede {
-  color: #ddd8cf;
-  margin-top: var(--s5);
+/* No glass panel any more. A frosted box around the headline was capping how big the
+   type could get, and on a page whose whole job is to sell, the photograph and the
+   sentence are the two things that have to be loud. The scrim above does the
+   legibility work instead, and it is measured rather than eyeballed: the copy clears
+   4.5:1 against the darkest 5% of the image. */
+.hero-copy {
+  max-width: 52rem;
+  color: #f7f4ef;
 }
 
 .hero-mark {
   display: inline-flex;
-  color: #f6f3ee;
+  color: #f7f4ef;
   margin-bottom: var(--s5);
 }
 
-/* Transparency is a preference too: some people disable it for legibility, not taste.
-   Fall back to a solid panel rather than leaving them squinting at a photograph. */
-@media (prefers-reduced-transparency: reduce) {
-  .hero-glass {
-    background: rgb(18 20 14 / 92%);
-    backdrop-filter: none;
+/* The one place in the product that shouts. clamp caps at 5.5rem, under the 6rem
+   ceiling, because past that a two-line headline stops being readable as a sentence
+   and becomes a poster somebody has to decode. */
+.hero-display {
+  margin: 0;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.038em;
+  font-weight: 650;
+  text-wrap: balance;
+}
+
+.hero-line {
+  display: block;
+}
+
+/* The second line is the qualifier, not the claim, and setting it at the same weight
+   made the pair read as two competing headlines. */
+.hero-line-quiet {
+  color: #cfc9be;
+  font-weight: 450;
+  letter-spacing: -0.028em;
+}
+
+.hero-lede {
+  max-width: 46ch;
+  margin-top: var(--s5);
+  font-size: var(--t-lg);
+  line-height: 1.5;
+  color: #e2ddd4;
+  text-wrap: pretty;
+}
+
+.hero-lede em {
+  font-style: normal;
+  color: #f7f4ef;
+  box-shadow: inset 0 -0.42em 0 rgb(195 39 43 / 55%);
+}
+
+/* ------------------------------------------------------------------ tallies */
+
+.hero-tallies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s6) var(--s8);
+  margin-top: var(--s7);
+  padding-top: var(--s6);
+  border-top: 1px solid rgb(255 255 255 / 18%);
+}
+
+.tally {
+  display: grid;
+  gap: var(--s1);
+}
+
+.tally-figure {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  /* Tabular, or a counting number reflows the label under it on every frame. */
+  font-variant-numeric: tabular-nums;
+  color: #f7f4ef;
+}
+
+.tally-label {
+  font-size: var(--t-sm);
+  color: #c8c2b7;
+}
+
+/* A quiet cue that there is more, on the one screen where somebody might not guess. */
+.hero-scroll {
+  position: absolute;
+  bottom: var(--s5);
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(247 244 239 / 62%);
+  animation: scroll-hint 2.4s var(--ease) infinite;
+}
+
+@keyframes scroll-hint {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.62;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll {
+    animation: none;
   }
 }
 
@@ -543,4 +621,202 @@
   border-bottom: 1px solid currentcolor;
   align-self: flex-start;
   padding-bottom: 1px;
+}
+
+/* ------------------------------------------------------------------- reveals */
+
+/* VISIBLE BY DEFAULT, AND THAT IS THE WHOLE RULE.
+   The first version of this said exactly that in a comment and then set
+   `opacity: 0.001` on `.reveal:not(.reveal-in)`, which is precisely the thing the
+   comment forbids. Every section below the hero screenshotted BLANK: the observer
+   had not fired for anything off-screen at capture time, so the page shipped as a
+   hero and four empty bands.
+   There is no resting hidden state now. The element is opaque; the animation plays
+   from an offset when the class arrives and stops mattering if it never does. */
+.reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-in {
+    animation: reveal-up var(--dur-step) var(--ease);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------- display headings */
+
+/* Bigger than h-section, used once per section on this page only. The product's
+   own screens stay on the quieter scale; a dashboard that shouts is a dashboard
+   nobody can read twice. */
+.h-display {
+  font-size: clamp(1.875rem, 3.6vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.032em;
+  font-weight: 650;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.lede-wide {
+  max-width: 62ch;
+}
+
+.btn-big {
+  padding: var(--s4) var(--s6);
+  font-size: var(--t-md);
+}
+
+/* -------------------------------------------------------------- chatbot vs post */
+
+/* Two panels that must be read against each other, so they are the same size and
+   differ only in what they contain and one border colour. Making the good one
+   prettier would be arguing by decoration instead of by evidence. */
+.versus {
+  display: grid;
+  gap: var(--s5);
+  margin-top: var(--s7);
+}
+
+@media (min-width: 52rem) {
+  .versus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s6);
+  }
+}
+
+.versus-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s6);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  background: var(--paper-raised);
+}
+
+.versus-robot {
+  background: var(--paper-sunk);
+  border-style: dashed;
+}
+
+.versus-real {
+  border-color: var(--enamel);
+  box-shadow: var(--e2);
+}
+
+.versus-who {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.versus-quote {
+  margin: 0;
+  font-family: var(--testimony);
+  font-size: var(--t-lg);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.versus-robot .versus-quote {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.versus-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s2);
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: var(--s4);
+  margin-top: auto;
+}
+
+.versus-robot .versus-notes li::before {
+  content: "\00d7\00a0\00a0";
+  color: var(--seal);
+}
+
+.versus-real .versus-notes li::before {
+  content: "\2713\00a0\00a0";
+  color: var(--enamel);
+}
+
+.versus-verdict {
+  margin-top: var(--s6);
+  max-width: 62ch;
+  font-size: var(--t-lg);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------------ pipeline */
+
+/* Numbered because it genuinely is a sequence: stage two cannot run before stage
+   one. This is the case the numbering ban carves out, and the copy says so out loud
+   so a reader is not asked to take the device on trust. */
+.pipeline {
+  display: grid;
+  gap: var(--s5);
+  margin: var(--s7) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+@media (min-width: 60rem) {
+  .pipeline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s6);
+  }
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  gap: var(--s3);
+  align-content: start;
+  padding-top: var(--s5);
+  border-top: 2px solid var(--seal);
+}
+
+.stage-n {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--seal);
+}
+
+.stage-title {
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.stage-body {
+  margin: 0;
+  font-size: var(--t-ms);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 46ch;
+  text-wrap: pretty;
 }

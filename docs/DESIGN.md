@@ -203,6 +203,29 @@ Honesty is a design requirement here, not a nicety, because [`PRD.md`](PRD.md#fr
 
 ---
 
+## The Landing Page Is Allowed To Sell
+
+It is the one surface that shouts, and the constraint on it is not volume but truth. **Every boast is a number this
+repository can produce**, because the pitch is "nothing here is invented" and a page opening with an invented statistic
+refutes itself above the fold.
+
+| Allowed                                                           | Not allowed                                                |
+| ----------------------------------------------------------------- | ---------------------------------------------------------- |
+| `1,507 posts` — read live from `/health`                          | "Loved by thousands" — there are no thousands              |
+| `247 places` — same                                               | "10x faster" — than what, measured how                     |
+| `0 picks we made up` — `rank.py` enforces it                      | "AI-powered" — says nothing and sounds like everything     |
+| "Loved By Malaysians" — of the **places**, and 1,507 posts say so | The same words aimed at the app, which nobody has used yet |
+
+The display scale is capped at **5.5rem**, under the 6rem ceiling: past that a two-line headline stops being a sentence
+and becomes a poster to decode. `h-display` is landing-only — the product's own screens stay on the quieter scale,
+because a dashboard that shouts cannot be read twice.
+
+**Reveals enhance a default that is already visible.** No section is hidden waiting for an observer. This was shipped
+wrong once, with a comment stating the rule directly above CSS that broke it, and every section below the hero rendered
+blank.
+
+---
+
 ## The Companion
 
 She hosts the onboarding wizard: a Live2D character in the rail, a speech bubble carrying the question she is asking,
@@ -229,6 +252,22 @@ face beside a voice reads as broken.
 
 **She is not the results mascot.** `Mascot.tsx` reports evidence strength on `/discover` and is bound to what the corpus
 holds. `Companion.tsx` asks the wizard's questions and is bound to nothing. They share a stage and share no job.
+
+---
+
+## The Chrome Is Ours
+
+Scrollbars, text selection, focus rings, `accent-color`, the caret, Chrome's yellow autofill, tooltips and the nav
+drawer. These are the parts most often left at the operating system default, and they are the parts that give away that
+a page is a document rather than a product. **They also do not follow a theme on their own**: a Windows scrollbar stays
+light grey on a dark page.
+
+`scripts/chrome_check.mjs` asserts each of them in **both** schemes, and the assertion is that the value _moves_ rather
+than that it exists. That is what caught a nested `:root` inside `:root` — a descendant selector that never matches —
+which had left the **entire dark theme dead** while every token still resolved to something.
+
+**Three states, never two.** Auto, Light, Dark. A two-state toggle cannot express "follow my machine", so the first tap
+silently takes it from somebody whose laptop flips at sunset.
 
 ---
 

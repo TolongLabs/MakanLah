@@ -7,6 +7,13 @@
    section rhythm at desktop. Neither adds a value between existing steps. */
 
 :root {
+  /* Native widgets read these and nothing else. Without color-scheme a dark page
+     keeps a light OS scrollbar and a light date picker; theme.ts overwrites it
+     inline when somebody makes an explicit choice. */
+  color-scheme: light dark;
+  accent-color: var(--enamel);
+  caret-color: var(--ink);
+
   --paper: #f7f7f4;
   --paper-raised: #ffffff;
   --paper-sunk: #efefe9;
@@ -105,8 +112,14 @@
   --page: 76rem;
 }
 
+/* Three states, not two. An explicit choice stamps data-theme on <html>; the
+   default "system" setting stamps nothing and only prefers-color-scheme separates
+   light from dark. The dark values are therefore declared TWICE -- once for the OS
+   preference, guarded so an explicit light choice wins over a dark OS, and once for
+   the explicit dark choice so it wins over a light OS. Declaring them once in a bare
+   media query gives a toggle that can darken a light OS but never lighten a dark one. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --paper: #12130f;
     --paper-raised: #1a1b16;
     --paper-sunk: #0c0d0a;
@@ -134,4 +147,33 @@
     --bandung-soft: #2b1a20;
     --lift: 0 1px 0 rgb(0 0 0 / 30%), 0 8px 32px rgb(0 0 0 / 45%);
   }
+}
+
+:root[data-theme="dark"] {
+  --paper: #12130f;
+  --paper-raised: #1a1b16;
+  --paper-sunk: #0c0d0a;
+  --ink: #f2f2ec;
+  --ink-soft: #9b9e90;
+  --ink-faint: #84877a;
+  --rule: #2c2e25;
+  --rule-strong: #43463a;
+  --enamel: #3fa697;
+  --enamel-quiet: #15302c;
+  --warn: #d9a441;
+  --warn-quiet: #2a2113;
+  --seal: #e2564c;
+  --seal-quiet: #34191a;
+  --e1: 0 1px 2px rgb(0 0 0 / 30%);
+  --e2: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 40%);
+  --e3: 0 2px 6px rgb(0 0 0 / 35%), 0 18px 44px rgb(0 0 0 / 50%);
+  --pandan: #5fb583;
+  --pandan-soft: #16281d;
+  --telang: #8e9ada;
+  --telang-soft: #1a1d2c;
+  --gula: #c99a63;
+  --gula-soft: #291f16;
+  --bandung: #e4849f;
+  --bandung-soft: #2b1a20;
+  --lift: 0 1px 0 rgb(0 0 0 / 30%), 0 8px 32px rgb(0 0 0 / 45%);
 }

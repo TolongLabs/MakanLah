@@ -379,3 +379,89 @@ a {
 .prose-page .h-section {
   margin-top: var(--s7);
 }
+/* Scrollbars. Firefox covers the whole document with :root, but each scrollable
+   surface owns its own track in WebKit, so the width and colour are set on every
+   element that can overflow. The 8px thumb is narrower than the 15px Chrome default. */
+:root,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) var(--paper);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--paper);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border-radius: var(--r-chip);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--paper);
+}
+
+::selection {
+  background: var(--enamel-quiet);
+  color: var(--ink);
+}
+
+/* Tooltips are rendered inline so they can be attached to any control. The bubble
+   sits above the trigger and is tied to it with aria-describedby. Hover and keyboard
+   focus both open it; it never relies on the OS title tooltip. */
+.tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip-bubble {
+  position: absolute;
+  bottom: calc(100% + var(--s2));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: calc(var(--z-island) + 10);
+  width: max-content;
+  max-width: 16rem;
+  padding: var(--s2) var(--s3);
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--r-input);
+  font-size: var(--t-sm);
+  line-height: 1.3;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    visibility 0s linear var(--dur-fast);
+  pointer-events: none;
+}
+
+.tooltip-bubble.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip-bubble {
+    transition: opacity var(--dur-fast) var(--ease);
+  }
+}
+
+/* Chrome's autofill background is a hardcoded yellow that ignores token colours.
+   A long inset shadow painted in the background colour is the only way to mask it
+   without disabling autofill. The text fill colour is restored to the ink token. */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus,
+.field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--paper-raised) inset;
+  -webkit-text-fill-color: var(--ink);
+  transition: background-color 9999s ease-out;
+}

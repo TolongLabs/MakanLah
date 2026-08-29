@@ -16,7 +16,19 @@ import { Testimony } from './Testimony'
  * When two platforms carry the venue, both excerpts render side by side, each under
  * its own source chip. The layout is the evidence claim, so nothing has to assert it.
  */
-export function ResultRow({ result, rank, showBasis = true }: { result: Result; rank: number; showBasis?: boolean }) {
+export function ResultRow({
+  result,
+  rank,
+  showBasis = true,
+  onAsk
+}: {
+  result: Result
+  rank: number
+  showBasis?: boolean
+  /** Hands this venue to the companion. Absent on surfaces that have no companion,
+      which is why the control is conditional rather than always rendered. */
+  onAsk?: (venue: { id: string; name: string }) => void
+}) {
   const { venue, why } = result
   const pair = leadPair(result.citations)
 
@@ -63,6 +75,11 @@ export function ResultRow({ result, rank, showBasis = true }: { result: Result; 
           ))}
         </div>
         <p className="result-actions">
+          {onAsk && (
+            <button type="button" className="ask-trigger" onClick={() => onAsk({ id: venue.id, name: venue.name })}>
+              Ask About This
+            </button>
+          )}
           <Link className="link" to={`/r/${venue.id}`}>
             All Sources
           </Link>

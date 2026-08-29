@@ -373,6 +373,7 @@ GET  /auth/me                          → { user, prefs }        401 without a 
 PUT  /auth/prefs  { prefs }            → { prefs }
 
 POST /companion { step, picked[] }     → { text, source: 'model'|'script', reason? }
+GET  /suggestions                      → { chips: [{label, query, posts, venues}], band, source }
 ```
 
 **Auth never gates `/recommend`.** The product promises a decision in under two minutes, and a login wall in front of
@@ -458,6 +459,17 @@ Its quota is counted in **requests, not ringgit**, because it runs on a free tie
 MYR would report a bill that does not exist and, worse, would let the paid budget's headroom authorise a call the free
 tier has already refused. `COMPANION_DAILY` and `COMPANION_PER_MIN` sit under the tier's 500/day and 15/min: crossing a
 free tier starts charging rather than failing.
+
+**`/suggestions` lets a model choose but never write.** It is handed a numbered list of dishes read out of `mention`
+(`db.popular_dishes`) and returns **indices**; the label that renders is the database string at that index. A model that
+invents a dish produces an out-of-range index, which is dropped — so a chip can never lead to an empty result page,
+which is the promise a chip makes. Every chip carries its post count for the same reason the citations exist: the number
+is why it is being offered.
+
+It is stricter than `/companion` on purpose. A bad companion line is merely odd; a bad chip is a dead end with the
+product's name on it. It shares the companion's **free-tier request counter** rather than the ringgit budget — see the
+note above on why metering a free lane in MYR would let paid headroom authorise a call the free tier has refused. Out of
+quota returns the corpus order; an unreachable corpus returns `chips: []` rather than six invented ones.
 
 `citations` is **never empty**. An entry that cannot be cited is dropped before the response is built, not returned with
 a caveat.

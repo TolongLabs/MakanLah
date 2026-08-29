@@ -1,7 +1,12 @@
+/* The form column, centred on both axes. There is no top bar and no footer on
+   these routes -- App.tsx renders them outside the shell -- so this column is the
+   whole viewport and the form should sit in the middle of it rather than hanging
+   from a top edge that no longer has anything above it. */
 .auth {
+  width: 100%;
   max-width: 27rem;
   margin-inline: auto;
-  padding-block: var(--s8) var(--s9);
+  padding-block: var(--s7);
 }
 
 .auth-head {
@@ -54,16 +59,21 @@
   display: none;
 }
 
+/* Centred below the breakpoint too, where the brand panel is gone and this column
+   is the entire page. */
 .auth-pane {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 100dvh;
   padding-inline: var(--s4);
 }
 
 @media (min-width: 64rem) {
   .auth-split {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    /* Full bleed out of the page container, and tall enough that the panel reads as a
-       wall rather than a banner. */
-    min-height: calc(100dvh - 72px);
+    /* Full bleed, and the full viewport: nothing sits above these routes now. */
+    min-height: 100dvh;
   }
 
   /* Sticky, and capped to the viewport. The form column is the taller of the two --
@@ -72,9 +82,9 @@
      which is where the headline ended up the first time. */
   .auth-brand {
     position: sticky;
-    top: 72px;
+    top: 0;
     align-self: start;
-    height: calc(100dvh - 72px);
+    height: 100dvh;
     display: block;
     overflow: hidden;
     isolation: isolate;
@@ -83,6 +93,7 @@
   .auth-pane {
     display: grid;
     align-content: center;
+    justify-items: center;
     padding-inline: var(--s8);
   }
 }

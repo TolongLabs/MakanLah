@@ -210,34 +210,216 @@
 
 /* ------------------------------------------------------------------- discover */
 
-.discover-grid {
+/* Search is the page, so it is a full-width header rather than one block in a rail
+   of four. The old layout put a 200px search box in a 17rem sidebar beside distance,
+   a taste summary and a mascot, which said all four were equally important. Only one
+   of them is what somebody came here to do. */
+.discover {
   display: grid;
+  /* minmax(0, 1fr), not the implicit auto. A grid item's min-width defaults to
+     max-content, so the four-option distance control -- 448px laid out in a row --
+     was widening the whole column and giving a 390px phone a horizontal scrollbar
+     on the page body. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s6);
   padding-block: var(--s5) var(--s8);
 }
 
 @media (min-width: 60rem) {
-  .discover-grid {
-    grid-template-columns: 17rem minmax(0, 1fr);
-    gap: var(--s8);
-    padding-block: var(--s7) var(--s10);
+  .discover {
+    gap: var(--s7);
+    padding-block: var(--s6) var(--s10);
   }
 }
 
-@media (min-width: 60rem) {
-  .discover-rail {
+.find {
+  display: grid;
+  gap: var(--s4);
+}
+
+.find-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+/* Large enough to be the first thing the eye lands on, and 16px minimum so iOS does
+   not zoom the viewport when it takes focus. */
+.find-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--t-lg);
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--e1);
+}
+
+.find-input::placeholder {
+  /* --ink-soft, not a lighter grey: placeholder text needs the same 4.5:1 as body
+     copy, and a hint nobody can read is a hint nobody gets. */
+  color: var(--ink-soft);
+}
+
+.find-input:focus-visible {
+  outline: 2px solid var(--seal);
+  outline-offset: 2px;
+  border-color: var(--seal);
+}
+
+.find-go {
+  flex: none;
+  padding-inline: var(--s6);
+}
+
+/* ---------------------------------------------------------------------- chips */
+
+.chips {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+/* Every chip is a dish string read out of the corpus, and the count is how many
+   posts are behind it. That is why the number is shown rather than hidden: the chip
+   is a promise that tapping it returns something, and the number is the evidence
+   for the promise. */
+.chip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  background: var(--paper-raised);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.chip-button:hover:not(:disabled) {
+  border-color: var(--seal);
+  background: var(--seal-quiet);
+}
+
+.chip-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.chip-count {
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------------- filters */
+
+.find-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3) var(--s5);
+}
+
+.segmented {
+  margin: 0;
+  min-inline-size: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  background: var(--paper-sunk);
+}
+
+.segment {
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--s2) var(--s3);
+  border: 0;
+  border-radius: var(--r-chip);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.segment:hover {
+  color: var(--ink);
+}
+
+.segment[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--paper-raised);
+  box-shadow: var(--e1);
+}
+
+.find-prefs {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+/* --------------------------------------------------------------------- body */
+
+.discover-body {
+  display: grid;
+  gap: var(--s6);
+}
+
+/* The companion column appears only where there is room for her stage. Below this
+   she is not rendered at all rather than stacked under the results, where she would
+   sit past ten picks and never be seen. */
+@media (min-width: 64rem) {
+  .discover-body {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: var(--s8);
+    align-items: start;
+  }
+
+  .discover-aside {
     position: sticky;
     top: calc(72px + var(--s5));
-    align-self: start;
-    max-height: calc(100dvh - 72px - var(--s8));
-    overflow-y: auto;
   }
 }
 
-.rail-block + .rail-block {
-  margin-top: var(--s5);
-  padding-top: var(--s5);
-  border-top: 1px solid var(--rule);
+/* On a phone she keeps the job and loses the stage. A 200px character above ten
+   results pushes the picks off the screen, which is the same trade the wizard makes
+   -- but her reading of the evidence and the Ask box are the useful half, and both
+   cost four rows. She sits above the results because what she says is about them. */
+@media (max-width: 63.99rem) {
+  .discover-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .discover-aside {
+    order: -1;
+  }
+
+  .ask-companion {
+    padding: var(--s4);
+  }
+
+  .is-live .ask-stage {
+    height: 0;
+  }
 }
 
 .rail-heading {
@@ -425,51 +607,6 @@
   gap: var(--s2);
 }
 
-/* On a phone the rail is not a rail. Its blocks become siblings of the results so the
-   search sits above them and the filters, taste summary and mascot fall below: a
-   hungry person on a 360px screen should see picks without scrolling past a
-   configuration panel first. */
-@media (max-width: 59.99rem) {
-  .discover-rail {
-    display: contents;
-  }
-
-  .rail-search {
-    order: 1;
-  }
-
-  .discover-results {
-    order: 2;
-  }
-
-  .rail-distance {
-    order: 3;
-  }
-
-  .rail-taste {
-    order: 4;
-  }
-
-  .rail-mascot {
-    order: 5;
-  }
-
-  /* display:contents drops the rail's own box, and with it the border the stacked
-     blocks were relying on. */
-  .rail-block + .rail-block {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  .rail-distance,
-  .rail-taste,
-  .rail-mascot {
-    padding-top: var(--s5);
-    border-top: 1px solid var(--rule);
-  }
-}
-
 .list-basis {
   margin-top: var(--s1);
   max-width: 54ch;
@@ -531,4 +668,157 @@
     animation-name: fade-in;
     animation-duration: var(--dur-ui);
   }
+}
+
+/* ------------------------------------------------------- the ask companion */
+
+/* She has two jobs on this page and the panel is ordered by them: her face, what she
+   is currently saying, and the way to make her say something else. */
+.ask-companion {
+  display: grid;
+  gap: var(--s3);
+  padding: var(--s5);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-panel);
+  background: var(--paper-raised);
+  box-shadow: var(--e2);
+}
+
+.ask-stage {
+  position: relative;
+  height: 0;
+}
+
+/* Reserved only once the model is actually up. An empty 200px box while 500 KB of
+   pixi is in flight -- or forever, on a browser without WebGL -- is worse than a
+   panel that starts short. */
+.is-live .ask-stage {
+  height: 200px;
+}
+
+.ask-companion canvas {
+  display: block;
+}
+
+.ask-bubble {
+  position: relative;
+  background: var(--bandung-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  padding: var(--s4);
+  font-size: var(--t-ms);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.ask-read {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ask-note,
+.ask-answer {
+  margin: var(--s2) 0 0;
+}
+
+.ask-answer {
+  margin-top: 0;
+}
+
+/* The refusal. It is set at full strength rather than as a muted aside, because
+   "nobody wrote about that" is the honest answer this product exists to be able to
+   give, not an apology for failing to have one. */
+.ask-uncovered {
+  margin: var(--s3) 0 0;
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+.ask-sources {
+  display: grid;
+  gap: var(--s1);
+  margin: var(--s3) 0 0;
+  padding: var(--s3) 0 0;
+  border-top: 1px solid var(--rule);
+  list-style: none;
+  font-size: var(--t-sm);
+}
+
+.ask-hint,
+.ask-target {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+}
+
+.ask-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.ask-target strong {
+  color: var(--ink);
+}
+
+.ask-clear {
+  font: inherit;
+  font-size: var(--t-xs);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ask-clear:hover {
+  color: var(--ink);
+}
+
+.ask-row {
+  display: flex;
+  gap: var(--s2);
+}
+
+.ask-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--t-ms);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-input);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.ask-input::placeholder {
+  color: var(--ink-soft);
+}
+
+.ask-companion .companion-voice {
+  justify-self: start;
+}
+
+/* The control that hands a venue to her. A button rather than a link, because it
+   changes what is on this page rather than going anywhere. */
+.ask-trigger {
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--seal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.ask-trigger:hover {
+  color: var(--ink);
 }

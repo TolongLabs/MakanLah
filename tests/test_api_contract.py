@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import psycopg
 import pytest
 
 fastapi_testclient = pytest.importorskip('fastapi.testclient')
@@ -335,3 +336,68 @@ class TestCompanionIsDecorationNotEvidence:
     def test_a_long_pick_list_is_refused_at_the_boundary(self, client):
         r = client.post('/companion', json={'step': 'craving', 'picked': [f'x{i}' for i in range(50)]})
         assert r.status_code == 422
+
+
+class TestSuggestionsAreMeteredAndCannotInvent:
+    """The chips endpoint. Same free-tier counter as the companion, same rule that
+    a model may reorder but never write a label."""
+
+    def test_returns_chips_the_corpus_can_back(self, client, monkeypatch):
+        monkeypatch.setattr(
+            api_main.suggest,
+            'chips',
+            lambda **_: {
+                'chips': [{'label': '肉骨茶', 'query': '肉骨茶', 'posts': 14, 'venues': 9}],
+                'band': 'dinner',
+                'source': 'model',
+            },
+        )
+        r = client.get('/suggestions')
+        assert r.status_code == 200
+        assert r.json()['chips'][0]['posts'] == 14
+
+    def test_shares_the_companion_free_tier_counter(self, monkeypatch):
+        # /suggestions and /companion are the same Gemini lane. Two independent
+        # counters would let the pair spend twice the free tier between them.
+        monkeypatch.setattr(api_main, 'COMPANION_DAILY', 2)
+        monkeypatch.setattr(api_main, 'COMPANION_PER_MIN', 99)
+        monkeypatch.setattr(api_main, '_companion', {'day': -1.0, 'used': 0.0})
+        monkeypatch.setattr(api_main, '_companion_minute', [])
+        assert [api_main._companion_quota() for _ in range(3)] == [True, True, False]
+
+    def test_degrades_to_the_corpus_rather_than_failing_when_the_quota_is_spent(self, client, monkeypatch):
+        # Peer review asked for this explicitly: a dead suggestion strip is fine, a
+        # stack trace on the results path is not.
+        monkeypatch.setattr(api_main, '_companion_quota', lambda: False)
+        seen = {}
+
+        def chips(*, use_model=True):
+            seen['use_model'] = use_model
+            return {
+                'chips': [{'label': 'nasi lemak', 'query': 'nasi lemak', 'posts': 9, 'venues': 5}],
+                'band': 'lunch',
+                'source': 'corpus',
+            }
+
+        monkeypatch.setattr(api_main.suggest, 'chips', chips)
+        r = client.get('/suggestions')
+        # The endpoint must ASK for the model-free path rather than having its own.
+        assert seen['use_model'] is False
+        assert r.status_code == 200
+        assert r.json()['source'] == 'corpus'
+        assert r.json()['chips'][0]['label'] == 'nasi lemak'
+
+    def test_an_unreachable_corpus_offers_nothing_rather_than_inventing(self, client, monkeypatch):
+        def boom(**_):
+            raise psycopg.OperationalError('no route to host')
+
+        monkeypatch.setattr(api_main.suggest, 'chips', boom)
+        r = client.get('/suggestions')
+        assert r.status_code == 200
+        assert r.json()['chips'] == []
+        assert r.json()['source'] == 'unavailable'
+
+    def test_it_is_rate_limited(self):
+        # Every call spends a model request. An unmetered endpoint converts
+        # somebody else's bandwidth into our quota.
+        assert 'suggestions' in api_main.RATE_LIMIT

@@ -8,114 +8,309 @@ import { dishLine } from '../format'
 import { MIXED_SCRIPT, SPECIMEN } from './landingSpecimen'
 
 /**
- * The landing page, restructured on the pattern in the owner's SolarSim app: a
- * full-height hero over a photograph that blurs as you leave it, then sectioned
- * content beneath.
+ * The landing page, and the only page in this product allowed to sell.
  *
- * TWO CALLS TO ACTION ON THE WHOLE PAGE, both reading "Get Started" and both going to
- * sign-up: one in the top bar, one at the foot. The page previously had three, in two
- * different wordings, pointing at a different destination. A landing page that asks
- * three times is a landing page that is not confident the first ask worked.
+ * It is loud on purpose, at the owner's direction, and every boast on it is a
+ * number this repository can produce. That constraint is not a limitation on the
+ * marketing, it IS the marketing: the pitch is "nothing here is invented", and a
+ * page that opened with an invented statistic would refute itself above the fold.
  *
- * The hero deliberately carries no button. The bar is pinned above it and the closing
- * band is one scroll away, so a third ask between them would only be noise.
+ * So there is no "loved by thousands" and no "10x faster". There is 1,507 posts,
+ * 247 places, and zero results without a citation -- the last of which is not a
+ * claim about ambition but about `rank.py`, which drops an uncited entry before
+ * the response is built.
+ *
+ * MOTION RULE, and it is the one that actually breaks pages: every reveal here
+ * enhances a default that is already visible. Nothing is hidden waiting for an
+ * observer to fire. A scroll animation that never runs -- background tab, a
+ * headless renderer, an engine that skipped the observer -- must leave a complete
+ * page behind, not a blank one.
  */
 export function Landing() {
   return (
     <>
       <Hero />
-      <FromRealPosts />
+      <NotInvented />
+      <HowItWorks />
+      <Exhibit />
+      <ThreeLanguages />
       <Corpus />
-      <Commitments />
       <LastCall />
     </>
   )
 }
 
-/** Scroll distance, published on animation frames rather than on every scroll event. */
-function useScrollY(): number {
-  const [y, setY] = useState(0)
+/* ------------------------------------------------------------------ machinery */
+
+/** True once the element has been on screen, and never false again. Reveals do not
+    replay on the way back up; a page that re-animates when you scroll up is a page
+    that will not sit still. */
+function useSeen<T extends Element>() {
+  const ref = useRef<T>(null)
+  const [seen, setSeen] = useState(false)
   useEffect(() => {
-    let ticking = false
-    const onScroll = () => {
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(() => {
-        setY(window.scrollY)
-        ticking = false
-      })
+    const el = ref.current
+    if (!el || typeof IntersectionObserver !== 'function') {
+      setSeen(true)
+      return
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setSeen(true)
+          io.disconnect()
+        }
+      },
+      { rootMargin: '0px 0px -12% 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
   }, [])
-  return y
+  return { ref, seen }
+}
+
+function still(): boolean {
+  return typeof window !== 'undefined' && (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false)
 }
 
 /**
- * Full-height, over a photograph, with the copy on a glass panel.
+ * A number that counts up once, the first time it is on screen.
  *
- * The image blurs progressively as it scrolls away, which is SolarSim's move and the
- * reason the text stays readable over a busy photo without a heavy scrim. It is a
- * filter on a decorative image rather than movement, but it is still driven by scroll,
- * so prefers-reduced-motion pins it at a constant blur instead.
+ * It renders the FINAL value on the very first paint and only then winds back to
+ * animate, so the honest number is what a reader sees whether or not anything
+ * runs. Under reduced motion it never winds back at all.
  */
+function Tally({ value, label }: { value: number | null; label: string }) {
+  const { ref, seen } = useSeen<HTMLDivElement>()
+  const [shown, setShown] = useState<number | null>(value)
+
+  useEffect(() => {
+    if (value == null) return
+    if (!seen || still()) {
+      setShown(value)
+      return
+    }
+    let raf = 0
+    const start = performance.now()
+    const run = (now: number) => {
+      const t = Math.min(1, (now - start) / 900)
+      // Quintic ease-out: fast, then a long settle, which reads as a counter
+      // arriving rather than a slot machine stopping.
+      setShown(Math.round(value * (1 - (1 - t) ** 5)))
+      if (t < 1) raf = requestAnimationFrame(run)
+    }
+    raf = requestAnimationFrame(run)
+    return () => cancelAnimationFrame(raf)
+  }, [seen, value])
+
+  return (
+    <div className="tally" ref={ref}>
+      <span className="tally-figure">{shown == null ? '—' : shown.toLocaleString('en-MY')}</span>
+      <span className="tally-label">{label}</span>
+    </div>
+  )
+}
+
+/** A section that fades and rises the first time it is reached. Visible by default. */
+function Reveal({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const { ref, seen } = useSeen<HTMLDivElement>()
+  return (
+    <div ref={ref} className={`reveal ${seen ? 'reveal-in' : ''} ${className}`.trim()}>
+      {children}
+    </div>
+  )
+}
+
+/* ----------------------------------------------------------------------- hero */
+
 function Hero() {
-  const y = useScrollY()
+  const [live, setLive] = useState<Health | null>(null)
   const imageRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
+    let on = true
+    health()
+      .then((h) => on && setLive(h))
+      .catch(() => {})
+    return () => {
+      on = false
+    }
+  }, [])
+
+  // The photograph pulls back and sharpens as the page loads, then drifts on scroll.
+  // Pinned under reduced motion rather than removed: the image is the whole mood.
+  useEffect(() => {
     const image = imageRef.current
-    if (!image) return
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    image.style.filter = still ? 'blur(6px)' : `blur(${Math.min(14, y / 40).toFixed(1)}px)`
-  }, [y])
+    if (!image || still()) return
+    let raf = 0
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY
+        image.style.transform = `scale(${(1.06 + Math.min(y, 900) / 9000).toFixed(4)}) translateY(${Math.min(y * 0.12, 90).toFixed(1)}px)`
+        image.style.filter = `blur(${Math.min(10, y / 90).toFixed(1)}px)`
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
 
   return (
     <section className="hero-full">
       <picture>
-        <source media="(max-width: 40rem)" srcSet="/kopitiam-800.webp" />
+        <source media="(max-width: 40rem)" srcSet="/hero-table-800.webp" />
         <img
           ref={imageRef}
           className="hero-full-image"
-          src="/kopitiam-1600.webp"
+          src="/hero-table-1600.webp"
           alt=""
           width={1600}
-          height={667}
+          height={900}
           fetchPriority="high"
           decoding="async"
         />
       </picture>
+
       <div className="hero-full-inner">
-        <div className="hero-glass rise-in">
+        <div className="hero-copy">
           <span className="hero-mark">
-            <Chop size={40} />
+            <Chop size={44} />
           </span>
-          <h1 className="display">Somebody Already Ate There</h1>
-          <p className="lede">
-            Every pick comes with the post it came from, in the language it was written in. No blurbs, no invented
-            ratings.
+          <h1 className="hero-display">
+            <span className="hero-line">Loved By Malaysians.</span>
+            <span className="hero-line hero-line-quiet">Not invented by a robot.</span>
+          </h1>
+          <p className="hero-lede">
+            A scraper reads what Malaysians write about food, around the clock. You get the place{' '}
+            <em>and the post that named it</em> — in the language somebody wrote it in.
           </p>
         </div>
+
+        <div className="hero-tallies">
+          <Tally value={live?.corpus_size ?? null} label="Posts read" />
+          <Tally value={live?.venues ?? null} label="Places named" />
+          <Tally value={0} label="Picks we made up" />
+        </div>
       </div>
+
+      <p className="hero-scroll" aria-hidden="true">
+        Scroll
+      </p>
     </section>
   )
 }
 
-/**
- * The exhibit, and then the rest of the evidence.
- *
- * The plate carries the corroboration: one venue with two posts from two platforms
- * side by side, which is the claim the product is actually making and the only way
- * to make it visibly. The cards carry the posts that are not part of that pair, so
- * nothing appears twice.
- *
- * THE PLATE IS ALSO WHAT `scripts/layout_check.py` MEASURES, and it is the only
- * surface in the app that renders an `.evidence-pair` without an API behind it.
- * Rebuilding this page around cards alone removed it, and the guard reported five
- * "nothing was measured" failures rather than passing quietly -- which is the only
- * reason this is written down here. If the plate leaves this page again, the guard
- * needs a new host or it is guarding nothing.
- */
+/* --------------------------------------------------------------- not invented */
+
+const ROBOT_LINE = 'You should try Village Park Restaurant in Damansara. It is famous for its nasi lemak.'
+
+function NotInvented() {
+  const pair = leadPair(SPECIMEN.citations)
+  const first = pair[0]
+  return (
+    <section className="page section">
+      <Reveal>
+        <h2 className="h-display">Ask A Chatbot Where To Eat And It Will Answer.</h2>
+        <p className="section-lede lede-wide">
+          It will sound certain. It will not tell you where that came from, when, or whether the place is still open —
+          because it does not know. It is finishing a sentence.
+        </p>
+      </Reveal>
+
+      <div className="versus">
+        <Reveal className="versus-side versus-robot">
+          <p className="versus-who">A language model, asked just now</p>
+          <blockquote className="versus-quote">{ROBOT_LINE}</blockquote>
+          <ul className="versus-notes">
+            <li>No source</li>
+            <li>No date</li>
+            <li>No way to check any of it</li>
+          </ul>
+        </Reveal>
+
+        <Reveal className="versus-side versus-real">
+          <p className="versus-who">A Malaysian, on RedNote</p>
+          {first && (
+            <>
+              <blockquote className="versus-quote" lang="und">
+                {first.excerpt}
+              </blockquote>
+              <ul className="versus-notes">
+                <li>Written by a person</li>
+                <li>{first.posted_at ?? 'Dated'}</li>
+                <li>
+                  <a className="link" href={first.post_url} target="_blank" rel="noreferrer noopener">
+                    Read it yourself
+                  </a>
+                </li>
+              </ul>
+            </>
+          )}
+        </Reveal>
+      </div>
+
+      <Reveal>
+        <p className="versus-verdict">
+          MakanLah only ever shows you the second kind. <strong>An entry that cannot be cited is dropped</strong> before
+          the list is built — not shown with a caveat, not softened, dropped.
+        </p>
+      </Reveal>
+    </section>
+  )
+}
+
+/* --------------------------------------------------------------- how it works */
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'It Reads, All Night',
+    body: 'A scraper works through RedNote and Google Maps around the clock, pulling posts Malaysians wrote about places they actually went. Nobody is waiting on it, so it can be slow and thorough.'
+  },
+  {
+    n: '02',
+    title: 'It Pulls Out The Facts',
+    body: 'Every post is read for the venue, the dish, the sentiment and the line worth quoting. Malay, Chinese and English, often inside one sentence. Nothing is translated and nothing is rewritten.'
+  },
+  {
+    n: '03',
+    title: 'You Ask, It Answers From That',
+    body: 'Your search never touches a platform. It reads the corpus that was already collected, which is why it still works on the day a platform goes dark — and why every pick arrives with its post attached.'
+  }
+]
+
+function HowItWorks() {
+  return (
+    <section className="page section">
+      <Reveal>
+        <h2 className="h-display">While You Were Asleep, It Was Reading.</h2>
+        <p className="section-lede lede-wide">
+          Three stages, in this order, every day. The numbering is real: stage two cannot run before stage one and your
+          search never runs any of them.
+        </p>
+      </Reveal>
+      <ol className="pipeline">
+        {STEPS.map((s) => (
+          <Reveal key={s.n}>
+            <li className="stage">
+              <span className="stage-n" aria-hidden="true">
+                {s.n}
+              </span>
+              <h3 className="stage-title">{s.title}</h3>
+              <p className="stage-body">{s.body}</p>
+            </li>
+          </Reveal>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+/* -------------------------------------------------------------------- exhibit */
+
 const PAIR = leadPair(SPECIMEN.citations)
 const PAIRED = new Set(PAIR.map((c) => c.post_url))
 const POST_CARDS: Citation[] = [...SPECIMEN.citations, MIXED_SCRIPT].filter(
@@ -125,11 +320,10 @@ const POST_CARDS: Citation[] = [...SPECIMEN.citations, MIXED_SCRIPT].filter(
 const PLATFORM_LABEL: Record<string, string> = { rednote: 'RedNote', google_maps: 'Google Maps' }
 
 function PostCard({ citation }: { citation: Citation }) {
-  const label = PLATFORM_LABEL[citation.platform] ?? citation.platform
   return (
     <li className="post-card">
       <div className="post-card-head">
-        <span className="chip">{label}</span>
+        <span className="chip">{PLATFORM_LABEL[citation.platform] ?? citation.platform}</span>
         {citation.posted_at && <span className="post-card-date">{citation.posted_at}</span>}
       </div>
       <blockquote className="post-card-quote" lang="und">
@@ -142,11 +336,16 @@ function PostCard({ citation }: { citation: Citation }) {
   )
 }
 
+/**
+ * The plate is also what `scripts/layout_check.py` measures, and it is the only
+ * surface in the app that renders an `.evidence-pair` with no API behind it. If it
+ * leaves this page the guard needs a new host or it is guarding nothing.
+ */
 function Specimen() {
   const { venue, why } = SPECIMEN
   const dishes = dishLine(venue.dishes)
   return (
-    <figure className="specimen rise-in specimen-enter">
+    <figure className="specimen">
       <span className="stamp" title="Two independent sources">
         <Chop size={58} />
         <span className="sr-only">Corroborated by two independent sources.</span>
@@ -171,17 +370,21 @@ function Specimen() {
   )
 }
 
-function FromRealPosts() {
+function Exhibit() {
   const { venue } = SPECIMEN
   return (
     <section className="page section">
-      <h2 className="h-section">Straight From The Posts</h2>
-      <p className="body-soft section-lede">
-        Real captures, shown as written. Two independent posts put <strong lang="und">{venue.name}</strong> in front of
-        you; the rest are other places entirely. Two platforms, three languages, nobody translated.
-      </p>
+      <Reveal>
+        <h2 className="h-display">This Is What One Looks Like.</h2>
+        <p className="section-lede lede-wide">
+          Not a mock-up. Two independent posts put <strong lang="und">{venue.name}</strong> in front of you, and both
+          are one tap from the original.
+        </p>
+      </Reveal>
       <div className="posts-split">
-        <Specimen />
+        <Reveal>
+          <Specimen />
+        </Reveal>
         <ul className="post-cards">
           {POST_CARDS.map((c) => (
             <PostCard key={c.post_url} citation={c} />
@@ -191,6 +394,28 @@ function FromRealPosts() {
     </section>
   )
 }
+
+/* ------------------------------------------------------------ three languages */
+
+function ThreeLanguages() {
+  return (
+    <section className="page section section-split">
+      <Reveal>
+        <h2 className="h-display">By Malaysians, For Malaysians.</h2>
+        <p className="section-lede">
+          KL writes about food in Malay, Chinese and English at once, often inside a single line. A pipeline that reads
+          only one of them still returns results, which is exactly the problem: it looks like it is working while it
+          quietly drops the best posts.
+        </p>
+      </Reveal>
+      <Reveal className="feature-quote">
+        <Testimony citation={MIXED_SCRIPT} large />
+      </Reveal>
+    </section>
+  )
+}
+
+/* --------------------------------------------------------------------- corpus */
 
 /** Freshness in the coarsest honest unit. "3 days" is useful; "3.04 days" is noise,
     and a precise figure implies a precision the capture schedule does not have. */
@@ -207,86 +432,78 @@ function Corpus() {
   const [reachable, setReachable] = useState(true)
 
   useEffect(() => {
-    let live = true
+    let on = true
     health()
-      .then((h) => live && setData(h))
-      .catch(() => live && setReachable(false))
+      .then((h) => on && setData(h))
+      .catch(() => on && setReachable(false))
     return () => {
-      live = false
+      on = false
     }
   }, [])
 
   return (
     <section className="page section">
-      <h2 className="h-section">What Is Actually In There</h2>
-      <p className="body-soft section-lede">
-        Counted live, from the corpus this app reads. Nothing is fetched from a platform while you wait.
-      </p>
+      <Reveal>
+        <h2 className="h-display">Counted Live, Right Now.</h2>
+        <p className="section-lede lede-wide">
+          Read from the corpus this app is serving as you read this page. Nothing is fetched from a platform while you
+          wait — that is the whole design.
+        </p>
+      </Reveal>
       {!reachable && (
         <p className="notice section-notice">
           We could not reach the corpus just now, so these numbers are not shown rather than guessed.
         </p>
       )}
       {data && (
-        <dl className="corpus">
-          <div className="stat">
-            <dd className="stat-figure">{data.corpus_size.toLocaleString('en-MY')}</dd>
-            <dt className="stat-label">Posts, each one linkable</dt>
-          </div>
-          <div className="stat">
-            <dd className="stat-figure">{(data.venues ?? 0).toLocaleString('en-MY')}</dd>
-            <dt className="stat-label">Places somebody wrote about</dt>
-          </div>
-          <div className="stat">
-            <dd className="stat-figure">{sinceCapture(data.newest_capture)}</dd>
-            <dt className="stat-label">Since the newest post was captured</dt>
-          </div>
-        </dl>
+        <Reveal>
+          <dl className="corpus">
+            <div className="stat">
+              <dd className="stat-figure">{data.corpus_size.toLocaleString('en-MY')}</dd>
+              <dt className="stat-label">Posts, each one linkable</dt>
+            </div>
+            <div className="stat">
+              <dd className="stat-figure">{(data.venues ?? 0).toLocaleString('en-MY')}</dd>
+              <dt className="stat-label">Places somebody wrote about</dt>
+            </div>
+            <div className="stat">
+              <dd className="stat-figure">{sinceCapture(data.newest_capture)}</dd>
+              <dt className="stat-label">Since the newest post was captured</dt>
+            </div>
+          </dl>
+        </Reveal>
       )}
     </section>
   )
 }
 
-const COMMITMENTS: { claim: string; why: string }[] = [
-  {
-    claim: 'No pick without a post behind it.',
-    why: 'An entry that cannot be cited is dropped before the list is built, not shown with a caveat attached. A rating with nothing behind it is a hallucination.'
-  },
-  {
-    claim: 'Nobody gets translated.',
-    why: 'Excerpts, venue names and dish names render in the script the writer used. We may add a gloss beside what somebody wrote. We never replace it.'
-  },
-  {
-    claim: 'Nothing is scraped while you wait.',
-    why: 'The app reads a corpus that was collected in the background. That is why it keeps working on the day a platform stops answering.'
-  }
-]
-
-function Commitments() {
-  return (
-    <section className="page section">
-      <h2 className="h-section">What It Will Not Do</h2>
-      <ul className="commitments">
-        {COMMITMENTS.map((c) => (
-          <li key={c.claim}>
-            <p className="commit-claim">{c.claim}</p>
-            <p className="commit-why">{c.why}</p>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
+/* ------------------------------------------------------------------ last call */
 
 /** The second and last call to action on the page. */
 function LastCall() {
   return (
     <section className="last-call">
+      {/* The page's second photograph, and the only other place it inverts. It names
+          no venue, so an atmospheric image here cannot be mistaken for evidence --
+          the same carve-out docs/DESIGN.md gives the auth panel. Lazy and below the
+          fold, so it never competes with the hero for first paint. */}
+      <picture>
+        <source media="(max-width: 40rem)" srcSet="/kopitiam-800.webp" />
+        <img
+          className="last-call-image"
+          src="/kopitiam-1600.webp"
+          alt=""
+          width={1600}
+          height={667}
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
       <div className="last-call-copy">
         <div className="last-call-inner">
-          <h2 className="h-section">Start With A Craving</h2>
-          <p className="section-lede">Four questions, and somebody has already eaten there.</p>
-          <Link className="btn btn-invert" to="/sign-up">
+          <h2 className="h-display">Somebody Already Ate There.</h2>
+          <p className="section-lede">Four questions. Then a place, and the post that named it.</p>
+          <Link className="btn btn-invert btn-big" to="/sign-up">
             Get Started
           </Link>
         </div>

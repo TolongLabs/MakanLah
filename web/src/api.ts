@@ -163,3 +163,30 @@ export type CompanionLine = { text: string; source: 'model' | 'script'; reason?:
 export function companionLine(step: string, picked: string[]): Promise<CompanionLine> {
   return apiFetch<CompanionLine>('/companion', { method: 'POST', body: JSON.stringify({ step, picked }) })
 }
+
+/** A dish the corpus actually has posts about. The label is a database string, never
+    model text: the model that orders these chips returns indices, so it cannot invent
+    a dish and a chip can never lead to an empty result page. */
+export type Chip = { label: string; query: string; posts: number; venues: number }
+
+export type Suggestions = { chips: Chip[]; band: string; source: 'model' | 'corpus' | 'unavailable' }
+
+export function suggestions(): Promise<Suggestions> {
+  return apiFetch<Suggestions>('/suggestions')
+}
+
+/** One question about one venue, answered from its citations or not at all.
+    `covered: false` is a correct answer and carries no citations by construction. */
+export type AskResponse = {
+  covered: boolean
+  answer: string
+  citations: Citation[]
+  venue?: { id: string; name: string; area: string | null } | null
+}
+
+export function ask(venueId: string, question: string): Promise<AskResponse> {
+  return apiFetch<AskResponse>('/ask', {
+    method: 'POST',
+    body: JSON.stringify({ venue_id: venueId, question })
+  })
+}

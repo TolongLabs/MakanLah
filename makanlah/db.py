@@ -503,3 +503,26 @@ def set_prefs(con, user_id, prefs):
         (user_id, json.dumps(prefs)),
     ).fetchone()
     return row['prefs']
+
+
+def popular_dishes(con, limit=24):
+    """The dishes the corpus actually has the most posts about.
+
+    The suggestion chips on /discover are built from this and nothing else, so a
+    chip can never lead to an empty result page: every string offered is a dish
+    somebody wrote about, ordered by how many people did.
+
+    Canonicalisation already happened at extraction time (makanlah/dishes.py), so
+    this counts what is stored rather than trying to fold variants here.
+    """
+    rows = con.execute(
+        """select d as dish, count(distinct m.post_id) as posts, count(distinct m.venue_id) as venues
+             from mention m, unnest(m.dishes) d
+            where length(trim(d)) > 1
+            group by d
+           having count(distinct m.post_id) >= 2
+            order by posts desc, venues desc
+            limit %s""",
+        (limit,),
+    ).fetchall()
+    return [{'dish': r['dish'], 'posts': r['posts'], 'venues': r['venues']} for r in rows]
