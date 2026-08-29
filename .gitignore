@@ -71,7 +71,11 @@ docs/source/*.webm
 # Live2D model binaries. The LiveroiD moc3, textures and expressions are a BOOTH
 # download under the Live2D proprietary licence, and the texture alone is 31 MB.
 # Drop them in per web/public/models/README.md; the app runs without them.
-web/public/models/liveroid/
+# The LiveroiD Live2D model. Gitignored until 2026-08-29, when the owner took the
+# licensing call explicitly: personal project, their risk. It has to be in the repo to
+# reach the build, because CI has no other source for it and the deploy job was
+# shipping the text fallback every time as a result.
+# web/public/models/liveroid/
 
 # Demo video artefacts. The pipeline that makes them is committed; the output is not.
 *.mp4

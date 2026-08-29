@@ -203,6 +203,35 @@ Honesty is a design requirement here, not a nicety, because [`PRD.md`](PRD.md#fr
 
 ---
 
+## The Companion
+
+She hosts the onboarding wizard: a Live2D character in the rail, a speech bubble carrying the question she is asking,
+and a voice toggle. The register is fun and cute, and it is the one place on the site allowed to be.
+
+**She is decoration, and the whole design rests on her staying that way.** Every other surface in this product is bound
+to the citation trail. She is bound the opposite way: she sees no corpus row, names no venue, and makes no claim, so
+there is no evidence for her to get wrong. `makanlah/companion.py` drops any line that names a place, recommends, rates,
+quotes a price or carries a URL, and falls back to a scripted one. **A cheerful sentence that recommended a restaurant
+would be exactly the hallucination-with-a-rating this product exists to not ship.**
+
+| Rule                          | Why                                                                                                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The bubble is never empty** | The scripted line is on screen in the frame the step changes. The server's line replaces it when it lands                                                                                                      |
+| **She never speaks unasked**  | Chrome and Safari refuse `speak()` before a user gesture, so a voice defaulting on is silent on step one and startling on step two. The toggle is the gesture                                                  |
+| **The choice sticks**         | Persisted per browser. Nobody should have to switch a voice off twice                                                                                                                                          |
+| **One line at a time**        | Every `speak()` cancels the last. Stepping quickly used to queue four questions and answer the last one long after the user moved on                                                                           |
+| **She is gone below 56rem**   | Not hidden — never mounted. `display: none` alone still downloaded 500 KB of pixi and allocated a WebGL context for a 1×1 canvas. Her bubble stays                                                             |
+| **The line is English**       | It is read by a browser speech synthesiser. A Chinese glyph in an English voice is skipped or spelled out letter by letter, and the corpus excerpts beside her are the ones that must stay in their own script |
+
+**The mouth is an approximation and the code says so.** The Web Speech API exposes word boundaries, not amplitude or
+visemes, so a real lip sync is not available to ask for. An oscillation timed to actual speech reads as talking; a still
+face beside a voice reads as broken.
+
+**She is not the results mascot.** `Mascot.tsx` reports evidence strength on `/discover` and is bound to what the corpus
+holds. `Companion.tsx` asks the wizard's questions and is bound to nothing. They share a stage and share no job.
+
+---
+
 ## Testing Before Anything Ships
 
 Nothing visual is done until all four hold, and they get stated in the report:

@@ -25,22 +25,34 @@
   }
 }
 
-/* The mascot sits with the progress index rather than above the question. On a phone
-   it does not appear at all: a 132px companion above the question pushes the actual
-   question below the fold, and phone width is the default case here. */
+/* The rail carries the companion and the progress index. It is not the same thing at
+   both widths, and that is the point.
+
+   On a phone it is the companion's line and nothing else, hoisted above the question
+   with order: -1 so she asks it and then it appears -- which is also the correct
+   reading order for a screen reader. Her stage and the step index are both gone: a
+   200px character above the question pushes the actual question below the fold, and
+   phone width is the default case for a food app. The sentence costs two rows.
+
+   From 56rem she gets her stage back and the whole thing becomes a sticky column. */
 .taste-rail {
+  order: -1;
+}
+
+.taste-rail .index-island {
   display: none;
 }
 
 @media (min-width: 56rem) {
   .taste-rail {
-    display: block;
+    order: 0;
     position: sticky;
     top: calc(72px + var(--s6));
     align-self: start;
   }
 
   .taste-rail .index-island {
+    display: block;
     margin-top: var(--s6);
   }
 }
@@ -334,4 +346,115 @@
   color: var(--ink-soft);
   margin-top: var(--s1);
   max-width: 32ch;
+}
+
+/* ------------------------------------------------------------------ companion */
+
+/* She asks the question out loud, so the bubble is the primary element here and the
+   character is the attribution on it, not the other way round. On a phone the stage
+   is not rendered at all and the bubble stands alone. */
+.companion {
+  display: grid;
+  gap: var(--s2);
+}
+
+.companion-stage {
+  display: none;
+  position: relative;
+}
+
+/* Reserved only once the model is actually up. An empty 220px box while 500 KB of
+   pixi is in flight -- or forever, on a browser without WebGL -- is worse than a
+   bubble that starts high and stays there. */
+.companion-live .companion-stage {
+  height: 220px;
+}
+
+.companion canvas {
+  display: block;
+}
+
+@media (min-width: 56rem) {
+  .companion-stage {
+    display: block;
+  }
+}
+
+/* A real speech bubble, tail and all. The device is doing actual work: it says these
+   words are hers rather than the interface's, which matters on the one surface in this
+   product where the text is generated rather than quoted. */
+.companion-bubble {
+  position: relative;
+  background: var(--bandung-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-panel);
+  padding: var(--s4) var(--s5);
+  font-size: var(--t-ms);
+  line-height: 1.55;
+  color: var(--ink);
+  box-shadow: var(--e1);
+  text-wrap: pretty;
+}
+
+/* Two triangles, the outer one carrying the border colour, so the tail has the same
+   hairline as the bubble instead of appearing to float off it. */
+.companion-bubble::before,
+.companion-bubble::after {
+  content: "";
+  position: absolute;
+  left: var(--s6);
+  width: 0;
+  height: 0;
+  border-inline: 9px solid transparent;
+}
+
+.companion-bubble::before {
+  top: -10px;
+  border-bottom: 10px solid var(--rule);
+}
+
+.companion-bubble::after {
+  top: -9px;
+  border-bottom: 10px solid var(--bandung-soft);
+}
+
+/* Below 56rem she has no stage, so a tail pointing at nothing is a lie in layout. */
+@media (max-width: 55.99rem) {
+  .companion-bubble::before,
+  .companion-bubble::after {
+    display: none;
+  }
+}
+
+.companion-voice {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font: inherit;
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  padding: var(--s1) var(--s3);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.companion-voice:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.companion-voice[aria-pressed="true"] {
+  color: var(--bandung);
+  border-color: var(--bandung);
+}
+
+.companion-voice-icon {
+  font-size: var(--t-ms);
+  line-height: 1;
 }

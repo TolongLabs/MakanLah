@@ -16,7 +16,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from makanlah import auth, config, copilot, db, rank
+from makanlah import auth, companion, config, copilot, db, rank
 
 # An outage is a connection that cannot be made. A ProgrammingError, a TypeError
 # or a KeyError is our own bug and must not be dressed up as one.
@@ -134,6 +134,9 @@ RATE_LIMIT = {
     'signup': (5, 3600),
     'recommend': (20, 60),
     'ask': (10, 60),
+    # The wizard is four steps, so a person legitimately hits this four or five
+    # times in a minute. Above that it is a loop, not a user.
+    'companion': (12, 60),
 }
 _attempts: dict[tuple[str, str], list[float]] = {}
 
@@ -167,6 +170,18 @@ IP_DAILY_SHARE = float(os.environ.get('IP_DAILY_SHARE', '0.1'))
 _spend: dict[str, float] = {'day': -1.0, 'myr': 0.0}
 _ip_spend: dict[str, float] = {}
 
+# The companion lane is metered in requests, not ringgit, because it is on a free
+# tier rather than a paid one: 500 requests a day, 15 a minute. Counting it in
+# MYR would report a bill that does not exist and, worse, would let the paid
+# budget's headroom authorise a call the free quota has already refused.
+#
+# The cap is under the quota, not at it. Crossing a free tier does not fail, it
+# starts charging, and spending real money is a thing this project stops for.
+COMPANION_DAILY = int(os.environ.get('COMPANION_DAILY', '400'))
+COMPANION_PER_MIN = int(os.environ.get('COMPANION_PER_MIN', '12'))
+_companion: dict[str, float] = {'day': -1.0, 'used': 0.0}
+_companion_minute: list[float] = []
+
 
 def _budget_day() -> int:
     return int(time.time() // 86400)
@@ -188,6 +203,20 @@ def _ip_left(ip: str) -> float:
     """Ringgit left for one visitor today."""
     _roll_day()
     return (DAILY_BUDGET_MYR * IP_DAILY_SHARE) - _ip_spend.get(ip, 0.0)
+
+
+def _companion_quota() -> bool:
+    """True if the free Gemini tier has room for one more line, right now."""
+    if _companion['day'] != _budget_day():
+        _companion['day'], _companion['used'] = float(_budget_day()), 0.0
+        _companion_minute.clear()
+    now = time.time()
+    _companion_minute[:] = [t for t in _companion_minute if now - t < 60]
+    if _companion['used'] >= COMPANION_DAILY or len(_companion_minute) >= COMPANION_PER_MIN:
+        return False
+    _companion['used'] += 1
+    _companion_minute.append(now)
+    return True
 
 
 def _affordable(request: Request, calls: int) -> bool:
@@ -378,6 +407,31 @@ def ask(req: AskRequest, request: Request):
     if out['covered'] and not out['citations']:
         out['covered'] = False
     return out
+
+
+class CompanionRequest(BaseModel):
+    step: str = Field(min_length=1, max_length=20)
+    # The labels the user just tapped, and nothing else. Never a corpus row.
+    picked: list[str] = Field(default_factory=list, max_length=6)
+
+
+@app.post('/companion')
+def companion_line(req: CompanionRequest, request: Request):
+    """One cheerful sentence for the onboarding wizard. Not gated by auth.
+
+    Decoration, deliberately: it sees no corpus row, names no venue and makes no
+    claim, which is what makes it safe to let a model write. `source` says
+    whether the model or the script produced it -- the client renders both the
+    same way, so without this field a dead lane looks identical to a live one.
+
+    A refusal here is not an error. Out of quota returns the scripted line with
+    200, because a wizard whose companion goes silent on a rate limit is a worse
+    outcome than a slightly repetitive companion.
+    """
+    _rate_limit('companion', request)
+    if not _companion_quota():
+        return {'text': companion.scripted(req.step), 'source': 'script', 'reason': 'quota'}
+    return companion.line(req.step, req.picked)
 
 
 @app.get('/venue/{venue_id}')
