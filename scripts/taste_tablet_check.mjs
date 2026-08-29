@@ -134,17 +134,41 @@ for (const width of WIDTHS) {
   await page.waitForSelector('.ask-stage canvas', { timeout: 20000 }).catch(() => {})
   await page.waitForTimeout(600)
   const r = await page.evaluate(`(() => {
-    const c = document.querySelector('.ask-stage canvas')
-    const b = c && c.getBoundingClientRect()
-    return { path: location.pathname, canvas: b ? { w: Math.round(b.width), h: Math.round(b.height) } : null }
+    const box = (el) => {
+      if (!el) return null
+      const b = el.getBoundingClientRect()
+      return { w: Math.round(b.width), h: Math.round(b.height), top: Math.round(b.top), bottom: Math.round(b.bottom) }
+    }
+    return {
+      path: location.pathname,
+      canvas: box(document.querySelector('.ask-stage canvas')),
+      aside: box(document.querySelector('.discover-aside')),
+      firstPick: box(document.querySelector('.results .result, .results .skeleton')),
+      vh: window.innerHeight
+    }
   })()`)
-  console.log(`\n--- /discover 834px  path=${r.path}  canvas=${r.canvas ? `${r.canvas.w}x${r.canvas.h}` : 'NONE'}`)
+  console.log(
+    `\n--- /discover 834px  path=${r.path}  canvas=${r.canvas ? `${r.canvas.w}x${r.canvas.h}` : 'NONE'} ` +
+      `aside=${r.aside ? `${r.aside.w}x${r.aside.h}` : 'NONE'} firstPick.top=${r.firstPick?.top} vh=${r.vh}`
+  )
   // If the seeding failed we are on /taste and measuring the wrong screen, which is
   // the mistake that produced a whole round of false readings today.
   say(r.path === '/discover', `/discover 834: we are actually on /discover  path=${r.path}`)
   say(r.canvas !== null, '/discover 834: the companion has a stage')
   if (r.canvas) {
     say(r.canvas.w <= 320, `/discover 834: her stage is the width she is framed for  ${r.canvas.w}x${r.canvas.h}`)
+  }
+  // Stacked above a one-line bubble the aside was 419px of a 1112px viewport, 38% of
+  // the screen for one sentence, with ~480px of empty card beside a 288px character.
+  // Beside her it is the height of the stage plus padding. 300 is the ceiling that
+  // separates the two shapes; it is not a design target, it is a regression tripwire.
+  if (r.aside) {
+    say(r.aside.h <= 340, `/discover 834: the aside is not a screenful  ${r.aside.h}px of ${r.vh}px`)
+  }
+  // The reason the aside's height is worth bounding at all: a reader ruling places
+  // out needs to see that results arrived without scrolling for it.
+  if (r.firstPick) {
+    say(r.firstPick.top < r.vh, `/discover 834: the first pick is above the fold  top=${r.firstPick.top} vh=${r.vh}`)
   }
   await ctx.close()
   await b2.close()

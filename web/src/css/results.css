@@ -726,6 +726,34 @@
    the layout the stage was measured inside was not the one intended. Reverted to the
    desktop treatment at a smaller height: stage on top, everything under it, one
    column. Fewer moving parts and nothing to get wrong at one width and not another. */
+/* At tablet the aside is a full-width row, and stacking her above a one-line bubble
+   spent 419px of a 1112px viewport -- 38% of the screen -- to deliver one sentence,
+   with roughly 480px of empty card to the right of a 288px character. Beside her
+   instead: the same content, ~220px, and the second pick clears the fold.
+
+   Every child is placed by SELECTOR rather than by naming areas. The first attempt
+   at this used `grid-template-areas` and only `.ask-stage` carried a `grid-area`, so
+   the other three children auto-placed into implicit tracks and the canvas vanished
+   at 834. `> *` cannot miss a child the way a list of names can. */
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  .is-live.ask-companion {
+    grid-template-columns: 18rem minmax(0, 1fr);
+    column-gap: var(--s5);
+    align-items: start;
+  }
+
+  .is-live.ask-companion > * {
+    grid-column: 2;
+  }
+
+  /* Gated on .is-live throughout, so a browser that never mounts her is not left
+     holding an empty 18rem column beside a bubble. */
+  .is-live.ask-companion > .ask-stage {
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+}
+
 @media (min-width: 48rem) and (max-width: 63.99rem) {
   /* Capped to the width she is framed for. In this band the aside is a full-width
      row rather than a 20rem column, so an uncapped stage measured 720x180 at 834 --
