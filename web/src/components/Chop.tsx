@@ -1,38 +1,33 @@
-/**
- * The mark. A hanko chop reading "lah" in squared seal script.
- *
- * Inline rather than an <img> for two reasons that both matter: it inherits
- * currentColor, so one component serves cinnabar in the nav, paper on a dark ground
- * and ink in print without three files; and at 300 bytes it costs less than the
- * request it would otherwise make.
- *
- * The letterforms are on a strict grid -- stroke 9, counters 8-13, three columns at
- * 18/38/22 with 4 between. The `a` is double-storey on purpose: a squared ring reads
- * as an o, and the first version of this mark spelled "loh".
- */
-const LETTERS =
-  'M17 18h9v64h-9z M31 38h26v9H31z M31 47h9v13h-9z M31 60h26v9H31z ' +
-  'M48 38h9v44h-9z M61 18h9v64h-9z M70 38h13v9H70z M74 47h9v35h-9z'
+import { useId } from 'react'
 
-export function Chop({ size = 28, outline = false }: { size?: number; outline?: boolean }) {
+/**
+ * The mark. A chop carrying 食 -- eat -- which is what "makan" means.
+ *
+ * The outline is a real glyph, extracted from a CJK font and normalised onto the
+ * 100-unit field, not hand-drawn. A malformed character is worse than no character,
+ * and the earlier hand-built Latin mark went through two wrong drafts ("Ldh", then
+ * "loh") before it read correctly. There is no drawing a kanji by eye.
+ *
+ * Knocked out with a mask rather than fill-rule: the glyph's contours wind for
+ * nonzero fill, and evenodd would punch holes in its own counters.
+ *
+ * Inline so it inherits currentColor -- one component serves cinnabar in the nav,
+ * paper on a dark ground and ink in print without three files.
+ */
+const GLYPH =
+  'M49.47234042553191 18.999999999999993 53.693617021276594 21.90212765957446 52.638297872340424 22.957446808510632Q65.56595744680851 30.608510638297865 80.60425531914893 34.565957446808504L77.70212765957447 39.578723404255314Q62.92765957446808 35.09361702127659 48.94468085106383 26.123404255319144Q37.33617021276596 35.621276595744675 20.97872340425532 40.634042553191485L19.395744680851063 35.621276595744675Q37.599999999999994 29.81702127659574 49.47234042553191 18.999999999999993ZM70.57872340425531 37.99574468085106V62.26808510638297H34.43404255319149V75.4595744680851L48.680851063829785 71.7659574468085L50.26382978723404 76.51489361702127L31.79574468085106 81.0L29.157446808510635 77.83404255319148V37.99574468085106H48.1531914893617L45.25106382978723 33.246808510638296L50.26382978723404 31.663829787234036Q52.638297872340424 34.565957446808504 53.95744680851064 37.99574468085106ZM34.43404255319149 43.008510638297864V47.757446808510636H65.30212765957447V43.008510638297864ZM34.43404255319149 52.506382978723394V57.25531914893617H65.30212765957447V52.506382978723394ZM45.51489361702127 63.587234042553185 62.66382978723404 68.86382978723404Q67.94042553191488 65.69787234042553 71.1063829787234 62.00425531914893L75.59148936170212 64.9063829787234L68.20425531914893 70.97446808510638L79.54893617021276 76.25106382978723L76.6468085106383 81.0Q59.761702127659575 72.29361702127659 42.34893617021277 67.80851063829786Z'
+
+export function Chop({ size = 28 }: { size?: number }) {
+  // Several chops render on one page. A shared mask id would let the first instance
+  // clip every other one.
+  const id = useId().replace(/:/g, '')
   return (
-    <svg
-      className="chop"
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="currentColor"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {outline ? (
-        <>
-          <path fillRule="evenodd" d="M0 0h100v100H0z M9 9v82h82V9z" />
-          <path d={LETTERS} />
-        </>
-      ) : (
-        <path fillRule="evenodd" d={`M0 0h100v100H0z ${LETTERS}`} />
-      )}
+    <svg className="chop" width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <mask id={id}>
+        <rect width="100" height="100" fill="#fff" />
+        <path d={GLYPH} fill="#000" />
+      </mask>
+      <rect width="100" height="100" fill="currentColor" mask={`url(#${id})`} />
     </svg>
   )
 }

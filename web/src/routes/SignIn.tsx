@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { messageFor, saveSession, signIn, signInAsGuest } from '../auth'
+import { AuthLayout } from '../components/AuthLayout'
 
 export function SignIn() {
   const navigate = useNavigate()
@@ -29,54 +30,56 @@ export function SignIn() {
   }
 
   return (
-    <div className="page auth">
-      <header className="auth-head">
-        <h1 className="h-section">Sign In</h1>
-        <p className="body-soft section-lede">An account remembers your taste answers. Searching never needs one.</p>
-      </header>
+    <AuthLayout>
+      <div className="auth">
+        <header className="auth-head">
+          <h1 className="h-section">Sign In</h1>
+          <p className="body-soft section-lede">An account remembers your taste answers. Searching never needs one.</p>
+        </header>
 
-      <form className="auth-form" onSubmit={onSubmit}>
-        <div className="field">
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        {error && (
-          <p className="field-error" role="alert">
-            {error}
-          </p>
-        )}
-        <button type="submit" className="btn btn-primary btn-wide" disabled={busy !== null}>
-          {busy === 'form' ? 'Signing In…' : 'Sign In'}
-        </button>
-      </form>
+        <form className="auth-form" onSubmit={onSubmit}>
+          <div className="field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {error && (
+            <p className="field-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" className="btn btn-primary btn-wide" disabled={busy !== null}>
+            {busy === 'form' ? 'Signing In…' : 'Sign In'}
+          </button>
+        </form>
 
-      <p className="auth-alt">
-        No account yet?{' '}
-        <Link className="link" to="/sign-up">
-          Create One
-        </Link>
-      </p>
+        <p className="auth-alt">
+          No account yet?{' '}
+          <Link className="link" to="/sign-up">
+            Create One
+          </Link>
+        </p>
 
-      <GuestBlock busy={busy === 'guest'} disabled={busy !== null} onClick={() => void attempt('guest')} />
-    </div>
+        <GuestBlock busy={busy === 'guest'} disabled={busy !== null} onClick={() => void attempt('guest')} />
+      </div>
+    </AuthLayout>
   )
 }
 

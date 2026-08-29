@@ -57,12 +57,19 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main>{children}</main>
-      <footer className="foot">
+      {/* Centred and stacked: mark, name, one line, one link. A footer is the last
+          thing between a visitor and leaving, and the old one spent four lines
+          restating the product to somebody already on their way out. */}
+      <footer className="foot" role="contentinfo">
         <div className="foot-inner">
-          <p>
-            Recommendations are drawn from posts written by other people. We show them as written, in the language they
-            were written in, and link back to the original.
-          </p>
+          <Link className="foot-brand" to="/" aria-label="MakanLah home">
+            <Chop size={30} />
+            <span className="foot-name">MakanLah</span>
+          </Link>
+          <p className="foot-motto">Recommendations you can trace.</p>
+          <Link className="foot-link" to="/privacy">
+            Privacy
+          </Link>
         </div>
       </footer>
     </div>

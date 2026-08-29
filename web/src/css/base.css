@@ -100,6 +100,7 @@ a {
 }
 
 .btn {
+  box-shadow: var(--e1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -359,4 +360,22 @@ a {
     44px 44px,
     100% 100%;
   mask-composite: intersect;
+}
+
+/* A reading page: one column, measure-capped, with the section rhythm the rest of the
+   site uses. Only Privacy uses it today, which is why it lives here rather than in a
+   file of its own. */
+.prose-page {
+  padding-block: var(--s8) var(--s9);
+  max-width: 46rem;
+}
+
+.prose-page p {
+  margin-top: var(--s4);
+  color: var(--ink-soft);
+  max-width: 68ch;
+}
+
+.prose-page .h-section {
+  margin-top: var(--s7);
 }

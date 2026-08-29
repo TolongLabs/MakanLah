@@ -74,9 +74,16 @@
 
 /* A specimen plate, not a card: 1px rule, zero radius, no fill and no shadow. The
    distinction matters, because a card says "component" and a plate says "exhibit". */
+/* The plate. It was a 1px rule with square corners on the reasoning that a card says
+   "component" and a plate says "exhibit". The reasoning holds; the execution read as a
+   cut edge. Radius and a real shadow make it an object you could pick up, which is
+   closer to what a plate is, and the hairline stays so it is still a plate rather than
+   a floating card. */
 .specimen {
   position: relative;
   border: 1px solid var(--rule);
+  border-radius: var(--r-panel);
+  box-shadow: var(--e2);
   padding: var(--s5);
   margin: 0;
 }
