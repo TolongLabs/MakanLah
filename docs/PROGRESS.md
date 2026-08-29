@@ -24,6 +24,66 @@ console before repinning.
 
 ---
 
+## 2026-08-29 (Later) — The Companion Speaks, And The Guard Nearly Stopped Guarding
+
+**PR #70, four commits, on `feat/landing-solarsim`.** The five refinements from the owner's local-dev eyeball.
+
+### The Landing Rebuild Took The Layout Guard's Only Host With It
+
+`scripts/layout_check.py` measures `.evidence-pair` against a 34rem container query. The specimen plate on the landing
+was **the only surface in the app that renders one with no API behind it**, which is why CI could run it at all.
+Rebuilding the page around post cards removed the plate, and the guard reported **five `nothing was measured` failures**
+rather than passing quietly — the precondition assertion added in #53 doing exactly the job it was added for.
+
+The plate is back, beside the remaining cards under one heading, and the guard's cases are re-derived for the new
+geometry. **The 1024px hole is gone**: it used to stack there "by design" because the hero split before the page reached
+its cap, and the section is now full width until 76rem. Margins measured at all five widths: −236, +145, +335, +62, +62.
+
+**42rem, not 40rem, is the floor on the plate's column.** A container query counts the content box, so 32px of padding
+and a 1px border come off before the bar is measured: 38rem of column is 542px of content and fails silently, 40rem
+clears by 30px which is one padding change from failing again.
+
+### Four Things The Companion Taught, All Measured
+
+| Found                                                                       | Fix                                                    |
+| --------------------------------------------------------------------------- | ------------------------------------------------------ |
+| At a 400ms beat the Gemini line lost the race **every time** in the browser | She speaks when the line lands; 1200ms is the ceiling  |
+| `display: none` still pulled 500 KB of pixi and a WebGL context on a phone  | The stage is not mounted below 56rem. Her bubble stays |
+| The Web Speech API exposes word boundaries, not amplitude or visemes        | The mouth is an oscillation, and the code says so      |
+| Her tier is free, so MYR budget headroom could authorise a refused call     | Counted in requests: 400/day, 12/min, under 500 and 15 |
+
+The first is the one worth carrying: **the lane was wired up, called, billed against quota and never heard.** Nothing
+failed. The scripted fallback rendered, every test passed, and the only way to see it was to read the bubble text in a
+real browser and notice it was never the model's.
+
+**`POST /companion` is the one lane deliberately kept away from the citation trail**, and that is what makes it safe to
+let a model write. No corpus row, no venue name, no `citations` key. `_safe()` drops any line that names a place,
+recommends, rates, quotes a price or carries a URL, and falls back to the script.
+
+### The Guest Disclosure Is Narrower Now, On Purpose
+
+The heading and three paragraphs of consent copy are gone at the owner's instruction. **Somebody can now sign in as
+guest without having been told the account is shared.** `docs/TRD.md` says so rather than still claiming the old
+contract; the disclosure moved to in-session, where the nav reads `Guest, Shared` for the whole session.
+
+### LiveroiD Is Committed
+
+Gitignored as a BOOTH download under Live2D's licence, so **CI never had it and production shipped the text fallback
+every time**. The owner took the call explicitly: personal project, their risk. Biome excludes it as a received source.
+
+### State
+
+**Not verified: audible sound.** Headless Chromium ships no TTS voices. The call path runs without error and picks a
+voice correctly; nobody has heard her. That needs a real browser.
+
+Green at the point of pushing: `bun run lint`, `tsc --noEmit`, **336 Python tests, 98 web tests**, `motion_check.mjs`
+4/4 across Chromium and Firefox in both preference states, `layout_check.py` 5/5. 48 screenshots regenerated in
+`docs/screenshots/`. Every new assertion was mutation-tested — the first version of "stays quiet until the voice is
+switched on" passed against a companion that did speak, because advancing fake timers left the promise chain unflushed.
+
+**Worktrees:** `wt-landing` holds this work. `wt-footer` and `wt-authguest` are spent and should be removed.
+**Unattended mode is off.**
+
 ## 2026-08-29 — The API Is Live, And #6 Is Closed
 
 **`https://makanlah-api.vercel.app`**, Vercel Hobby, region `sin1`. The client on Pages calls it: a real browser at
