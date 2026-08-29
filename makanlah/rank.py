@@ -135,6 +135,42 @@ def coverage_gaps(query):
     return gaps
 
 
+# A halal claim may not rest on a fragment. UAT found 鱼你 flagged on a Google
+# Maps excerpt reading "...Yonny is the 'halal' counterpart, and that distinction
+# is the" -- it stops mid-sentence, and the clause that would say what the
+# distinction means is exactly what #15 truncated away. The word is also in scare
+# quotes in the original, which usually means the writer is holding it at arm's
+# length.
+#
+# Being wrong about halal is the one error a Malaysian user will not forgive, so
+# a cut-off sentence is not evidence for it. Other excerpts stay usable; they are
+# simply not allowed to carry this claim.
+_ENDS_MID_SENTENCE = re.compile(r'[\w,;:\'"’”，、]\s*$')
+
+# Negation does not appear in the corpus today -- nine phrasings were searched
+# for and none is present -- so this is a latent risk rather than a live one. It
+# becomes live the moment a re-scrape adds one post saying a place is not halal,
+# and the failure mode is the worst available: telling Nabilah a venue speaks to
+# her constraint when the post says the opposite.
+_NEGATED = re.compile(
+    r'\b(not|non|bukan|tidak|tak)\s*[- ]?\s*halal\b|\bno\s+halal\b|非清真',
+    re.I,
+)
+
+
+def _supports_gap(text, gap):
+    """Whether this excerpt can carry the claim, not merely mention the word."""
+    if not text:
+        return False
+    if _ENDS_MID_SENTENCE.search(text):
+        return False
+    if gap == 'halal':
+        if _NEGATED.search(text):
+            return False
+        return bool(_HALAL_CJK.search(text) or _HALAL.search(text))
+    return False
+
+
 def mark_gap_coverage(entries, gaps):
     """Say per venue whether its own posts speak to the gap.
 
@@ -153,12 +189,7 @@ def mark_gap_coverage(entries, gaps):
         cites = e.get('citations') or []
         mentions = []
         for gap in gaps:
-            pattern = _HALAL_CJK if gap == 'halal' else None
-            hit = any(
-                (pattern and pattern.search(c.get('excerpt') or ''))
-                or (gap == 'halal' and _HALAL.search(c.get('excerpt') or ''))
-                for c in cites
-            )
+            hit = any(_supports_gap(c.get('excerpt'), gap) for c in cites)
             if hit:
                 mentions.append(gap)
         e['venue']['gap_mentions'] = mentions
