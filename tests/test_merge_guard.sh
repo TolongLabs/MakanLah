@@ -19,6 +19,13 @@ want() { # want <expected-exit> <command> <description>
   fi
 }
 
+says() { # says <substring> <command> <description>
+  local out; out=$(echo "{\"tool_input\":{\"command\":\"$2\"}}" | bash "$HOOK" 2>&1 >/dev/null)
+  if [[ "$out" == *"$1"* ]]; then pass=$((pass + 1)); else
+    fail=$((fail + 1)); echo "  FAIL: $3 (wanted a message containing '$1', got: ${out:0:90})"
+  fi
+}
+
 echo "merge guard"
 
 # Passes through anything that is not a merge.
@@ -31,6 +38,11 @@ want 2 "gh pr merge --merge" "a merge with no PR number"
 want 2 "gh pr merge 21 --merge --admin" "--admin, which bypasses branch protection"
 want 2 "rtk gh pr merge 21 --merge" "an rtk-prefixed merge is still matched"
 
+# Taking the first of several would verify that one and wave the rest through.
+want 2 "gh pr merge 21 --merge && gh pr merge 22 --merge" "two PRs in one command"
+says "one at a time" "gh pr merge 21 --merge && gh pr merge 22 --merge" \
+  "and it says why, rather than denying via a failed read"
+
 # Known and deliberate: the guard matches the phrase anywhere in the command, so
 # prose containing it is blocked too. Narrowing to a command position needs shell
 # parsing a hook cannot do, and a miss is an unguarded merge. Asserted here so the
@@ -40,6 +52,10 @@ want 2 "echo 'the gh pr merge deny was replaced by a hook' > notes.md" \
 
 if gh auth status >/dev/null 2>&1; then
   want 2 "gh pr merge 999999 --merge" "a PR that does not exist"
+  # A read that fails is not a check that failed. Retrying the read is safe --
+  # all three failing still denies -- and the message proves the retry ran rather
+  # than the first attempt denying outright.
+  says "after three attempts" "gh pr merge 999999 --merge" "an unreadable PR is retried before it is denied"
   merged=$(gh pr list --state merged --limit 1 --json number --jq '.[0].number' 2>/dev/null || true)
   if [[ -n "$merged" ]]; then
     want 2 "gh pr merge $merged --merge" "an already-merged PR"
