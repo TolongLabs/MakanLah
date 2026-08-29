@@ -24,6 +24,70 @@ console before repinning.
 
 ---
 
+## 2026-08-29 (UAT Round Two) — A Stamp That Punished Its Own Best Evidence
+
+**Merged: #94 (corroboration), #95 (CORS on a fault), #97 (tablet companion, in CI now).** Prod served `7bfbdca` at
+21:22:15Z and the stamp fix was verified there across three queries by a second session: **17 of 17 rows correct, moving
+in both directions.** Closed **#84** with live evidence, and **#81**.
+
+**The corroboration stamp was inverted, and it withheld itself from exactly the strongest evidence the corpus has.**
+`independentlyBacked()` required `c.authors >= 2`. Google Maps citations carry `author_handle: null`, so a Maps review
+counts zero authors — which meant four RedNote posts by two handles were stamped and two RedNote posts plus a Maps
+review were not. Cross-platform agreement is the one thing the companion's own copy calls strongest, and it was the case
+being penalised. Now `posts >= 2 && (authors >= 2 || platforms >= 2)`. **Two posts stays as the floor**: one post is one
+voice however many platforms syndicate it.
+
+**A caveat that travels with that verification.** No `posts=1, platforms=2` venue exists in the corpus, so the floor
+clause **cannot be exercised through the UI at all**. It is covered by mutation tests in `evidence.test.ts` and by
+nothing else. Reported as "not exercisable", never as a pass.
+
+**An unhandled 500 used to arrive with no `Access-Control-Allow-Origin`** (#81), so a server fault read in the browser
+as a CORS misconfiguration and sent whoever debugged it to audit a config that was already correct. Starlette's
+`ServerErrorMiddleware` sits **outside** `CORSMiddleware`. Fixed by catching one layer inside it — `add_middleware`
+inserts at the front, so the handler is registered **before** the CORS call in order to end up within it. **The ordering
+is the fix**, which is why there is a comment saying so at the call. Still a 500, still logs the traceback, body names
+the exception class and never its message, `degraded` absent because our bug is not an outage.
+
+**Two screens hosted the companion and they had two different gates.** `/discover` mounted her from 48rem; `/taste` held
+out until 56rem because its comment said the gate mirrored the rail's second column — answering "is there room for a
+character" with the answer to "is there room for a column". Measured at 834, before and after:
+
+| Surface         | Before                 | After                  |
+| --------------- | ---------------------- | ---------------------- |
+| `/taste` 834    | canvas NONE, gap 549px | **288×220**, gap 321px |
+| `/taste` 768    | canvas NONE, gap 549px | **288×220**, gap 321px |
+| `/discover` 834 | 720×180                | **288×200**            |
+| 390 (phone)     | NONE                   | unchanged, deliberate  |
+
+**The width cap is not cosmetic.** `Live2DStage.frame()` scales purely by height and centres on `w / 2`, so an uncapped
+stage does not enlarge her — it parks her small in a 4:1 letterbox while the bubble's tail stays at `left: var(--s6)`
+pointing at 41px of nothing.
+
+**Three checks that agreed with themselves, caught this session.** The pattern is not slowing down.
+
+1. `taste_tablet_check.mjs` printed **four green ticks at four widths while measuring nothing** — `.option` matched
+   hidden step panels, so the clearance assertion read `0 <= 1031`. The `optionCount` guard is the assertion, not
+   tidiness
+2. A peer reported the mascot absent at 834 on a route they had not meant to test, then corrected it themselves
+3. A peer's first 834 run blocked the `image` resource type; Live2D textures are `texture_00.png`, so the probe measured
+   its own blocking and read as a regression
+
+**Neither this machine nor the peer's can verify that she is painted.** Headless Chromium here reports `coverage=0.0%`
+at every width **including 1440** — its WebGL will not run Cubism at all. Geometry is verified locally, ink is verified
+by CI, and `mascot_check.mjs` now carries the 834 case so the pixel count happens where the instrument works.
+
+**#83's consequence, written down before somebody files it as a bug.** `with_live_citations()` drops any entry whose
+every citation is known dead, so `宝香绑线肉骨茶` — one citation, confirmed dead — is now absent from **every** result
+set including a search for its own exact name. Measured across five queries. Correct behaviour, and it was nearly
+escalated as an indexing fault. Noted on the issue.
+
+**#85 is next and is the largest open product defect.** `蛋挞`, `ayam goreng berempah` and `char kuey teow` all miss,
+and `something not too heavy` still returns FamilyMart SS2 in the top four. First reading: the lexical lane fires only
+for the **fifteen hand-listed dishes** in `makanlah/dishes.py`, so every query outside that table falls to the vector
+lane alone — which is why the Malay side is weakest. Not yet measured, and the measurement comes before the fix.
+
+---
+
 ## 2026-08-29 — The Citation Trail Now Survives Being Checked
 
 **#83 is closed on production, measured rather than inferred.** Same `肉骨茶` query, before and after loading liveness:

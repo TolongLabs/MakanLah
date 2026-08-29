@@ -15,6 +15,9 @@ but is not the Malaysian dish. An exact tag match finds the first; no embedding
 distinguishes the second.
 """
 
+import difflib
+import unicodedata
+
 DISH_ALIASES = {
     'bak kut teh': ['bak kut teh', 'bakuteh', 'bkt', '肉骨茶', 'sup tulang babi'],
     'nasi lemak': ['nasi lemak', '椰浆饭', '椰漿飯', 'coconut rice'],
@@ -31,6 +34,16 @@ DISH_ALIASES = {
     'pizza': ['pizza', '披萨', '比萨'],
     'steak': ['steak', '牛排', '西冷牛排'],
     'curry mee': ['curry mee', '咖喱面', '咖喱面条', '咖喱干拌面'],
+    # Both added from #85's measurements rather than from imagination. The corpus
+    # tags 叉烧杨家家来 with 叉烧 and Oh Yeah Kopitiam with `Char Siew`, and nothing
+    # joined them; `egg tart` found nothing while 蛋挞 found two venues.
+    #
+    # Deliberately no `bbq pork` or `roast pork` here. `canonical()` matches on
+    # substring in BOTH directions, so a short form swallows every string that
+    # contains it -- `pork` alone would fold `roast pork`, `pork noodles` and
+    # `braised pork rice` into char siew. Short forms are a trap in this table.
+    'char siew': ['char siew', 'char siu', 'charsiew', '叉烧', '叉燒'],
+    'egg tart': ['egg tart', 'portuguese egg tart', '蛋挞', '蛋撻', '葡挞'],
 }
 
 # Cuisines that never overlap. A venue tagged only from one group is a
@@ -70,3 +83,78 @@ def canonical_for_query(query):
         if q == key or q in [f.lower() for f in forms]:
             return key
     return None
+
+
+def fold(dish):
+    """One spelling key. NFKC so a full-width copy folds onto its ASCII twin."""
+    return unicodedata.normalize('NFKC', dish or '').casefold().strip()
+
+
+# Measured against the 810-key corpus vocabulary. At 0.80, `halal food` matches
+# `local food`, which is a lexical lane firing on a query about religious dietary
+# law and answering it with somebody's word for cheap. At 0.85 that goes and every
+# wanted case survives: `cha siew` -> `char siew`, `nasi lemat` -> `nasi lemak`.
+NEAR = 0.85
+
+# Below this, a near match is noise. `pork` and `rice` are in the vocabulary and
+# resolve exactly; it is three-letter fragments that should not be guessed at.
+MIN_NEAR_LEN = 4
+
+
+def named_in(query, vocabulary):
+    """Which stored dish strings a query names: `(folded_keys, label)`.
+
+    The hand table in this module knows fifteen dishes. The corpus carries 838
+    distinct dish strings, so `canonical_for_query` alone recognised **12.3% of
+    them and 18.1% of dish-mentions, and none of the ten mixed-script strings**.
+    `蛋挞` is written about by two venues and was invisible to the lexical lane;
+    so were `char siew` (6 venues), `coffee` (7) and `ayam gepuk` (4).
+
+    So the vocabulary is the corpus, and DISH_ALIASES keeps the one job it is
+    actually good at -- grouping `肉骨茶` with `bak kut teh` across languages,
+    which no amount of string folding will ever do.
+
+    Three lanes, and the result is their UNION rather than the first that hits:
+
+    1. **The alias table**, so a query in one language reaches venues tagged in
+       another
+    2. **An exact fold**, which is the 8x
+    3. **A near match**, for the corpus's own spelling -- `cha seiw`, `rosated
+       chicken` and `buratta` are all real rows, and so is `noodle` beside
+       `noodles`
+
+    The union rather than a first-hit is measured, not assumed. Across the whole
+    810-key vocabulary there are **29 near-pairs at 0.85, no key has more than two
+    neighbours, and every pair is the same dish twice**: plurals (`taco`/`tacos`),
+    spellings (`chili`/`chilli`), phrasing (`fish & seafood` / `fish and seafood`)
+    and Han variants (`干肉骨茶`/`肉骨茶`). There were no false pairs to trade
+    against, so stopping at the first lane only lost venues.
+
+    Whole-query only, as before. `something not too heavy` names no dish and
+    matches nothing in any lane at any cutoff, which is what keeps a mood query on
+    the semantic lane where it belongs.
+    """
+    q = fold(query)
+    if not q or len(q) > 40:
+        return frozenset(), None
+
+    found: set[str] = set()
+    label = None
+
+    key = canonical_for_query(query)
+    if key:
+        found |= {v for v in vocabulary if canonical(v) == key}
+        if found:
+            label = key
+
+    if q in vocabulary:
+        found.add(q)
+        label = label or q
+
+    if len(q) >= MIN_NEAR_LEN:
+        near = difflib.get_close_matches(q, list(vocabulary), n=3, cutoff=NEAR)
+        found |= set(near)
+        if near:
+            label = label or near[0]
+
+    return frozenset(found), label
