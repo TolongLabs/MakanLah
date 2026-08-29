@@ -21,10 +21,19 @@ from makanlah import config, db
 
 
 def ledger_backend() -> str:
-    if os.environ.get('DATABASE_URL'):
-        return 'postgres'
+    """Which store holds the counters.
+
+    LEDGER_PATH is checked first because it is an explicit override and
+    DATABASE_URL is ambient: config.load_dotenv() populates it from a developer's
+    .env at import, so the other order pointed the test suite at the production
+    ledger. That was not theoretical -- it read real accumulated spend, wrote test
+    charges into it, and turned a thirty-second run into six minutes. CI has no
+    DATABASE_URL and so stayed green throughout.
+    """
     if os.environ.get('LEDGER_PATH'):
         return 'sqlite'
+    if os.environ.get('DATABASE_URL'):
+        return 'postgres'
     return 'memory'
 
 
@@ -403,7 +412,13 @@ class PostgresLedger(Ledger):
             if _companion['used'] >= daily or len(_companion_minute) >= per_min:
                 con.execute('DELETE FROM ledger_companion_day WHERE day < %s', (day,))
                 return False
-            con.execute('INSERT INTO ledger_companion_minute (ts) VALUES (%s)', (now,))
+            # ts is the primary key and postgres stores it at real precision, so two
+            # requests in the same instant collapse to one value -- 1.788034e+09 for a
+            # whole second of traffic. The collision raised UniqueViolation, which is
+            # not a ledger outage so it escaped the fallback and 500'd /suggestions in
+            # production. Dropping the duplicate under-counts a burst inside one tick,
+            # which the daily cap still bounds; failing the request does not.
+            con.execute('INSERT INTO ledger_companion_minute (ts) VALUES (%s) ON CONFLICT DO NOTHING', (now,))
             row = con.execute(
                 """INSERT INTO ledger_companion_day (day, used) VALUES (%s, %s)
                    ON CONFLICT (day) DO UPDATE
