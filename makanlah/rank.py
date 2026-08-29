@@ -10,6 +10,7 @@ distance wastes the index and returns a great match forty minutes away.
 """
 
 import math
+import re
 
 from makanlah import config, db, dishes, models
 from makanlah.text import fold_variants
@@ -96,6 +97,71 @@ def disambiguate(entries):
                 e['venue']['disambiguator'] = label
                 e['venue']['ambiguous_with_sibling'] = False
 
+    return entries
+
+
+# A dietary constraint the corpus cannot speak to. Posts rarely state
+# certification, and inferring it from a venue name or cuisine is the confident
+# wrong answer this product exists to avoid -- getting it wrong is not a ranking
+# miss, it is somebody eating what they hold themselves not to.
+#
+# Matched as a standalone word so "Restoran Halal Corner" -- a name, not a
+# request -- does not put a disclaimer on a search that never asked for one.
+# Latin needs word boundaries so "Halal Corner" is not a request. CJK cannot
+# have them -- Python's \\w matches Han, so 清真餐厅 would be rejected by its own
+# following character. Two patterns rather than one clever one.
+_HALAL = re.compile(r'(?<![A-Za-z])halal(?![A-Za-z])', re.I)
+# 清真寺 is a mosque, and 清真 is a prefix of it. A substring match reads a venue
+# described as near a mosque as a halal claim -- confidently mislabelling it on
+# the strength of a landmark. Being wrong about halal is the one error a
+# Malaysian user will not forgive, so the exclusion is explicit and tested.
+_HALAL_CJK = re.compile(r'清真(?!寺)')
+_HALAL_NAME = re.compile(r'\b(restoran|restaurant|kedai|corner|cafe)\b', re.I)
+
+
+def coverage_gaps(query):
+    """Name what the corpus cannot answer about this query.
+
+    Returns gap keys, not prose: the caller owns the wording, and /ask already
+    has a voice for this -- "The provided excerpts do not mention whether ...".
+    A ranked list had no equivalent, so a halal query came back as an unmarked
+    list that reads as an answer.
+    """
+    if not query:
+        return []
+    gaps = []
+    if _HALAL_CJK.search(query) or (_HALAL.search(query) and not _HALAL_NAME.search(query)):
+        gaps.append('halal')
+    return gaps
+
+
+def mark_gap_coverage(entries, gaps):
+    """Say per venue whether its own posts speak to the gap.
+
+    A blanket "we have no halal information" is false and a reader can disprove
+    it: the corpus contains 清真友好 -- halal-friendly, written by a person --
+    behind a venue we already show. Claiming silence over real testimony is the
+    same failure as claiming knowledge we do not have, pointed the other way.
+
+    So the claim is per result and checkable: this venue's posts mention it, or
+    they do not. Quoting someone who wrote it is not inference; it is the core
+    loop. Deciding halal from a name or a cuisine would be, and is not done here.
+    """
+    if not gaps:
+        return entries
+    for e in entries:
+        cites = e.get('citations') or []
+        mentions = []
+        for gap in gaps:
+            pattern = _HALAL_CJK if gap == 'halal' else None
+            hit = any(
+                (pattern and pattern.search(c.get('excerpt') or ''))
+                or (gap == 'halal' and _HALAL.search(c.get('excerpt') or ''))
+                for c in cites
+            )
+            if hit:
+                mentions.append(gap)
+        e['venue']['gap_mentions'] = mentions
     return entries
 
 
@@ -313,9 +379,20 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
 
     results = disambiguate(results)
     results = add_corroboration(results)
+    gaps = coverage_gaps(query)
+    results = mark_gap_coverage(results, gaps)
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
-    return {'results': results, 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': sources}
+    return {
+        'results': results,
+        'degraded': degraded,
+        'degraded_reasons': reasons,
+        'sources_used': sources,
+        # What the corpus cannot speak to for this query. Results still come
+        # back; they come back with the gap named rather than reading as an
+        # answer to a question nobody can answer from these posts.
+        'coverage_gaps': gaps,
+    }
 
 
 def one(venue_id, *, lat=None, lng=None):
