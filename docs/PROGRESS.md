@@ -1,8 +1,8 @@
 # Progress — 2026-08-29 · citations carry testimony, and the latency target is met
 
-**`main` is at `61325b4`.** Sixteen PRs merged — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30, #32, #35, #37,
-#38, #39, #40, #42. **256 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather than
-on a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the
+**`main` is at `61325b4`.** 18 PRs merged — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30, #32, #35, #37, #38,
+#39, #40, #42. **256 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather than on a
+branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the
 corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
