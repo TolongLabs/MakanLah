@@ -35,9 +35,15 @@ app = FastAPI(
     openapi_url='/openapi.json' if _DOCS else None,
 )
 
+_cors = config.settings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(config.settings().cors_origins),
+    allow_origins=list(_cors.cors_origins),
+    # An explicit CORS_ORIGINS list wins; otherwise the project's own Pages hosts
+    # and localhost. `allow_credentials` stays off, so this is a spend control
+    # rather than a session one -- and it does nothing to curl, which is why the
+    # daily budget above is the real answer.
+    allow_origin_regex=None if _cors.cors_origins else _cors.cors_origin_regex,
     allow_methods=['GET', 'POST'],
     allow_headers=['*'],
 )

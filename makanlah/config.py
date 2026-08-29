@@ -5,6 +5,7 @@ which is what a health check and a preflight need.
 """
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -54,6 +55,7 @@ class Settings:
     nominatim_base_url: str
     nominatim_user_agent: str
     cors_origins: tuple[str, ...]
+    cors_origin_regex: str
 
 
 def settings() -> Settings:
@@ -130,8 +132,26 @@ def settings() -> Settings:
         copilot_thinking=e('COPILOT_THINKING', '').lower() in ('1', 'true', 'yes'),
         nominatim_base_url=e('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         nominatim_user_agent=e('NOMINATIM_USER_AGENT', 'MakanLah/0.1'),
-        cors_origins=tuple(x for x in (e('CORS_ORIGINS', '') or '').split(',') if x) or ('*',),
+        cors_origins=tuple(x for x in (e('CORS_ORIGINS', '') or '').split(',') if x),
+        cors_origin_regex=e('CORS_ORIGIN_REGEX') or _default_cors_regex(e('CF_PAGES_PROJECT', 'makanlah-b5h')),
     )
+
+
+def _default_cors_regex(project: str) -> str:
+    """Who may call this API from a browser, when CORS_ORIGINS is not set.
+
+    `*` was right for a local API and is wrong for a public one -- not because it
+    leaks a session (auth is a Bearer header, not a cookie, so allow_credentials
+    is off and no site can ride a signed-in user) but because every request
+    spends a model call. An open CORS policy invites someone else's page to spend
+    our budget.
+
+    A fixed list would break Cloudflare Pages previews, which get their own
+    subdomain per branch, so this matches the project's own hosts and localhost
+    on any port. Set CORS_ORIGINS to override with an explicit list.
+    """
+    host = re.escape(project)
+    return rf'^https://([a-z0-9-]+\.)?{host}\.pages\.dev$|^http://(localhost|127\.0\.0\.1)(:\d+)?$'
 
 
 def describe() -> dict[str, bool]:
