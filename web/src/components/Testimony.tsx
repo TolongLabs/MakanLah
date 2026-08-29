@@ -24,6 +24,19 @@ export function Testimony({
 }) {
   const { excerpt, post_url, platform, author_handle, posted_at } = citation
   const to = href ?? post_url
+  // #83. A post measured dead gets no link, on either layout. The card drops the
+  // chip entirely (see `leadPair`); this page keeps the row, because it is the
+  // record somebody checks a corroboration stamp against and a venue whose stamp
+  // reads four posts over a page showing one row invites exactly the doubt the
+  // stamp exists to answer. What it must not do is hand over a link that wastes a
+  // click, or go quiet about why -- a row that simply lost its link reads as a
+  // rendering fault, and "we checked" is itself part of the evidence here.
+  //
+  // `dead` is tri-state: only `true` is measured dead. `null` or absent is never
+  // checked and renders as live, because a cooled-down re-probe resolved exactly
+  // such a row live on the venue with the strongest evidence in the corpus.
+  const gone = citation.dead === true
+  const note = <span className="testimony-gone">This post no longer opens.</span>
   return (
     <figure className="testimony">
       {excerpt && (
@@ -33,9 +46,13 @@ export function Testimony({
       )}
       {!attributed && (
         <figcaption className="attribution">
-          <a className="link" href={to} target="_blank" rel="noreferrer noopener">
-            Read The Post
-          </a>
+          {gone ? (
+            note
+          ) : (
+            <a className="link" href={to} target="_blank" rel="noreferrer noopener">
+              Read The Post
+            </a>
+          )}
           {author_handle && <span className="posted">{author_handle}</span>}
         </figcaption>
       )}
@@ -43,9 +60,16 @@ export function Testimony({
           pill long enough to ellipsis on a phone, and what got cut was the attribution. */}
       {attributed && (
         <figcaption className="attribution">
-          <a className="chip" href={to} target="_blank" rel="noreferrer noopener">
-            {sourceLabel(platform, author_handle)}
-          </a>
+          {gone ? (
+            <>
+              <span className="chip chip-gone">{sourceLabel(platform, author_handle)}</span>
+              {note}
+            </>
+          ) : (
+            <a className="chip" href={to} target="_blank" rel="noreferrer noopener">
+              {sourceLabel(platform, author_handle)}
+            </a>
+          )}
           {posted_at && <span className="posted">{posted_at}</span>}
         </figcaption>
       )}

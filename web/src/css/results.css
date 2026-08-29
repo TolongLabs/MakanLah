@@ -188,6 +188,23 @@
   white-space: nowrap;
 }
 
+/* A chip for a post nobody can open. It keeps the chip's shape, because the row is
+   still a real citation and still names who wrote it -- what it loses is the enamel,
+   which on this page means "there is evidence here you can go and read". Muted to the
+   ground rather than marked in cinnabar: the post being gone is a fact about the
+   record, not a warning about the venue, and --seal is reserved for attestation. */
+.chip-gone {
+  color: var(--ink-faint);
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+}
+
+.testimony-gone {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
 .chip:hover {
   text-decoration: underline;
 }
