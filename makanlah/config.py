@@ -100,8 +100,8 @@ def settings() -> Settings:
         ),
         rerank_api_key=e('HERMES_API_KEY') or e('DASHSCOPE_API_KEY') or e('OPENROUTER_API_KEY'),
         rerank_model=e('RERANK_MODEL')
-        or ('qwen3.8-flash' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
-        # qwen3.x thinks by default, and thinking costs 9x here: qwen3.8-flash ran
+        or ('qwen3.7-flash-2026-07-15' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
+        # qwen3.x thinks by default, and thinking costs 9x here: the flash lane ran
         # 4.06/15.48/20.75s with it on and 1.04/2.02/2.26s with it off, same prompts.
         # A user is waiting on this lane, so it is off unless explicitly re-enabled.
         rerank_thinking=e('RERANK_THINKING', '').lower() in ('1', 'true', 'yes'),
@@ -126,7 +126,7 @@ def settings() -> Settings:
         ),
         copilot_api_key=e('HERMES_API_KEY') or e('DASHSCOPE_API_KEY') or e('OPENROUTER_API_KEY'),
         copilot_model=e('COPILOT_MODEL')
-        or ('qwen3.8-flash' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
+        or ('qwen3.7-flash-2026-07-15' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
         copilot_thinking=e('COPILOT_THINKING', '').lower() in ('1', 'true', 'yes'),
         nominatim_base_url=e('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         nominatim_user_agent=e('NOMINATIM_USER_AGENT', 'MakanLah/0.1'),

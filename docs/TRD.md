@@ -212,11 +212,11 @@ a keyword query well while telling a reader nothing, and ranking was quietly lea
 
 Split along the same seam as the runtimes, for the same reason.
 
-| Job         | Where                                       | Why                                                                                                                                                                                                                                                 |
-| ----------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Extract** | **DashScope `qwen-plus-2025-07-28`**        | Batch, high volume, latency-tolerant. Qwen is strong on Chinese, and the corpus is RedNote. **ModelScope was the pre-spike assumption and no key for it exists**; the owner holds an International/Singapore DashScope key, which is also nearer KL |
-| **Embed**   | **DashScope `text-embedding-v3`**, 1024-dim | Decided by measurement, not argument. Free under the same key. See below                                                                                                                                                                            |
-| **Re-rank** | **DashScope `qwen3.8-flash`**, thinking off | A user is waiting, and this lane is ~96% of request latency                                                                                                                                                                                         |
+| Job         | Where                                                  | Why                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Extract** | **DashScope `qwen-plus-2025-07-28`**                   | Batch, high volume, latency-tolerant. Qwen is strong on Chinese, and the corpus is RedNote. **ModelScope was the pre-spike assumption and no key for it exists**; the owner holds an International/Singapore DashScope key, which is also nearer KL |
+| **Embed**   | **DashScope `text-embedding-v3`**, 1024-dim            | Decided by measurement, not argument. Free under the same key. See below                                                                                                                                                                            |
+| **Re-rank** | **DashScope `qwen3.7-flash-2026-07-15`**, thinking off | A user is waiting, and this lane is ~94% of request latency. Dated, and the only flash lane carrying free quota: the rolling `qwen3.8-flash` reads `Not Supported`, so every call was billed (#34)                                                  |
 
 ### Every Lane Is Pinned To A Dated Snapshot
 
@@ -243,13 +243,18 @@ billing silently.
 
 Measured 2026-08-29 by recording `usage` from the DashScope response, not estimated:
 
-| Lane                     | Per `/recommend`              |
-| ------------------------ | ----------------------------- |
-| `text-embedding-v3`      | 2–6 input tokens. Immaterial  |
-| `qwen3.8-flash`, re-rank | **~2,150 input, ~200 output** |
+| Lane                                | Per `/recommend`              |
+| ----------------------------------- | ----------------------------- |
+| `text-embedding-v3`                 | 2–6 input tokens. Immaterial  |
+| `qwen3.7-flash-2026-07-15`, re-rank | **~2,150 input, ~200 output** |
 
-At Singapore list price — **$0.15/M input, $0.47/M output** for `qwen3.8-flash`, **$0.40/M and $1.20/M** for `qwen-plus`
-— that is **$0.00042 per `/recommend`**.
+At Singapore list price — **$0.030/M input, $0.130/M output** for `qwen3.7-flash-2026-07-15` in the 0–32K tier, where
+every prompt here sits — that is
+**$0.00009 per `/recommend`**, about **RM 0.0004**. `qwen-plus` for extraction is
+$0.40/M and $1.20/M.
+
+**The previous lane, `qwen3.8-flash`, was $0.15/M and $0.47/M: 4.6× this, and with no free quota behind it.** Re-pinning
+was worth more than any optimisation in this document.
 
 | Workload                           | Cost        |
 | ---------------------------------- | ----------- |
@@ -282,9 +287,19 @@ and an endpoint map is free reconnaissance.
 `allow_credentials` is off and no site can ride a signed-in session. Pinning `CORS_ORIGINS` to the Pages domain raises
 the bar for a browser-based abuser and does nothing to `curl`, which is why the budget above is the real control.
 
-### The Latency Budget, And Why It Is Still Missed
+### The Latency Budget, Now Met
 
-`PRD.md` asks for **p95 < 3s**. The measured p95 is **4.66s**. That is a stated trade, not an oversight.
+`PRD.md` asks for **p95 < 3s**. The measured p95 is **2.89s**, on `qwen3.7-flash-2026-07-15`. It was missed for the life
+of the project and the history below is kept because the reasoning still applies to the next lane change.
+
+**It was not fixed by optimising anything.** Re-pinning the re-rank lane off the rolling `qwen3.8-flash` — which turned
+out to carry no free quota at all ([#34](https://github.com/TolongLabs/MakanLah/issues/34)) — took p95 from **4.36s to
+2.89s** and mean p@5 from 0.982 to 0.992 at the same time. The lane was the budget.
+
+---
+
+**The history, which is why the target was missed for so long.** The measured p95 was **4.66s**, and that was a stated
+trade rather than an oversight.
 
 **Re-rank is 93.9% of p95** — every other stage is rounding error:
 
@@ -306,9 +321,10 @@ ranking section already described; the timeout now agrees with it instead of bei
 
 Bounding cost nothing measurable: **p@5 0.976 → 0.984, top1 51/51, p95 5.30s → 4.66s, max 7.16s → 4.74s.**
 
-**Closing the last 1.66s means a ~2.5s budget, which would drop re-ranking on a large share of requests.** For a product
-whose promise is a trustworthy pick, shipping worse rankings to hit a latency number is the wrong trade. Revisit when a
-faster lane exists, or when the target is reconsidered against measured quality. One environment variable either way.
+**Closing the last 1.66s meant a ~2.5s budget, which would have dropped re-ranking on a large share of requests.** For a
+product whose promise is a trustworthy pick, shipping worse rankings to hit a latency number was the wrong trade — so
+the note here said to revisit when a faster lane existed. That is exactly what happened, and the lesson generalises:
+**when a stage is 93.9% of p95, the lane is the budget and tuning around it is wasted effort.**
 
 ### The Embedding Decision
 
