@@ -24,6 +24,74 @@ console before repinning.
 
 ---
 
+## 2026-08-29 — The Citation Trail Now Survives Being Checked
+
+**#83 is closed on production, measured rather than inferred.** Same `肉骨茶` query, before and after loading liveness:
+**6 of 8 cards led with a dead citation; now 0 of 6.** The set shrank because `宝香绑线肉骨茶` dropped out — its only
+citation was dead, so it was a ranked entry nobody could check.
+
+### The Prober That Did Not Work, And Why That Was Worth Finding
+
+A plain-HTTP prober was written, tested, and **measured against five independently classified posts: 0 of 5 agreement,
+everything `unknown`.** RedNote renders notes client-side; the served HTML is 460KB with no note content and no
+missing-post text, and the first 4KB of `__INITIAL_STATE__` is **byte-identical** between a dead post and a live one.
+
+It failed to `unknown`, never to `dead`, which is the only reason this was cheap. The measurement now comes from the UAT
+session's Playwright harness, which already resolves every `post_url` as a byproduct — a better answer than a second
+browser stack, and it came from the frontend session rather than from me.
+
+**`ingest/load_liveness.py` writes only `live` and `dead`.** 39 rows in: 20 dead, 17 live, **2 `unknown` skipped**. That
+rule earned itself immediately: `69904021` is 兴记肉骨茶's only surviving citation, was `unknown` because a security
+challenge blocked confirmation, and loading it as dead would have stripped a real venue of its last evidence.
+
+### Two Numbers That Should Frame Any Launch Decision
+
+**54% of probed posts are dead** (20 of 37 classified), far worse than the 21% a smaller round-1 sample suggested. But
+across 57 cards, **zero leave a user with nothing to check** — the dead posts cluster on a few venues and almost every
+affected venue carries an unaffected Google Maps citation. The failure mode was "the link I clicked was dead", not "this
+recommendation is unfalsifiable". The second number is the one that matters; the first says re-capture is more urgent
+than it looked.
+
+### The Session's One Recurring Failure, Now Five Instances
+
+**A check that ran, reported success, and was measuring nothing.** Mascot asserted a live WebGL context — a blank canvas
+has one. Theme asserted tokens exist — they existed, resolving to the wrong values. The ledger asserted a counter
+increments — it did, in a container nobody would see again. `add_corroboration` passed ten unit tests and raised
+`KeyError` on the first real response, because the fixtures agreed with the function rather than with the data. And a
+numeric subtitle check for "dark pixels, near the bottom, centred" passed happily on type twice the size it should be.
+
+**In every case the fix to the check was to assert a difference rather than a presence** — pixels against zero, light
+against dark, before against after a cold start, live corpus against fixture, rendered frame against measurement.
+
+### Two Findings That Were Wrong, Corrected By The People Who Made Them
+
+The UAT session reported "Ask About This returns nothing". **I attributed it to a crashed renderer under memory pressure
+and told the owner so. That was wrong.** They ruled it out with a crash listener that never fired and twelve polls
+returning fresh DOM, and found their own bug: reading the panel by slicing _forward_ from `"Asking about"` when the
+answer renders _above_ the form. I reached for the environmental explanation because one was available.
+
+They also corrected "the corpus usually has live evidence, the card picks the dead one" — they had not probed the
+alternatives, only read them off the payload. 阿喜 has **no** live RedNote citation at all, only Maps. That is a
+materially different product from one where selection can always find something.
+
+### Also Landed
+
+**#87** — `corroboration: {posts, authors, platforms}` and `shared_with`. On live data it cuts both ways: `兴记肉骨茶`
+has four authors on one platform and was being **refused**; `中南肉骨茶` has two posts by **one** author across two
+platforms and was being **stamped**. **#59** — three of six Han-folded groups collapse, three are genuinely different
+(`华阳` two `place_id`s **11,970m** apart; Oriental Kopi is a chain, so the comment in `text.py` calling them one
+kopitiam was wrong and is corrected). **The video pipeline** — Kokoro `jf_nezumi`, chosen by measuring pitch **and**
+intelligibility, where the highest-pitched voice was the least intelligible at 50% WER.
+
+### Open
+
+**#15** (1,008 truncated Google Maps posts) needs the signed-in browser. **#81** (a 500 loses its CORS headers, so the
+browser reports a fault that does not exist). **#86** (no halal signal — a coverage decision, not a defect). A recurring
+browser-driven probe over the ~1,468 unprobed posts. And the launch video, deliberately unrecorded: the UI is settled
+but the recording waits on the UAT re-probe clearing its cooldown.
+
+---
+
 ## 2026-08-29 (UAT Round One) — The Same Failure, Now Four Times
 
 **Prod is at `4d1ef4f`.** PRs #74, #77, #89 merged. Peer 3 ran UAT as three personas; eight frontend findings fixed, one
