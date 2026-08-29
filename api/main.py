@@ -78,14 +78,14 @@ def recommend(req: RecommendRequest, request: Request):
     _rate_limit('recommend', request)
     # Two calls: one embedding, one re-rank. Charged before the work, so a
     # request that fails halfway still counts what it spent.
-    if _spend_left() < 2:
+    if not _affordable(request, 2):
         return {
             'results': [],
             'degraded': True,
             'degraded_reasons': ['daily model budget reached'],
             'sources_used': [],
         }
-    _charge(2)
+    _charge(request, 2)
     try:
         out = rank.recommend(req.query, lat=req.lat, lng=req.lng, radius_m=req.radius_m, limit=req.limit)
     except CORPUS_UNREACHABLE as e:
@@ -118,33 +118,77 @@ RATE_LIMIT = {
 }
 _attempts: dict[tuple[str, str], list[float]] = {}
 
-# The ceiling that actually bounds the bill.
+# The ceiling that actually bounds the bill, stated in the currency the owner
+# thinks in rather than in calls.
 #
 # Per-IP limits do not bound spend: they bound one host. A hundred hosts at
-# nineteen requests a minute each are all individually polite. This counts every
-# model call the process makes, against a budget stated in calls per day, and
-# stops serving when it is gone.
+# nineteen requests a minute each are all individually polite and collectively
+# expensive. This meters money.
 #
-# Deliberately a hard stop rather than a throttle. Degrading is what this product
-# already does when the corpus is unreachable, and the client already renders it
-# honestly. An unexpected invoice has no such affordance.
-DAILY_CALL_BUDGET = int(os.environ.get('DAILY_CALL_BUDGET', '2000'))
-_spend: dict[str, int] = {'day': -1, 'calls': 0}
+# MYR_PER_CALL is measured, not guessed: one /recommend is ~2,150 input and ~200
+# output tokens on the re-rank lane, and at the Singapore list price of $0.15/M
+# and $0.47/M that is USD 0.00042, or about RM 0.0019 at 4.4. Re-measure when a
+# lane is re-pinned -- docs/TRD.md carries the method.
+DAILY_BUDGET_MYR = float(os.environ.get('DAILY_BUDGET_MYR', '10'))
+MYR_PER_CALL = float(os.environ.get('MYR_PER_CALL', '0.0019'))
+
+# No single visitor may take more than this share of the day. The point is not to
+# be fair, it is that one troll with a loop should cost the other visitors
+# nothing: they burn their slice, get 429 for the rest of the day, and everybody
+# else still gets answers. Without it a budget is just a bigger bucket to drain.
+IP_DAILY_SHARE = float(os.environ.get('IP_DAILY_SHARE', '0.1'))
+
+_spend: dict[str, float] = {'day': -1.0, 'myr': 0.0}
+_ip_spend: dict[str, float] = {}
 
 
 def _budget_day() -> int:
     return int(time.time() // 86400)
 
 
-def _spend_left() -> int:
+def _roll_day() -> None:
     if _spend['day'] != _budget_day():
-        _spend['day'], _spend['calls'] = _budget_day(), 0
-    return DAILY_CALL_BUDGET - _spend['calls']
+        _spend['day'], _spend['myr'] = float(_budget_day()), 0.0
+        _ip_spend.clear()
 
 
-def _charge(calls: int = 1) -> None:
-    _spend_left()
-    _spend['calls'] += calls
+def _spend_left() -> float:
+    """Ringgit left in the day."""
+    _roll_day()
+    return DAILY_BUDGET_MYR - _spend['myr']
+
+
+def _ip_left(ip: str) -> float:
+    """Ringgit left for one visitor today."""
+    _roll_day()
+    return (DAILY_BUDGET_MYR * IP_DAILY_SHARE) - _ip_spend.get(ip, 0.0)
+
+
+def _affordable(request: Request, calls: int) -> bool:
+    cost = calls * MYR_PER_CALL
+    return _spend_left() >= cost and _ip_left(_client_ip(request)) >= cost
+
+
+def _charge(request: Request, calls: int = 1) -> None:
+    _roll_day()
+    cost = calls * MYR_PER_CALL
+    _spend['myr'] += cost
+    ip = _client_ip(request)
+    _ip_spend[ip] = _ip_spend.get(ip, 0.0) + cost
+
+
+def _client_ip(request: Request) -> str:
+    """Behind Cloudflare the socket peer is Cloudflare, so the real visitor is in
+    CF-Connecting-IP. Trusted only because nothing but our own edge terminates
+    TLS in front of this; a direct deployment must not trust it."""
+    if TRUST_PROXY_HEADER:
+        fwd = request.headers.get('cf-connecting-ip') or request.headers.get('x-forwarded-for')
+        if fwd:
+            return fwd.split(',')[0].strip()
+    return request.client.host if request.client else 'unknown'
+
+
+TRUST_PROXY_HEADER = os.environ.get('TRUST_PROXY_HEADER', '').lower() in ('1', 'true', 'yes')
 
 
 def _rate_limit(bucket: str, request: Request) -> None:
@@ -156,7 +200,7 @@ def _rate_limit(bucket: str, request: Request) -> None:
     """
     limit, window = RATE_LIMIT[bucket]
     now = time.time()
-    key = (bucket, request.client.host if request.client else 'unknown')
+    key = (bucket, _client_ip(request))
     hits = [t for t in _attempts.get(key, []) if now - t < window]
     if len(hits) >= limit:
         raise HTTPException(status_code=429, detail='Too many attempts, try again shortly.')
@@ -293,9 +337,9 @@ def ask(req: AskRequest, request: Request):
     /recommend, this is not gated by auth.
     """
     _rate_limit('ask', request)
-    if _spend_left() < 1:
+    if not _affordable(request, 1):
         return {'covered': False, 'answer': 'The assistant is resting for today.', 'citations': []}
-    _charge(1)
+    _charge(request, 1)
     try:
         out = copilot.ask(req.venue_id, req.question)
     except CORPUS_UNREACHABLE as e:
