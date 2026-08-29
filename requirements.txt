@@ -1,0 +1,12 @@
+# Runtime dependencies for the deployed API. Render installs from this rather
+# than from pyproject.toml, which declares no build backend and is a uv manifest
+# rather than an installable package -- `pip install .` fails against it.
+#
+# tests/test_deploy_manifest.py asserts this file and pyproject.toml agree, so
+# the two cannot drift apart silently. Dev-only deps stay out: the deployed API
+# must not ship a test client.
+websockets>=13
+psycopg[binary]>=3.2
+fastapi>=0.115
+uvicorn>=0.32
+opencc-python-reimplemented>=0.1.7
