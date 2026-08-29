@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Result } from '../api'
-import { basisLine, evidenceOf, leadPair } from '../evidence'
+import { basisLine, citationHref, independentlyBacked, leadPair, sharedPostCount } from '../evidence'
 import { dishLine, distance } from '../format'
 import { Chop } from './Chop'
 import { Testimony } from './Testimony'
@@ -36,10 +36,14 @@ export function ResultRow({
   // not a result. It should never arrive, and if it does it does not render.
   if (!pair.length) return null
 
-  // Two independent platforms saying the same thing is the strongest claim this
-  // product can make, and until now it was only implied by the layout. A chop is
-  // what "attested" looks like, so the row gets stamped.
-  const attested = evidenceOf(result) === 'corroborated'
+  // Two independent voices saying the same thing is the strongest claim this
+  // product can make, so the stamp is gated on it actually being true -- two
+  // distinct posts by two distinct authors, not two platforms carrying one post.
+  // #87: one listicle backed three of the top five and all three were stamped.
+  const attested = independentlyBacked(result)
+  // How many other picks on this same page lean on the same post. Non-zero means
+  // the list is narrower than its length suggests, and the reader should see that.
+  const shared = Math.max(0, ...pair.map(sharedPostCount))
   const dist = distance(result.distance_m)
   const dishes = dishLine(venue.dishes)
   const basis = showBasis ? basisLine(result.match?.basis) : null
@@ -67,11 +71,28 @@ export function ResultRow({
           {dist && <span>{dist}</span>}
           {dishes && <span lang="und">{dishes}</span>}
         </p>
+        {/* Two venues in the corpus read as the same name and are genuinely
+            different restaurants, so two rows is right and silence is not. #58
+            leaves `disambiguator` null when the corpus cannot tell them apart, and
+            null is the honest answer: name the ambiguity rather than invent a label
+            to fill the slot. */}
+        {venue.ambiguous_with_sibling && (
+          <p className="ambiguous">
+            {venue.disambiguator
+              ? `Another place shares this name. This is the one ${venue.disambiguator}.`
+              : 'Another place in the corpus has the same name. The posts cannot tell them apart, so both are listed.'}
+          </p>
+        )}
         {why && <p className="why">{why}</p>}
         {basis && <p className="basis">{basis}</p>}
+        {shared > 0 && (
+          <p className="basis shared-source">
+            {`One of these posts also backs ${shared === 1 ? 'another pick' : `${shared} other picks`} in this list.`}
+          </p>
+        )}
         <div className={pair.length > 1 ? 'evidence evidence-pair' : 'evidence'}>
           {pair.map((c) => (
-            <Testimony key={`${c.platform}:${c.post_url}`} citation={c} />
+            <Testimony key={`${c.platform}:${c.post_url}`} citation={c} href={citationHref(c, venue)} />
           ))}
         </div>
         <p className="result-actions">

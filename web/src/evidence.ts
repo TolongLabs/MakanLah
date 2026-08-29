@@ -116,3 +116,46 @@ export function readingFor(mood: MascotMood): { read: string; note: string } {
       return { read: 'Listening', note: 'Answer the four questions and this fills in.' }
   }
 }
+
+/**
+ * Where a citation's link should actually go.
+ *
+ * A Google Maps "post" is a review, and reviews have no individual URL, so the
+ * corpus stores a **name search** -- `maps/search/?api=1&query=<name> Kuala
+ * Lumpur`. For a name like `ALVA` or `一见钟情` that can land on the wrong place
+ * entirely, and it did on 23 of 23 venues in UAT.
+ *
+ * The venue's own `maps_url` is built server-side and carries `query_place_id`
+ * when the corpus has one, which is exact. Same destination, no guessing. The
+ * fallback stays the citation's own URL, because a venue without a place_id has
+ * nothing better and a RedNote post URL is already exact.
+ */
+export function citationHref(citation: Citation, venue?: { maps_url?: string; place_id?: string | null }): string {
+  if (citation.platform === 'google_maps' && venue?.maps_url?.includes('query_place_id=')) return venue.maps_url
+  return citation.post_url
+}
+
+/**
+ * May this venue be called corroborated?
+ *
+ * Two excerpts from two platforms USED to be enough, and it was wrong in a way UAT
+ * caught: one listicle backed three of the top five picks and every card claimed
+ * "Corroborated by two independent sources". True per card by the old rule, false
+ * as English. Two mentions from one author on one post are one voice however many
+ * platforms carry it.
+ *
+ * Until the API sends `corroboration`, this falls back to the layout rule -- but it
+ * requires two DISTINCT post URLs, which is the part the old check never made.
+ */
+export function independentlyBacked(result: Result): boolean {
+  const c = result.venue.corroboration
+  if (c) return c.authors >= 2 && c.posts >= 2
+  const posts = new Set(result.citations.map((x) => x.post_url))
+  const platforms = new Set(result.citations.map((x) => x.platform))
+  return posts.size >= 2 && platforms.size >= 2
+}
+
+/** Venues in this same response that lean on the same post as this citation. */
+export function sharedPostCount(citation: Citation): number {
+  return citation.shared_with?.length ?? 0
+}

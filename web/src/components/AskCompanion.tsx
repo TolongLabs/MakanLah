@@ -6,7 +6,9 @@ import type { Live2DStage } from '../live2d/Live2DStage'
 
 const MascotStage = lazy(() => import('../live2d/MascotStage'))
 
-const STAGE_AT = '(min-width: 64rem)'
+/* Must match the tablet rule in results.css. Changing one and not the other is how
+   the stage got CSS room on a tablet while React still refused to mount it. */
+const STAGE_AT = '(min-width: 48rem)'
 
 export type AskTarget = { id: string; name: string } | null
 
@@ -148,7 +150,16 @@ export function AskCompanion({
       )}
 
       <div className="ask-bubble" aria-live="polite">
-        {answer ? (
+        {/* WAITING AND FINISHED-WITH-NOTHING ARE DIFFERENT CLAIMS and used to look
+            identical: the only in-flight signal was the submit button's label, so a
+            hung renderer and an ignored click were indistinguishable from outside.
+            That cost a UAT round -- a crashed tab was reported as "the UI drops the
+            answer on the floor", and it took two clean reproductions to rule out.
+            She now says she is reading, and says it in the bubble where the answer
+            will appear. */}
+        {busy ? (
+          <p className="ask-read ask-waiting">Reading her posts…</p>
+        ) : answer ? (
           <>
             <p className="ask-answer">{answer.answer}</p>
             {answer.covered ? (

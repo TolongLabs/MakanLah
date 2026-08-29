@@ -446,3 +446,35 @@
     transition: opacity var(--dur-fast) var(--ease);
   }
 }
+
+/* The signed-in bar wraps rather than overflows.
+   "Guest, Shared" plus "Sign Out" measured 367px against a 286px logged-out bar,
+   which put the document at 425px on a 390px viewport -- and a mobile browser
+   answers that by shrinking the layout viewport, so EVERY page rendered at ~92%
+   and panned 35px sideways into empty space. On every screen after sign-up, which
+   is the launch path.
+
+   Wrapping rather than truncating, because the alternative was ellipsing the
+   disclosure itself: "Guest, Sh..." is not a disclosure. The bar grows one row on
+   a phone while signed in, and nothing is lost. */
+@media (max-width: 30rem) {
+  .nav-inner {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
+    padding-block: var(--s2);
+    row-gap: var(--s2);
+  }
+
+  .nav-links {
+    gap: var(--s2);
+  }
+
+  .nav-cta {
+    padding-inline: var(--s3);
+  }
+
+  .theme-seg {
+    padding-inline: var(--s2);
+  }
+}

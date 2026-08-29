@@ -1,5 +1,9 @@
 export type Citation = {
   post_url: string
+  /** Other venues in the SAME response backed by this same post (#87). A listicle
+      backing ranks 1, 2 and 3 is one voice, and the reader cannot see that without
+      being told. Optional: the API does not send it yet. */
+  shared_with?: string[]
   excerpt: string | null
   platform: string
   author_handle: string | null
@@ -24,6 +28,20 @@ export type Venue = {
   lng: number | null
   maps_url: string
   dishes: string[]
+  /** A short qualifier that tells this venue apart from a same-named sibling, or
+      null when the corpus genuinely cannot tell them apart. **Null is a real
+      answer here, not a missing one** (#58): the UI must never invent a label to
+      fill it, because the whole point is admitting the ambiguity. */
+  disambiguator?: string | null
+  /** Distinct counts behind this venue, added for #87. "Two independent sources"
+      is only true when `authors >= 2` AND `posts >= 2`: two mentions from one
+      author on one post are one voice however many platforms carry it. Optional
+      because the API does not send it yet -- absent means "cannot claim it". */
+  corroboration?: { posts: number; authors: number; platforms: number }
+  /** True when another venue in the corpus reads as the same name. Two rows is the
+      correct rendering -- they are different restaurants -- but the reader has to
+      be told, or it looks like a duplicate. */
+  ambiguous_with_sibling?: boolean
 }
 
 export type Result = {

@@ -52,8 +52,21 @@ export function Discover() {
   const [data, setData] = useState<RecommendResponse | null>(null)
   const [failed, setFailed] = useState(false)
   const [asked, setAsked] = useState('')
+  // The radius the last search ACTUALLY used, which is not the same as the one
+  // selected: run() drops it when geolocation never resolved. Telling somebody
+  // "nothing within 3 km of you" when the search was KL-wide is the same class of
+  // lie as blaming the corpus for a radius.
+  const [askedRadius, setAskedRadius] = useState(0)
   const [chips, setChips] = useState<Chip[]>([])
   const [target, setTarget] = useState<AskTarget>(null)
+  // The onboarding craving used to ride along on every later search forever, so the
+  // page claimed two different things at once: "Filtered by your answers: nasi lemak
+  // bumbung supper" above "5 picks for something not too heavy". Droppable now, and
+  // dropping it only clears the craving -- the rest of the answers still filter.
+  const [useCraving, setUseCraving] = useState(true)
+
+  const useCravingRef = useRef(useCraving)
+  useCravingRef.current = useCraving
 
   const run = useCallback(
     async (q: string, radiusM: number) => {
@@ -65,10 +78,12 @@ export function Discover() {
       setTarget(null)
       try {
         const useRadius = radiusM > 0 && geo
+        setAskedRadius(useRadius ? radiusM : 0)
+        const applied = prefs && !useCravingRef.current ? { ...prefs, craving: [] } : prefs
         const res = await recommend({
           query: term,
           limit: 10,
-          ...(prefs ? { prefs } : {}),
+          ...(applied ? { prefs: applied } : {}),
           ...(useRadius ? { lat: geo.lat, lng: geo.lng, radius_m: radiusM } : {})
         })
         setData(res)
@@ -127,6 +142,10 @@ export function Discover() {
   const commonLine = listBasisLine(common)
   const best = results[0]
   const summary = summarise(prefs)
+  const hasCraving = (prefs.craving?.length ?? 0) > 0
+  // Once the craving is dropped it stops being advertised as well as stops being
+  // sent. Claiming a filter that is no longer applied is the same bug in reverse.
+  const shown = useCraving ? summary : summary.filter((r) => r.term !== 'Craving')
 
   return (
     <div className="page discover">
@@ -183,7 +202,25 @@ export function Discover() {
           </fieldset>
           {summary.length > 0 && (
             <p className="find-prefs">
-              Filtered by your answers: {summary.map((s) => s.value).join(', ')}.{' '}
+              Filtered by your answers: {shown.map((r) => r.value).join(', ')}.{' '}
+              {hasCraving && useCraving && (
+                <button
+                  type="button"
+                  className="link link-button"
+                  onClick={() => {
+                    // The ref is written HERE and not left to the next render:
+                    // run() reads it synchronously and React has not re-rendered
+                    // yet, so setUseCraving alone updated the label while the
+                    // request still carried the craving. The claim and the
+                    // request have to agree.
+                    useCravingRef.current = false
+                    setUseCraving(false)
+                    if (asked) void run(asked, radius)
+                  }}
+                >
+                  Drop The Craving
+                </button>
+              )}{' '}
               <Link className="link" to="/taste">
                 Change
               </Link>
@@ -194,18 +231,17 @@ export function Discover() {
 
       <div className="discover-body">
         <main className="discover-results">
+          {/* At most one caveat, and only about what actually happened. Three stacked
+              explanations -- two of them false -- read as an app apologising for
+              itself, and the reader cannot tell which one is the real reason. */}
           {geoRefused && (
             <p className="notice-plain">
               We could not get your location, so this searches all of KL. Distances are hidden.
             </p>
           )}
-          {data?.degraded && (
-            <p className="notice">
-              {data.degraded_reasons?.length
-                ? `Showing what we have: ${data.degraded_reasons.join(', ')}.`
-                : 'A source was unreachable at the last refresh, so this may be incomplete.'}
-            </p>
-          )}
+          {data?.degraded && data.degraded_reasons?.length ? (
+            <p className="notice">{`Showing what we have: ${data.degraded_reasons.join(', ')}.`}</p>
+          ) : null}
           {failed && (
             <p className="notice">
               We could not reach the corpus at <code>{apiBase()}</code>. Point this page at a running one by adding{' '}
@@ -238,23 +274,42 @@ export function Discover() {
             </>
           )}
 
+          {/* ONE explanation, and the true one.
+              This said "nothing in the corpus matches X yet" for a query the corpus
+              is full of -- the real cause was a 3km radius, and tapping Search All
+              Of KL right after returned ten picks. It also told people to try the
+              suggestions above when there were none on screen. Both were the page
+              guessing at a reason instead of naming the one it knows. */}
           {!loading && data && results.length === 0 && !failed && (
             <div className="empty empty-centred">
-              <p>Nothing in the corpus matches “{asked}” yet.</p>
-              <p>Try one of the suggestions above, or describe the dish rather than the place.</p>
-              {radius > 0 && (
-                <p>
-                  <button
-                    type="button"
-                    className="btn btn-quiet"
-                    onClick={() => {
-                      setRadius(0)
-                      void run(asked, 0)
-                    }}
-                  >
-                    Search All Of KL
-                  </button>
-                </p>
+              {askedRadius > 0 ? (
+                <>
+                  <p>
+                    Nothing for “{asked}” within {(askedRadius / 1000).toFixed(askedRadius < 1000 ? 1 : 0)} km of you.
+                  </p>
+                  <p>There may be more further out.</p>
+                  <p>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setRadius(0)
+                        void run(asked, 0)
+                      }}
+                    >
+                      Search All Of KL
+                    </button>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>Nobody has written about “{asked}” yet, anywhere in the corpus.</p>
+                  <p>
+                    {chips.length > 0
+                      ? 'One of the suggestions above will have posts behind it.'
+                      : 'Try describing the dish rather than the place.'}
+                  </p>
+                </>
               )}
             </div>
           )}
