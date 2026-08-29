@@ -371,6 +371,8 @@ POST /auth/guest  {}                   → { token, user }        user.is_guest,
 POST /auth/logout                      → { ok }
 GET  /auth/me                          → { user, prefs }        401 without a live token
 PUT  /auth/prefs  { prefs }            → { prefs }
+
+POST /companion { step, picked[] }     → { text, source: 'model'|'script', reason? }
 ```
 
 **Auth never gates `/recommend`.** The product promises a decision in under two minutes, and a login wall in front of
@@ -382,7 +384,7 @@ with no `Authorization` header and with a junk one.
 | **Passwords**       | `hashlib.scrypt`, N=2^15 r=8 p=1, per-row salt. Parameters live **inside** each hash so they can be raised                               |
 | **Tokens**          | 32 random bytes, opaque, returned once. Only a SHA-256 fingerprint is stored, so a dump yields no sessions                               |
 | **Account probing** | An unknown address and a wrong password return the **same** 401, and the unknown path still runs a hash so timing does not separate them |
-| **Rate limits**     | Per IP, in process: login 10/5min, guest 20/5min, signup 5/hour                                                                          |
+| **Rate limits**     | Per IP, in process: login 10/5min, guest 20/5min, signup 5/hour, companion 12/min                                                        |
 | **Guest expiry**    | 12 hours, against 30 days for a real account — the guest credential is effectively public                                                |
 
 **`scrypt` rather than argon2id or bcrypt**: both need a C extension in the API image, and the standard library's scrypt
@@ -437,8 +439,25 @@ Like `/recommend`, `/ask` is **not gated by auth**. Its lane is configured separ
 getting an ordering wrong.
 
 **The guest account is shared.** `/auth/guest` returns a session on a single row that every caller shares, so `user`
-carries `is_guest` and `shared: true` and the client must disclose that activity is visible to other guests **before**
-the sign-in, not after.
+carries `is_guest` and `shared: true`, and the client must surface that. **The disclosure is now in-session rather than
+pre-click**: the auth screens carry the button alone, and the nav renders `Guest, Shared` for as long as the session
+lasts. That is the owner's call, taken on 2026-08-29, and it is a real narrowing — somebody can now sign in as guest
+without having been told the account is shared. It is disclosed continuously afterwards instead, which is where a person
+is actually at risk of forgetting. `web/src/__tests__/auth.test.tsx` asserts both halves.
+
+**`/companion` is the one lane deliberately kept away from the citation trail.** It writes a single cheerful sentence
+for a wizard step. It is safe to generate precisely because it is useless as evidence: it sees no corpus row, names no
+venue, returns no `citations` key and cannot, and `makanlah/companion.py` drops any line that names a place, recommends,
+rates, quotes a price or carries a URL. When a line is dropped, or the key is unset, or the free quota is spent, a
+scripted line is returned with 200 and `source: 'script'` — a wizard whose companion goes silent reads as broken, a
+slightly repetitive one does not. **The scripted lines are duplicated in `web/src/companion/lines.ts`** so the client
+speaks before the server answers; `web/src/__tests__/companion.test.ts` reads the Python file and fails if the two
+diverge.
+
+Its quota is counted in **requests, not ringgit**, because it runs on a free tier rather than a paid one. Counting it in
+MYR would report a bill that does not exist and, worse, would let the paid budget's headroom authorise a call the free
+tier has already refused. `COMPANION_DAILY` and `COMPANION_PER_MIN` sit under the tier's 500/day and 15/min: crossing a
+free tier starts charging rather than failing.
 
 `citations` is **never empty**. An entry that cannot be cited is dropped before the response is built, not returned with
 a caveat.
