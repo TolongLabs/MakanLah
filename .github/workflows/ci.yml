@@ -123,7 +123,9 @@ jobs:
         run: |
           CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser)
           [ -n "$CHROME" ] || { echo "::error::no Chrome on the runner, so the layout was never checked"; exit 1; }
-          CHROME="$CHROME" uv run --no-project python scripts/layout_check.py
+          # --with rather than the project: the script needs websockets and stdlib,
+          # and resolving the whole project would drag in psycopg and fastapi for nothing.
+          CHROME="$CHROME" uv run --no-project --with websockets python scripts/layout_check.py
 
   # Publishing the client. Gated on `check`, so nothing ships that CI has not passed.
   #
