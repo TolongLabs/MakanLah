@@ -8,6 +8,10 @@ export type Citation = {
   platform: string
   author_handle: string | null
   posted_at: string | null
+  /** Whether the post still resolves (#83). `true` = measured dead, `null` or
+      absent = never checked, which is NOT the same thing and is treated as live.
+      The API sends it; a card that ignores it links the reader to a wall. */
+  dead?: boolean | null
 }
 
 /** docs/TRD.md "API Contract". `basis` lets the UI say why an entry is present

@@ -12,6 +12,7 @@ import {
   sharedBasis,
   sharedPostCount
 } from '../evidence'
+import bkt from './fixtures/bkt-citations.json'
 
 function c(over: Partial<Citation> = {}): Citation {
   return {
@@ -70,6 +71,48 @@ describe('leadPair', () => {
   it('returns the corroborating platform second', () => {
     const pair = leadPair([c(), c({ platform: 'google_maps', post_url: 'https://maps/1', excerpt: 'Good' })])
     expect(pair.map((p) => p.platform)).toEqual(['rednote', 'google_maps'])
+  })
+
+  // Measured on prod: 阿喜 and 三美肉骨茶 both lead with a live Google Maps citation
+  // and carry nothing but DEAD RedNote ones. The server's prefer_live puts the live
+  // citation first, so the LEAD was right on 5 of 5 -- and the second chip, chosen
+  // only for being a different platform, linked to a post that no longer exists on
+  // 3 of 5 cards.
+  it('does not corroborate with a post that no longer exists', () => {
+    const pair = leadPair([
+      c({ platform: 'google_maps', post_url: 'https://maps/1', excerpt: 'Good' }),
+      c({ post_url: 'https://rednote/dead', excerpt: '好吃', dead: true })
+    ])
+    expect(pair).toHaveLength(1)
+    expect(pair[0]?.platform).toBe('google_maps')
+  })
+
+  it('reaches past a dead post to a live one on the same platform', () => {
+    const pair = leadPair([
+      c({ platform: 'google_maps', post_url: 'https://maps/1', excerpt: 'Good' }),
+      c({ post_url: 'https://rednote/dead', excerpt: '好吃', dead: true }),
+      c({ post_url: 'https://rednote/live', excerpt: '也好吃' })
+    ])
+    expect(pair.map((x) => x.post_url)).toEqual(['https://maps/1', 'https://rednote/live'])
+  })
+
+  it('treats an unchecked post as live rather than as dead', () => {
+    // `dead: null` is "nobody has probed this yet". Collapsing unknown into dead
+    // would delete real evidence from the product -- the 兴记肉骨茶 citation was
+    // exactly that case and re-probing resolved it live.
+    const pair = leadPair([
+      c({ platform: 'google_maps', post_url: 'https://maps/1', excerpt: 'Good' }),
+      c({ post_url: 'https://rednote/unknown', excerpt: '好吃', dead: null })
+    ])
+    expect(pair).toHaveLength(2)
+  })
+
+  it('still shows a dead lead when it is the only thing there is', () => {
+    // with_live_citations drops an entry whose every citation is dead, so this
+    // should not arrive. If it does, one dead citation beats rendering nothing at
+    // all: the invariant is that a card always shows where it came from.
+    const pair = leadPair([c({ post_url: 'https://rednote/dead', excerpt: '好吃', dead: true })])
+    expect(pair).toHaveLength(1)
   })
 })
 
@@ -240,5 +283,43 @@ describe('where a citation links', () => {
   it('never rewrites a RedNote post URL', () => {
     const exact = 'https://www.google.com/maps/search/?api=1&query=X&query_place_id=0x31cc'
     expect(citationHref(only('rednote'), { maps_url: exact })).toBe('https://post')
+  })
+})
+
+/**
+ * The real shape, from `POST /recommend {"query": "肉骨茶"}` against prod: five
+ * venues, sixteen citations, seven of them measured dead. Post URLs are replaced
+ * with synthetic ones and excerpts with a placeholder, because scraped content does
+ * not go in the repository -- what is preserved is the structure under test, which
+ * is the platform of each citation, its order, and its `dead` value.
+ *
+ * This is here because the unit tests above are cases I chose. Three of these five
+ * cards rendered a dead chip on production while every one of those unit tests
+ * would have passed, since the shape that breaks it -- a live lead on one platform
+ * and nothing but dead citations on the other -- is one I did not think to write
+ * until it was measured in the wild.
+ */
+describe('leadPair against the shape prod actually returns', () => {
+  const rows = bkt as { rank: number; citations: Citation[] }[]
+
+  it('has dead citations in the fixture at all', () => {
+    // Without this the suite below passes trivially on a fixture somebody cleaned.
+    expect(rows.flatMap((r) => r.citations).filter((c) => c.dead === true).length).toBe(7)
+  })
+
+  it('never hands the reader a post that no longer exists', () => {
+    for (const row of rows) {
+      for (const cite of leadPair(row.citations)) {
+        expect(cite.dead, `rank ${row.rank} -> ${cite.post_url}`).not.toBe(true)
+      }
+    }
+  })
+
+  it('still cites every card', () => {
+    // Dropping a dead chip must never drop the last chip. A card with no citation
+    // is not a result, and this is the invariant the fix could have broken.
+    for (const row of rows) {
+      expect(leadPair(row.citations).length, `rank ${row.rank}`).toBeGreaterThan(0)
+    }
   })
 })
