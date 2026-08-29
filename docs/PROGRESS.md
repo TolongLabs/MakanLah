@@ -24,6 +24,67 @@ console before repinning.
 
 ---
 
+## 2026-08-29 (Round Three) — One Failure Pattern, Found Three Times In One Afternoon
+
+**PR #71 merged** (mascot framing). **PR for the six-item batch open on `feat/round-three`.** Three peers now: Peer 1
+backend/devops, this session frontend, Peer 3 UAT. Contract in issue #72. **Unattended mode is ON** — self-merge on
+green CI is armed.
+
+### The Pattern, Written Once Instead Of Three Times
+
+Three separate bugs this session, all the same shape: **the check ran, reported success, and was measuring nothing.**
+
+| Bug                            | What the check asserted        | Why it passed anyway                                |
+| ------------------------------ | ------------------------------ | --------------------------------------------------- |
+| **Mascot rendered nothing**    | A live WebGL context, not lost | A blank canvas has one                              |
+| **Entire dark theme was dead** | The tokens exist               | They existed, resolving to the light values         |
+| **Spend ledger** (Peer 1's)    | The counter increments         | It did — in a container nobody would ever see again |
+
+**In all three the fix to the CHECK was to assert a DIFFERENCE rather than a PRESENCE.** Pixels against zero. Light
+against dark. Before against after a cold start. A presence assertion agrees with itself; a difference assertion has to
+be shown two states and cannot.
+
+The mascot one is worth the detail: the model canvas is **4648×8000 units and the character's ink starts 34.3% down
+it**. `scale: 0.3, anchorY: 0.08` framed units 536–2536, which is empty air above her head. Every asset returned 200,
+`onReady` fired, the context was live, and **0% of the canvas had ink in it**. Measured by fitting the whole model into
+a probe canvas and reading back alpha. Now 56.5%, asserted as a floor in CI.
+
+The dark theme one shipped in this session and was caught within the hour: my own edit nested `:root` inside `:root`,
+which is a descendant selector that never matches.
+
+### Two More Found By Looking, Not By Testing
+
+**Every landing section below the hero shipped blank.** The reveal CSS carried a comment reading "visible by default,
+and that is the whole rule" directly above `opacity: 0.001` on the un-revealed state. The comment was right and the code
+did the opposite. There is no hidden resting state now — the animation plays from an offset and stops mattering if the
+observer never fires.
+
+**Two horizontal overflows on a phone**, both from layout defaults rather than from anything written: the closed nav
+drawer extended the document 74px past a 390px viewport (a `position: fixed` ancestor does not clip its children), and
+the discover grid sized to `max-content` so a four-option distance control widened the whole page.
+
+### What Shipped
+
+Landing rewritten as marketing with a new Codex hero and live counters; `/discover` rebuilt around an empty full-width
+search with corpus-derived chips; LiveroiD given a real job on both screens; auth stripped of chrome; footer
+right-aligned; browser chrome replaced and theme-aware; a three-state theme switch.
+
+**`GET /suggestions` lets a model choose but never write** — it returns indices into a corpus list, so it cannot name a
+dish nobody wrote about. It shares the companion's free-tier request counter rather than the ringgit budget, because MYR
+headroom would authorise a call the free tier has already refused.
+
+**Verified against the live corpus**, not asserted: asked 阿喜 "is there usually a queue?" and got _"One reviewer noted
+a 'big line' at 11:30am, while another reported no queue at 10am"_ with both Google Maps citations attached.
+
+### State
+
+99 web tests, 358 Python tests, four browser guards green (mascot pixels, chrome in both themes, motion in both engines,
+layout 5/5). Overflow 0 at 360/390/834 on every route.
+
+**A worktree collision nearly cost this batch.** The main checkout was on Peer 1's branch with all 29 of my files
+uncommitted on it. Backed up, verified byte-for-byte, moved to `feat/round-three`, re-verified. **Commit early when
+sharing a checkout.**
+
 ## 2026-08-29 (Later) — The Companion Speaks, And The Guard Nearly Stopped Guarding
 
 **PR #70, four commits, on `feat/landing-solarsim`.** The five refinements from the owner's local-dev eyeball.
