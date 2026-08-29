@@ -13,7 +13,7 @@ import math
 
 from makanlah import config, db, models
 from makanlah.dishes import canonical, canonical_for_query
-from makanlah.text import normalize
+from makanlah.text import fold_variants, normalize
 
 
 def _distance_m(lat1, lng1, lat2, lng2):
@@ -24,6 +24,52 @@ def _distance_m(lat1, lng1, lat2, lng2):
     dp, dl = math.radians(lat2 - lat1), math.radians(lng2 - lng1)
     a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
     return round(r * 2 * math.asin(math.sqrt(a)))
+
+
+def _format_distance(d):
+    if d < 1000:
+        return f'{d} m away'
+    return f'{d / 1000:.1f} km away'
+
+
+def disambiguate(entries):
+    """Label or flag results whose names collide under fold_variants.
+
+    A label is only ever taken from data the corpus holds: area, or a formatted
+    distance when area is missing. If no usable differentiator exists, the pair
+    is flagged as ambiguous rather than invented.
+    """
+    groups = {}
+    for e in entries:
+        key = fold_variants(e['venue']['name'])
+        groups.setdefault(key, []).append(e)
+
+    for group in groups.values():
+        if len(group) < 2:
+            for e in group:
+                e['venue']['disambiguator'] = None
+            continue
+
+        candidates = []
+        for e in group:
+            area = e['venue'].get('area')
+            if area:
+                candidates.append(area)
+            elif e.get('distance_m') is not None:
+                candidates.append(_format_distance(e['distance_m']))
+            else:
+                candidates.append(None)
+
+        if None in candidates or len(set(candidates)) != len(candidates):
+            for e in group:
+                e['venue']['disambiguator'] = None
+                e['venue']['ambiguous_with_sibling'] = True
+        else:
+            for e, label in zip(group, candidates, strict=True):
+                e['venue']['disambiguator'] = label
+                e['venue']['ambiguous_with_sibling'] = False
+
+    return entries
 
 
 def dedupe(candidates):
@@ -155,6 +201,8 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                 'citations': v['citations'],
             }
         )
+
+    results = disambiguate(results)
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
     return {'results': results, 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': sources}

@@ -8,6 +8,8 @@ session and the scrapers.
 import re
 import unicodedata
 
+from opencc import OpenCC
+
 CJK = re.compile(r'[一-鿿]')
 MS = re.compile(r'\b(nasi|makan|sedap|kedai|restoran|jalan|murah|enak|ayam|ikan|daun)\b', re.I)
 EN = re.compile(r'\b(the|and|food|restaurant|best|good|really|place|try|with)\b', re.I)
@@ -87,3 +89,24 @@ def normalize(name):
     s = CJK_GENERIC.sub(' ', s)
     s = re.sub(r'[^\w一-鿿]+', ' ', s)
     return ' '.join(s.split())
+
+
+_T2S = OpenCC('t2s')
+
+
+def fold_variants(name):
+    """A join key that ignores simplified/traditional CJK variants.
+
+    The same shop may be written 興记 or 兴记; a row may also carry an English
+    gloss after the Chinese name. When CJK is present, the Latin text is the
+    gloss and is dropped so the variants still collide. Latin-only names pass
+    through unchanged.
+    """
+    s = normalize(name)
+    if not s:
+        return ''
+    s = _T2S.convert(s)
+    if CJK.search(s):
+        s = re.sub(r'[^一-鿿]+', ' ', s)
+        s = ' '.join(s.split())
+    return s
