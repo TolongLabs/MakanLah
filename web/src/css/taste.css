@@ -294,7 +294,6 @@
 .mascot-reading {
   position: absolute;
   inset: auto 0 0;
-  text-align: center;
 }
 
 .mascot:not(.mascot-live) .mascot-fallback {

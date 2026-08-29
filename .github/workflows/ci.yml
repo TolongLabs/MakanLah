@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: read
+  deployments: write
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -78,3 +80,113 @@ jobs:
             echo "::error::.env is tracked. Only .env.example belongs in git."
             exit 1
           fi
+
+  # Publishing the client. Gated on `check`, so nothing ships that CI has not passed.
+  #
+  # It SKIPS rather than fails when the Cloudflare credentials are absent, because a
+  # deploy job that reddens CI over a secret nobody has set yet would train everyone to
+  # ignore a red check, and docs/AUTONOMY.md makes CI the only reviewer there is.
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: creds
+        name: Are the Cloudflare credentials present
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is unset, so the client was built but not published. See issue #36."
+          fi
+
+      - if: steps.creds.outputs.ready == 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # The client defaults to http://127.0.0.1:8000, which an https page cannot call.
+      # Until the API is deployed (#6) this is empty on purpose and the app shows its
+      # honest "we could not reach the corpus" state rather than hanging.
+      - if: steps.creds.outputs.ready == 'true'
+        name: Build
+        working-directory: web
+        env:
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      # The Live2D model is 4.2 MB of licensed art, gitignored, and present only on the
+      # machine that has it. The app degrades to a text panel without it, so a deploy
+      # without the binaries is a supported state and must not be a silent one.
+      - if: steps.creds.outputs.ready == 'true'
+        name: Note what is not being shipped
+        run: |
+          if [ ! -f web/dist/models/liveroid/LiveroiD_A-Y01/LiveroiD_A-Y01.model3.json ]; then
+            echo "::notice::No Live2D model in the build. The mascot ships as its text panel, which is the designed fallback."
+          fi
+
+      - if: steps.creds.outputs.ready == 'true'
+        id: publish
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy web/dist --project-name=${{ vars.CF_PAGES_PROJECT || 'makanlah' }} --branch=${{ github.head_ref
+            || github.ref_name }}
+
+      # A 200 proves nothing here. public/_redirects sends every unknown path to
+      # index.html, so a missing asset answers 200 with the HTML shell: that is exactly
+      # how the hosted build stayed silently stale for a day. Assert the content type
+      # and a plausible size instead.
+      - if: steps.creds.outputs.ready == 'true'
+        name: Assert the deploy actually serves the build
+        env:
+          URL: ${{ steps.publish.outputs.deployment-url }}
+        run: |
+          set -euo pipefail
+          [ -n "$URL" ] || { echo "::error::wrangler returned no deployment URL"; exit 1; }
+          fail=0
+          probe() {
+            local path="$1" want="$2"
+            local type size
+            type=$(curl -sSL -o /dev/null -w '%{content_type}' "$URL$path")
+            size=$(curl -sSL -o /dev/null -w '%{size_download}' "$URL$path")
+            if [[ "$type" != *"$want"* ]]; then
+              echo "::error::$path served '$type' (wanted $want), $size bytes. The SPA fallback is answering, so the asset is missing."
+              fail=1
+            else
+              echo "ok $path  $type  $size bytes"
+            fi
+          }
+          probe /icon-192.png image/png
+          probe /og.png image/png
+          probe /manifest.webmanifest json
+          exit $fail
+
+      - if: steps.creds.outputs.ready == 'true' && github.event_name == 'pull_request'
+        name: Leave the preview URL on the PR
+        uses: actions/github-script@v7
+        env:
+          URL: ${{ steps.publish.outputs.deployment-url }}
+        with:
+          script: |
+            const url = process.env.URL
+            const marker = '<!-- preview-deploy -->'
+            const body = `${marker}\nPreview: ${url}\n\nA visual change is reviewed here, not from a screenshot. The container-query bug in #20 survived four green CI runs and a dozen screenshots.`
+            const {owner, repo} = context.repo
+            const issue_number = context.issue.number
+            const existing = (await github.rest.issues.listComments({owner, repo, issue_number}))
+              .data.find(c => c.body.includes(marker))
+            if (existing) await github.rest.issues.updateComment({owner, repo, comment_id: existing.id, body})
+            else await github.rest.issues.createComment({owner, repo, issue_number, body})
