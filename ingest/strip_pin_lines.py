@@ -24,48 +24,13 @@ re-extraction from the raw cache, and are left untouched rather than blanked.
 """
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from makanlah import db  # noqa: E402
-
-# A line that locates rather than argues: a pin, a listicle number heading its
-# own line, or a street/postcode line.
-PIN_LINE = re.compile(r'^\s*(📍|\d+\s*[.、]\s*\S|No\.?\s*\d)|^\s*\S.*\b\d{5}\b')
-
-# What must survive for the strip to be worth doing. Below this there is no
-# testimony left, and leaving a bad excerpt beats blanking it.
-#
-# Weighted, not counted. A CJK character carries roughly a word, so 30 of them is
-# a paragraph while 30 Latin characters is half a sentence -- a plain len() sets
-# a bar Chinese testimony clears trivially and English testimony cannot, which is
-# the silent language bias AGENTS.md warns about. Counting CJK double puts the
-# two scripts on comparable footing.
-MIN_REMAINDER = 30
-CJK = re.compile(r'[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]')
-
-
-def _weight(text):
-    return len(text) + sum(1 for ch in text if CJK.match(ch))
-
-
-def strip_pins(excerpt):
-    """The excerpt with leading locating lines removed, or None to leave it alone."""
-    if not excerpt:
-        return None
-    lines = excerpt.split('\n')
-    i = 0
-    while i < len(lines) and (not lines[i].strip() or PIN_LINE.match(lines[i])):
-        i += 1
-    if i == 0:
-        return None
-    rest = '\n'.join(lines[i:]).strip()
-    if _weight(rest) < MIN_REMAINDER:
-        return None
-    return rest
+from makanlah.excerpts import MIN_REMAINDER, strip_pins, weight  # noqa: E402, F401
 
 
 def main():

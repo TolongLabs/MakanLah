@@ -63,6 +63,48 @@ class TestExcerptIsVerbatim:
             assert out is None or out in POST
 
 
+class TestRepairPrefersTestimony:
+    """The repair used to anchor on the venue name, and on a RedNote listicle the
+    line carrying the name is the pin line. So the guard against a fabricated
+    quote was reintroducing address-as-testimony (#25). It now anchors on the
+    model's own words first, and refuses to return chrome at all."""
+
+    def test_a_rewrapped_excerpt_is_recovered_rather_than_replaced(self):
+        # The model joined two real lines with a space. Nothing was invented, so
+        # the repair should hand back the real span, not a window at the name.
+        rewrapped = '1️⃣兴记肉骨茶 Hing Kee Bakuteh 👉汤头浓郁，本地人回头率高'
+        out, origin = repair_excerpt(rewrapped, '兴记肉骨茶', [], POST)
+        assert origin == 'repaired'
+        assert out in POST
+        assert '汤头浓郁' in out, 'the opinion is the part worth keeping'
+
+    def test_a_window_of_only_chrome_is_dropped_not_returned(self):
+        post = '📍Deeriang Restaurant\n48-G, Jalan Sultan, 50000 Kuala Lumpur\n#KLFood #CariMakan'
+        out, origin = repair_excerpt('invented entirely', 'Deeriang Restaurant', [], post)
+        assert out is None
+        assert origin == 'dropped', 'an address is not testimony, and neither are hashtags'
+
+    def test_opening_hours_are_chrome_too(self):
+        post = 'Lucky Coffee Bar\n⏰ 12pm-5am\n#KLcafe #kualalumpur'
+        out, origin = repair_excerpt('invented', 'Lucky Coffee Bar', [], post)
+        assert out is None
+        assert origin == 'dropped'
+
+    def test_testimony_under_a_pin_line_survives(self):
+        post = '📍Shin Yangpyung\n猪骨汤味道很正宗，肉炖到超嫩！其他菜也基本没踩雷～'
+        out, origin = repair_excerpt('invented', 'Shin Yangpyung', [], post)
+        assert origin == 'repaired'
+        assert out in post
+        assert not out.startswith('📍'), 'the pin line is dropped, the verdict is kept'
+
+    def test_a_terse_chinese_verdict_is_not_mistaken_for_chrome(self):
+        # Six characters is a whole verdict in Chinese. A length rule tuned on
+        # English would discard this, which is the bias AGENTS.md warns about.
+        out, origin = repair_excerpt('invented', 'Village Park', [], POST)
+        assert origin == 'repaired'
+        assert '椰浆饭天花板' in out
+
+
 class TestVenueNormalization:
     """Ambiguity creates a new venue; merging later is safe, a wrong merge is not.
     But the same venue written two ways must collapse to one row."""
