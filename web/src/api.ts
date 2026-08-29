@@ -147,3 +147,19 @@ export function venue(id: string, at?: { lat: number; lng: number }): Promise<Re
   const q = at ? `?lat=${encodeURIComponent(at.lat)}&lng=${encodeURIComponent(at.lng)}` : ''
   return apiFetch<Result>(`/venue/${encodeURIComponent(id)}${q}`)
 }
+
+/** One spoken line for the onboarding companion. `source` says whether a model or
+    the scripted fallback wrote it; the UI renders both the same way, and the field
+    exists so a dead lane is visible in a log rather than indistinguishable. */
+export type CompanionLine = { text: string; source: 'model' | 'script'; reason?: string }
+
+/**
+ * The companion's line for one wizard step.
+ *
+ * The only generated text in the product, and safe to be: it sees no corpus row,
+ * names no venue and carries no citation, which the API enforces rather than
+ * hopes for. `picked` is the labels the user just tapped and nothing else.
+ */
+export function companionLine(step: string, picked: string[]): Promise<CompanionLine> {
+  return apiFetch<CompanionLine>('/companion', { method: 'POST', body: JSON.stringify({ step, picked }) })
+}

@@ -7,7 +7,11 @@
 }
 
 .shell > main {
+  position: relative;
+  z-index: 1;
   flex: 1;
+  margin-bottom: calc(var(--s9) + var(--s7) + var(--s3));
+  background: var(--paper);
 }
 
 .nav {
@@ -101,17 +105,24 @@
 }
 
 .foot {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  height: calc(var(--s9) + var(--s7) + var(--s3));
   border-top: 1px solid var(--rule);
-  margin-top: var(--s9);
-  padding-block: var(--s8);
+  background: var(--paper);
 }
 
 .foot-inner {
   max-width: var(--page);
+  height: 100%;
   margin: 0 auto;
   padding-inline: var(--s4);
   display: grid;
   justify-items: center;
+  align-content: center;
   gap: var(--s3);
   text-align: center;
 }

@@ -343,3 +343,204 @@
     animation-delay: 0ms;
   }
 }
+
+/* ----------------------------------------------------- the full-height hero */
+
+/* SolarSim's hero: a photograph you stand on rather than a band you scroll past. The
+   image blurs as it leaves, which keeps the copy readable over a busy photo without
+   needing a scrim heavy enough to flatten it. */
+.hero-full {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  min-height: calc(100dvh - 72px);
+  overflow: hidden;
+}
+
+.hero-full-image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 40% 50%;
+  /* The inline filter is set from scroll; this is the resting value before hydration
+     and the value a no-JS render keeps. */
+  filter: blur(2px);
+  transform: scale(1.06);
+}
+
+.hero-full::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, rgb(12 14 11 / 84%) 0%, rgb(12 14 11 / 62%) 46%, rgb(12 14 11 / 30%) 100%);
+}
+
+.hero-full-inner {
+  max-width: var(--page);
+  width: 100%;
+  margin-inline: auto;
+  padding: var(--s8) var(--s4);
+}
+
+@media (min-width: 48rem) {
+  .hero-full-inner {
+    padding-inline: var(--s6);
+  }
+}
+
+/* The glass panel. Depth here is doing a job -- it separates the copy from a
+   photograph without hiding it -- which is the only condition under which this
+   treatment is worth having. */
+.hero-glass {
+  max-width: 44rem;
+  padding: var(--s6);
+  border-radius: var(--r-panel);
+  border: 1px solid rgb(255 255 255 / 14%);
+  background: rgb(18 20 14 / 46%);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--e3);
+  color: #f6f3ee;
+}
+
+@media (min-width: 48rem) {
+  .hero-glass {
+    padding: var(--s7);
+  }
+}
+
+.hero-glass .lede {
+  color: #ddd8cf;
+  margin-top: var(--s5);
+}
+
+.hero-mark {
+  display: inline-flex;
+  color: #f6f3ee;
+  margin-bottom: var(--s5);
+}
+
+/* Transparency is a preference too: some people disable it for legibility, not taste.
+   Fall back to a solid panel rather than leaving them squinting at a photograph. */
+@media (prefers-reduced-transparency: reduce) {
+  .hero-glass {
+    background: rgb(18 20 14 / 92%);
+    backdrop-filter: none;
+  }
+}
+
+/* ------------------------------------------------- the exhibit and the posts */
+
+/* The plate first, the remaining posts beside it. One column until the page cap,
+   because the plate is the thing that has a hard minimum: the pair inside it is a
+   container query against 34rem, and squeezing the plate into a half-width column on
+   a 1024px laptop drops it to one column with no other symptom. Full width below the
+   cap costs nothing and keeps the pair split at every width above the phone.
+
+   42rem, not 34rem, is the floor on the plate's own column. A container query counts
+   the CONTENT box, so the plate's 32px padding and 1px border come off the top before
+   the 34rem bar is measured: 38rem of column is 542px of content and quietly fails.
+   40rem clears it by 30px, which is inside one padding change of failing again, so
+   the floor is 42rem and clears by 62. scripts/layout_check.py measures this at five
+   widths and is the only thing that would notice. */
+.posts-split {
+  display: grid;
+  gap: var(--s6);
+  margin-top: var(--s6);
+}
+
+@media (min-width: 76rem) {
+  .posts-split {
+    grid-template-columns: minmax(42rem, 1.3fr) minmax(0, 1fr);
+    gap: var(--s7);
+    align-items: start;
+  }
+}
+
+/* --------------------------------------------------------------- post cards */
+
+/* One card per referenced post. The card is the unit because a post is a thing
+   somebody wrote, and four of them at equal weight says the corpus is made of writing
+   rather than of records. */
+.post-cards {
+  display: grid;
+  gap: var(--s5);
+  list-style: none;
+  padding: 0;
+}
+
+@media (min-width: 48rem) {
+  .post-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s6);
+  }
+}
+
+/* Beside the plate they stack: two cards in a narrow column read as a column, and
+   two cards side by side next to a tall plate read as a gap. */
+@media (min-width: 76rem) {
+  .post-cards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s5);
+  }
+}
+
+.post-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  min-width: 0;
+  padding: var(--s5);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  background: var(--paper-raised);
+  box-shadow: var(--e1);
+  transition:
+    box-shadow var(--dur-ui) var(--ease),
+    border-color var(--dur-ui) var(--ease);
+}
+
+.post-card:hover {
+  border-color: var(--rule-strong);
+  box-shadow: var(--e2);
+}
+
+.post-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-width: 0;
+}
+
+.post-card-date {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* The writer's words, in the serif that is reserved for them. */
+.post-card-quote {
+  font-family: var(--testimony);
+  font-size: var(--t-ms);
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0;
+  min-width: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.post-card-link {
+  margin-top: auto;
+  font-size: var(--t-sm);
+  color: var(--enamel);
+  text-decoration: none;
+  border-bottom: 1px solid currentcolor;
+  align-self: flex-start;
+  padding-bottom: 1px;
+}

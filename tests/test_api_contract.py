@@ -281,3 +281,57 @@ def _health_venue_sql():
     src = (Path(__file__).resolve().parents[1] / 'api' / 'main.py').read_text()
     body = src.split("out['venues'] =", 1)[1]
     return body.split('.fetchone()', 1)[0]
+
+
+class TestCompanionIsDecorationNotEvidence:
+    """The one lane allowed to be generated, held to the one rule that matters.
+
+    It exists because the wizard is nicer with a voice. It is safe because it
+    never sees a corpus row and never returns a citation, so nothing it says can
+    be mistaken for a result.
+    """
+
+    def test_returns_a_line_and_says_where_it_came_from(self, client, monkeypatch):
+        monkeypatch.setattr(api_main.companion, 'line', lambda step, picked: {'text': 'Hi!', 'source': 'model'})
+        r = client.post('/companion', json={'step': 'craving', 'picked': []})
+        assert r.status_code == 200
+        assert r.json() == {'text': 'Hi!', 'source': 'model'}
+
+    def test_never_carries_a_citation_or_a_venue(self, client, monkeypatch):
+        # A companion response that grew a citations key would put an uncited
+        # claim on the one surface nothing checks. It has no such key, by shape.
+        # The lane is stubbed so this asserts the endpoint's shape rather than a
+        # workstation's .env: with a real key present it would call Gemini.
+        monkeypatch.setattr(api_main.companion, 'line', lambda step, picked: {'text': 'Hi!', 'source': 'model'})
+        r = client.post('/companion', json={'step': 'craving', 'picked': []})
+        body = r.json()
+        assert set(body) <= {'text', 'source', 'reason'}
+        assert 'citations' not in body and 'venue' not in body
+
+    def test_speaks_anyway_when_the_free_quota_is_gone(self, client, monkeypatch):
+        # 200 with a scripted line, not 429. A wizard whose companion goes silent
+        # mid-flow reads as broken; a slightly repetitive one does not.
+        monkeypatch.setattr(api_main, '_companion_quota', lambda: False)
+        r = client.post('/companion', json={'step': 'mood', 'picked': []})
+        assert r.status_code == 200
+        assert r.json()['source'] == 'script'
+        assert r.json()['reason'] == 'quota'
+        assert r.json()['text']
+
+    def test_the_daily_cap_is_under_the_free_tier(self):
+        # GEMINI_MODEL_L2D's free tier is 500 requests a day and 15 a minute.
+        # Crossing a free tier starts charging rather than failing, and spending
+        # real money is a thing this project stops for.
+        assert api_main.COMPANION_DAILY < 500
+        assert api_main.COMPANION_PER_MIN < 15
+
+    def test_the_quota_counter_actually_stops(self, monkeypatch):
+        monkeypatch.setattr(api_main, 'COMPANION_DAILY', 3)
+        monkeypatch.setattr(api_main, 'COMPANION_PER_MIN', 99)
+        monkeypatch.setattr(api_main, '_companion', {'day': -1.0, 'used': 0.0})
+        monkeypatch.setattr(api_main, '_companion_minute', [])
+        assert [api_main._companion_quota() for _ in range(5)] == [True, True, True, False, False]
+
+    def test_a_long_pick_list_is_refused_at_the_boundary(self, client):
+        r = client.post('/companion', json={'step': 'craving', 'picked': [f'x{i}' for i in range(50)]})
+        assert r.status_code == 422

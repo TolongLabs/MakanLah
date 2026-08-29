@@ -41,11 +41,16 @@ BASE = os.environ.get('WEB_BASE', 'http://127.0.0.1:4188')
 BAR_REM = 34
 
 # (width, height, expected track count or None to report without asserting, note)
+# The plate moved out of the hero and into the posts section, which changed the
+# geometry these widths describe. The old 1024 case was a documented hole -- the hero
+# split there but the page had not reached its cap, so the pair stacked and the note
+# said "by design". The section is full width until 76rem, so that hole is gone and
+# 1024 is now an assertion rather than a report.
 CASES = [
     (390, 844, 1, 'phone: one column on purpose, 34rem cannot fit two'),
-    (834, 1112, 2, 'tablet: hero is one column so the specimen is full width'),
-    (1024, 900, None, 'the band between the hero split and the page cap; stacks by design'),
-    (1280, 900, 2, 'page cap reached, the pair splits'),
+    (834, 1112, 2, 'tablet: the section is one column so the plate is full width'),
+    (1024, 900, 2, 'laptop: still one column, still full width. This used to stack'),
+    (1280, 900, 2, 'page cap reached and the section splits; the plate holds 42rem'),
     (1440, 900, 2, 'nothing changes above the cap'),
 ]
 

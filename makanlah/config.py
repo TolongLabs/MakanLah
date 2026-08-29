@@ -53,6 +53,10 @@ class Settings:
     copilot_api_key: str | None
     copilot_model: str
     copilot_thinking: bool
+    companion_base_url: str
+    companion_api_key: str | None
+    companion_model: str
+    companion_timeout: float
     nominatim_base_url: str
     nominatim_user_agent: str
     cors_origins: tuple[str, ...]
@@ -134,6 +138,17 @@ def settings() -> Settings:
         copilot_model=e('COPILOT_MODEL')
         or ('qwen3.7-flash-2026-07-15' if e('DASHSCOPE_API_KEY') else 'qwen/qwen3-30b-a3b-instruct-2507'),
         copilot_thinking=e('COPILOT_THINKING', '').lower() in ('1', 'true', 'yes'),
+        # The companion is its own lane and shares nothing with the two above. It
+        # writes one cheerful sentence for the onboarding wizard, sees no corpus
+        # row and makes no claim, so it is pointed at whatever free quota is
+        # spare rather than at the lane a citation depends on. Gemini's
+        # OpenAI-compatible path, so models._post works unchanged.
+        companion_base_url=e('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta/openai'),
+        companion_api_key=e('GEMINI_API_KEY'),
+        companion_model=e('GEMINI_MODEL_L2D', 'gemini-3.5-flash-lite'),
+        # Somebody is mid-wizard and reading a question. Past this the scripted
+        # line is spoken instead, which is a fine outcome and not an error.
+        companion_timeout=float(e('COMPANION_TIMEOUT', '3.0')),
         nominatim_base_url=e('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
         nominatim_user_agent=e('NOMINATIM_USER_AGENT', 'MakanLah/0.1'),
         cors_origins=tuple(x for x in (e('CORS_ORIGINS', '') or '').split(',') if x),

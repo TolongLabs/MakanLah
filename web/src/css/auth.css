@@ -20,27 +20,16 @@
   color: var(--ink-soft);
 }
 
-/* The guest disclosure. It reads at body size in full-strength ink, above the button
-   and never below it, because docs/PRD.md and issue #8 make this a disclosure
-   requirement: a shared account has to be understood before the click, not after.
-   It is deliberately not fine print and deliberately not softened. */
-.guest {
-  margin-top: var(--s7);
-  padding-top: var(--s6);
-  border-top: 1px solid var(--rule);
-}
+/* The guest button. A second, quieter way in, sitting directly under the credential
+   fields. It carries .btn-quiet's own outline, so the only thing needed here is enough
+   space that it does not read as a second submit.
 
-.guest-disclosure {
-  border: 1px solid var(--rule-strong);
-  padding: var(--s4);
-  margin-block: var(--s3) var(--s4);
-  font-size: var(--t-ms);
-  line-height: 1.6;
-  color: var(--ink);
-}
-
-.guest-disclosure > p + p {
-  margin-top: var(--s3);
+   It used to carry a heading and three paragraphs of consent copy. That is gone at the
+   owner's instruction. The account is still genuinely shared, and the nav still reads
+   "Guest, Shared" for the whole session -- see .who in chrome.css -- so the product
+   still says it, just not before the click. */
+.guest-btn {
+  margin-top: var(--s5);
 }
 
 /* WCAG 2.2 exempts a link inside a sentence from the 24px minimum. 15px is still mean
@@ -78,9 +67,9 @@
   }
 
   /* Sticky, and capped to the viewport. The form column is the taller of the two --
-     the guest disclosure is deliberately long -- and a panel that grows with it puts
-     its own bottom-anchored copy hundreds of pixels below the fold, which is where
-     the headline ended up the first time. */
+     sign-up carries three fields, help text and two error slots -- and a panel that
+     grows with it puts its own bottom-anchored copy hundreds of pixels below the fold,
+     which is where the headline ended up the first time. */
   .auth-brand {
     position: sticky;
     top: 72px;

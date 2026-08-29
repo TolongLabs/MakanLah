@@ -13,34 +13,27 @@ const signIn = () =>
     </MemoryRouter>
   )
 
-describe('the guest disclosure', () => {
-  it('says all three things before the click', () => {
-    // Issue #8 and docs/TRD.md make this a disclosure requirement, not copy: the
-    // account is shared, other guests can see and change what you do, and continuing
-    // is consent.
+describe('the guest button', () => {
+  it('is the button and nothing else', () => {
+    // The heading and the consent paragraphs were removed at the owner's instruction.
+    // Asserted so a later change cannot quietly reinstate a block this screen is not
+    // supposed to have, and so the removal is a decision on the record rather than a
+    // diff nobody reads.
     signIn()
-    const text = document.querySelector('.guest-disclosure')?.textContent ?? ''
-    expect(text).toMatch(/one account that everybody shares/i)
-    expect(text).toMatch(/visible to every other guest/i)
-    expect(text).toMatch(/consent/i)
+    expect(document.querySelector('.guest-disclosure')).toBeNull()
+    expect(screen.queryByRole('heading', { name: /Sign In As Guest/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Continue As Guest/i })).toBeTruthy()
   })
 
-  it('is above the button, not after it', () => {
-    // "Before the click" is a DOM-order claim, so it gets asserted as one. A
-    // disclosure that renders below its own button has not disclosed anything.
+  it('sits under the credential fields, not above them', () => {
+    // "Under the Email/Password fields" is a DOM-order claim, so it is asserted as one.
     signIn()
-    const disclosure = document.querySelector('.guest-disclosure')
+    const form = document.querySelector('.auth-form')
     const button = screen.getByRole('button', { name: /Continue As Guest/i })
-    expect(disclosure).toBeTruthy()
-    // Node.DOCUMENT_POSITION_FOLLOWING: the button comes after the disclosure.
-    expect(disclosure?.compareDocumentPosition(button) ?? 0).toBe(4)
-  })
-
-  it('is not fine print', () => {
-    // It reads at body size in full strength ink. If a later change drops it into a
-    // .field-help or a footnote class, this fails.
-    signIn()
-    expect(document.querySelector('.guest-disclosure')?.className).not.toMatch(/field-help|foot|sr-only/)
+    expect(form).toBeTruthy()
+    expect(form?.contains(button)).toBe(false)
+    // Node.DOCUMENT_POSITION_FOLLOWING: the guest button comes after the whole form.
+    expect(form?.compareDocumentPosition(button) ?? 0).toBe(4)
   })
 
   it('offers guest without demanding an email first', () => {

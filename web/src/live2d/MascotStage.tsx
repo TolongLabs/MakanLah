@@ -10,16 +10,20 @@ import { EXPRESSION, MODEL } from './modelRegistry'
 export default function MascotStage({
   mood,
   onReady,
-  onFail
+  onFail,
+  onStage
 }: {
   mood: MascotMood
   onReady: () => void
   onFail: () => void
+  /** The controller, handed out so a host can drive the mouth from a rAF loop.
+      Going through props would re-render React at frame rate. */
+  onStage?: (stage: Live2DStage | null) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Live2DStage | null>(null)
-  const settled = useRef({ ready: onReady, fail: onFail })
-  settled.current = { ready: onReady, fail: onFail }
+  const settled = useRef({ ready: onReady, fail: onFail, stage: onStage })
+  settled.current = { ready: onReady, fail: onFail, stage: onStage }
 
   useEffect(() => {
     const container = containerRef.current
@@ -32,7 +36,9 @@ export default function MascotStage({
     stage
       .mount(container, MODEL)
       .then(() => {
-        if (!cancelled) settled.current.ready()
+        if (cancelled) return
+        settled.current.stage?.(stage)
+        settled.current.ready()
       })
       .catch(() => {
         // The model binaries are not in this repository, so this is the expected path
@@ -50,6 +56,7 @@ export default function MascotStage({
     return () => {
       cancelled = true
       observer.disconnect()
+      settled.current.stage?.(null)
       stage.destroy()
       stageRef.current = null
     }

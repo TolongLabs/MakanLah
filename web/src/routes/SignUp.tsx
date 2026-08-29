@@ -103,14 +103,14 @@ export function SignUp() {
           </button>
         </form>
 
+        <GuestBlock busy={busy === 'guest'} disabled={busy !== null} onClick={() => void guest()} />
+
         <p className="auth-alt">
           Already have one?{' '}
           <Link className="link" to="/sign-in">
             Sign In
           </Link>
         </p>
-
-        <GuestBlock busy={busy === 'guest'} disabled={busy !== null} onClick={() => void guest()} />
       </div>
     </AuthLayout>
   )

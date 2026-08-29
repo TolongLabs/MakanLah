@@ -1,79 +1,150 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { type Health, health } from '../api'
+import { type Citation, type Health, health } from '../api'
 import { Chop } from '../components/Chop'
 import { Testimony } from '../components/Testimony'
 import { leadPair } from '../evidence'
 import { dishLine } from '../format'
 import { MIXED_SCRIPT, SPECIMEN } from './landingSpecimen'
 
+/**
+ * The landing page, restructured on the pattern in the owner's SolarSim app: a
+ * full-height hero over a photograph that blurs as you leave it, then sectioned
+ * content beneath.
+ *
+ * TWO CALLS TO ACTION ON THE WHOLE PAGE, both reading "Get Started" and both going to
+ * sign-up: one in the top bar, one at the foot. The page previously had three, in two
+ * different wordings, pointing at a different destination. A landing page that asks
+ * three times is a landing page that is not confident the first ask worked.
+ *
+ * The hero deliberately carries no button. The bar is pinned above it and the closing
+ * band is one scroll away, so a third ask between them would only be noise.
+ */
 export function Landing() {
   return (
     <>
-      <div className="hero-band ground ground-fade">
-        <section className="page hero">
-          <div className="hero-copy rise-in">
-            <h1 className="display">Somebody Already Ate There</h1>
-            <p className="lede">Every pick comes with the post it came from, in the language it was written in.</p>
-            <div className="hero-actions">
-              <Link className="btn btn-primary" to="/taste">
-                Find Food
-              </Link>
-            </div>
-          </div>
-          <Specimen />
-        </section>
-      </div>
-
-      <MixedLanguage />
+      <Hero />
+      <FromRealPosts />
       <Corpus />
       <Commitments />
-
       <LastCall />
     </>
   )
 }
 
+/** Scroll distance, published on animation frames rather than on every scroll event. */
+function useScrollY(): number {
+  const [y, setY] = useState(0)
+  useEffect(() => {
+    let ticking = false
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        setY(window.scrollY)
+        ticking = false
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  return y
+}
+
 /**
- * The page's one photographic moment, and the only place it inverts. Deliberate rather
- * than decorative: the closing section was the emptiest on the page, and this is the
- * one section that makes no claim about a specific venue, so an atmospheric image
- * cannot be mistaken for evidence. It is lazy and below the fold, so it never competes
- * with first paint.
+ * Full-height, over a photograph, with the copy on a glass panel.
+ *
+ * The image blurs progressively as it scrolls away, which is SolarSim's move and the
+ * reason the text stays readable over a busy photo without a heavy scrim. It is a
+ * filter on a decorative image rather than movement, but it is still driven by scroll,
+ * so prefers-reduced-motion pins it at a constant blur instead.
  */
-function LastCall() {
+function Hero() {
+  const y = useScrollY()
+  const imageRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (!image) return
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    image.style.filter = still ? 'blur(6px)' : `blur(${Math.min(14, y / 40).toFixed(1)}px)`
+  }, [y])
+
   return (
-    <section className="last-call">
+    <section className="hero-full">
       <picture>
         <source media="(max-width: 40rem)" srcSet="/kopitiam-800.webp" />
         <img
-          className="last-call-image"
+          ref={imageRef}
+          className="hero-full-image"
           src="/kopitiam-1600.webp"
           alt=""
           width={1600}
           height={667}
-          loading="lazy"
+          fetchPriority="high"
           decoding="async"
         />
       </picture>
-      <div className="last-call-copy">
-        <div className="last-call-inner">
-          <h2 className="h-section">Start With A Craving</h2>
-          <p className="section-lede">Four questions, no account needed.</p>
-          <Link className="btn btn-invert" to="/taste">
-            Find Food
-          </Link>
+      <div className="hero-full-inner">
+        <div className="hero-glass rise-in">
+          <span className="hero-mark">
+            <Chop size={40} />
+          </span>
+          <h1 className="display">Somebody Already Ate There</h1>
+          <p className="lede">
+            Every pick comes with the post it came from, in the language it was written in. No blurbs, no invented
+            ratings.
+          </p>
         </div>
       </div>
     </section>
   )
 }
 
+/**
+ * The exhibit, and then the rest of the evidence.
+ *
+ * The plate carries the corroboration: one venue with two posts from two platforms
+ * side by side, which is the claim the product is actually making and the only way
+ * to make it visibly. The cards carry the posts that are not part of that pair, so
+ * nothing appears twice.
+ *
+ * THE PLATE IS ALSO WHAT `scripts/layout_check.py` MEASURES, and it is the only
+ * surface in the app that renders an `.evidence-pair` without an API behind it.
+ * Rebuilding this page around cards alone removed it, and the guard reported five
+ * "nothing was measured" failures rather than passing quietly -- which is the only
+ * reason this is written down here. If the plate leaves this page again, the guard
+ * needs a new host or it is guarding nothing.
+ */
+const PAIR = leadPair(SPECIMEN.citations)
+const PAIRED = new Set(PAIR.map((c) => c.post_url))
+const POST_CARDS: Citation[] = [...SPECIMEN.citations, MIXED_SCRIPT].filter(
+  (c): c is Citation => Boolean(c) && !PAIRED.has(c.post_url)
+)
+
+const PLATFORM_LABEL: Record<string, string> = { rednote: 'RedNote', google_maps: 'Google Maps' }
+
+function PostCard({ citation }: { citation: Citation }) {
+  const label = PLATFORM_LABEL[citation.platform] ?? citation.platform
+  return (
+    <li className="post-card">
+      <div className="post-card-head">
+        <span className="chip">{label}</span>
+        {citation.posted_at && <span className="post-card-date">{citation.posted_at}</span>}
+      </div>
+      <blockquote className="post-card-quote" lang="und">
+        {citation.excerpt}
+      </blockquote>
+      <a className="post-card-link" href={citation.post_url} target="_blank" rel="noreferrer noopener">
+        Read The Post
+      </a>
+    </li>
+  )
+}
+
 function Specimen() {
   const { venue, why } = SPECIMEN
-  const pair = leadPair(SPECIMEN.citations)
   const dishes = dishLine(venue.dishes)
-
   return (
     <figure className="specimen rise-in specimen-enter">
       <span className="stamp" title="Two independent sources">
@@ -92,7 +163,7 @@ function Specimen() {
         <p className="why">{why}</p>
       </div>
       <div className="evidence evidence-pair">
-        {pair.map((c) => (
+        {PAIR.map((c) => (
           <Testimony key={c.post_url} citation={c} />
         ))}
       </div>
@@ -100,19 +171,22 @@ function Specimen() {
   )
 }
 
-function MixedLanguage() {
+function FromRealPosts() {
+  const { venue } = SPECIMEN
   return (
-    <section className="page section section-split">
-      <div>
-        <h2 className="h-section">One Post, Three Languages</h2>
-        <p className="body-soft section-lede">
-          KL writes about food in Malay, Chinese and English at once, often inside a single line. A pipeline that reads
-          only one of them still returns results, which is the problem: it looks like it is working while it quietly
-          drops the best posts.
-        </p>
-      </div>
-      <div className="feature-quote">
-        <Testimony citation={MIXED_SCRIPT} large />
+    <section className="page section">
+      <h2 className="h-section">Straight From The Posts</h2>
+      <p className="body-soft section-lede">
+        Real captures, shown as written. Two independent posts put <strong lang="und">{venue.name}</strong> in front of
+        you; the rest are other places entirely. Two platforms, three languages, nobody translated.
+      </p>
+      <div className="posts-split">
+        <Specimen />
+        <ul className="post-cards">
+          {POST_CARDS.map((c) => (
+            <PostCard key={c.post_url} citation={c} />
+          ))}
+        </ul>
       </div>
     </section>
   )
@@ -200,6 +274,23 @@ function Commitments() {
           </li>
         ))}
       </ul>
+    </section>
+  )
+}
+
+/** The second and last call to action on the page. */
+function LastCall() {
+  return (
+    <section className="last-call">
+      <div className="last-call-copy">
+        <div className="last-call-inner">
+          <h2 className="h-section">Start With A Craving</h2>
+          <p className="section-lede">Four questions, and somebody has already eaten there.</p>
+          <Link className="btn btn-invert" to="/sign-up">
+            Get Started
+          </Link>
+        </div>
+      </div>
     </section>
   )
 }

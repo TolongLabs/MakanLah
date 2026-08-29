@@ -6,6 +6,10 @@ import { loadCubismCore } from './cubismCore'
 // is why the import below is dynamic and lives inside mount().
 ;(window as unknown as Record<string, unknown>).PIXI = PIXI
 
+type CoreModel = {
+  setParameterValueById(id: string, value: number): void
+}
+
 type Live2DModelLike = PIXI.DisplayObject & {
   scale: PIXI.ObservablePoint
   anchor: PIXI.ObservablePoint
@@ -13,7 +17,12 @@ type Live2DModelLike = PIXI.DisplayObject & {
   y: number
   expression(name: string): Promise<unknown>
   destroy(): void
+  internalModel?: { coreModel?: CoreModel }
 }
+
+/** Cubism 4's standard mouth-open parameter. Every model built on the standard
+    template carries it; a model that does not simply keeps its mouth shut. */
+const MOUTH = 'ParamMouthOpenY'
 
 export type MountOptions = {
   url: string
@@ -75,6 +84,27 @@ export class Live2DStage {
     this.baseScale = opts.scale
     this.anchorY = opts.anchorY
     this.frame(w, h)
+  }
+
+  /**
+   * Drive the mouth from outside, 0 shut to 1 open.
+   *
+   * Called from a rAF loop while the speech synthesiser is talking, which is why
+   * it takes a number rather than a phoneme: the Web Speech API exposes no
+   * amplitude and no visemes, only word-boundary events, so a real lip sync is
+   * not available to ask for. An oscillation timed to actual speech reads as
+   * talking; a still face beside a voice reads as broken.
+   *
+   * The parameter is written every frame because Cubism resets it on update.
+   */
+  setMouth(open: number): void {
+    const core = this.model?.internalModel?.coreModel
+    if (!core) return
+    try {
+      core.setParameterValueById(MOUTH, Math.min(1, Math.max(0, open)))
+    } catch {
+      // A model without the standard parameter. Silence is the correct outcome.
+    }
   }
 
   setExpression(name: string): void {

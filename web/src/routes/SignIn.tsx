@@ -70,43 +70,30 @@ export function SignIn() {
           </button>
         </form>
 
+        <GuestBlock busy={busy === 'guest'} disabled={busy !== null} onClick={() => void attempt('guest')} />
+
         <p className="auth-alt">
           No account yet?{' '}
           <Link className="link" to="/sign-up">
             Create One
           </Link>
         </p>
-
-        <GuestBlock busy={busy === 'guest'} disabled={busy !== null} onClick={() => void attempt('guest')} />
       </div>
     </AuthLayout>
   )
 }
 
-/**
- * Guest is one shared public account, so the disclosure has to be understood before
- * the click rather than discovered after it. It is set at body size in full-strength
- * ink, sits above the button, and is not softened: issue #8 and docs/TRD.md both make
- * this a disclosure requirement rather than copy.
- */
 export function GuestBlock({ busy, disabled, onClick }: { busy: boolean; disabled: boolean; onClick: () => void }) {
+  // Button only, directly under the credential fields. The heading and the three
+  // paragraphs of consent copy are gone at the owner's instruction.
+  //
+  // The account really is shared, so the disclosure has not vanished from the product:
+  // the nav renders "Guest, Shared" for the whole session, which is where somebody is
+  // actually at risk of forgetting. Worth knowing that this screen no longer says it
+  // before the click.
   return (
-    <section className="guest">
-      <h2 className="h-sub">Sign In As Guest</h2>
-      <div className="guest-disclosure">
-        <p>
-          Guest is <strong>one account that everybody shares</strong>. It exists so the app can be demonstrated without
-          anyone handing over an email.
-        </p>
-        <p>
-          Anything you do while signed in as Guest, including your taste answers, is visible to every other guest, and
-          any of them can change it. Do not put anything private in it.
-        </p>
-        <p>Continuing is your consent to that.</p>
-      </div>
-      <button type="button" className="btn btn-quiet btn-wide" onClick={onClick} disabled={disabled}>
-        {busy ? 'Signing In…' : 'Continue As Guest'}
-      </button>
-    </section>
+    <button type="button" className="btn btn-quiet btn-wide guest-btn" onClick={onClick} disabled={disabled}>
+      {busy ? 'Signing In…' : 'Continue As Guest'}
+    </button>
   )
 }

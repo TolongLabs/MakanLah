@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Prefs } from '../api'
-import { Mascot } from '../components/Mascot'
+import { STEP_KEYS } from '../companion/lines'
+import { Companion } from '../components/Companion'
 import { savePrefs } from '../prefs'
 import { BUDGET, type Choice, COMPANY, cravingOptions, MOOD, RANGE, STEPS } from '../taste/options'
 
@@ -30,12 +31,22 @@ export function Taste() {
 
   const [geo, setGeo] = useState<Geo>(null)
   const [geoRefused, setGeoRefused] = useState(false)
+  // Flipped once at the end so the companion says she is off to read the posts,
+  // during the moment between the last tap and the results route mounting.
+  const [finishing, setFinishing] = useState(false)
 
   // Generated once per visit, so the options cannot change under the user while they
   // are reading them.
   const cravings = useMemo(() => cravingOptions(), [])
+  // One draw per visit, so stepping Back to a question you already answered gets the
+  // same companion line rather than a differently-worded one. Three companions in one
+  // wizard is what varying it per step change reads as.
+  const voiceSeed = useMemo(() => Math.floor(Math.random() * 3), [])
 
   const typed = ownWords.trim()
+  // What the companion is allowed to know: the user's own tapped labels. Never a
+  // corpus row, never a venue, never a result.
+  const spoken = [...craving, ...(typed ? [typed] : [])]
   const done = [craving.length > 0 || typed.length > 0, company != null, range != null, mood != null]
   const canContinue = done[step] === true
   const isLast = step === STEPS.length - 1
@@ -62,6 +73,7 @@ export function Taste() {
   }
 
   function finish() {
+    setFinishing(true)
     const prefs: Prefs = {
       craving: [...craving, ...(typed ? [typed] : [])],
       ...(company ? { company } : {}),
@@ -172,7 +184,7 @@ export function Taste() {
       </div>
 
       <aside className="taste-rail">
-        <Mascot mood="curious" />
+        <Companion step={finishing ? 'done' : (STEP_KEYS[step] ?? 'craving')} picked={spoken} seed={voiceSeed} />
         <nav className="index-island" aria-label="Steps">
           <p className="rail-heading">Your Answers</p>
           <ul className="index-list">

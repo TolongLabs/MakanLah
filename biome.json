@@ -6,7 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/.agents", "!**/.claude", "!docs/source", "!**/dist", "!web/public/live2dcubismcore.min.js"]
+    "includes": [
+      "**",
+      "!**/.agents",
+      "!**/.claude",
+      "!docs/source",
+      "!**/dist",
+      "!web/public/live2dcubismcore.min.js",
+      "!web/public/models"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
