@@ -15,6 +15,7 @@ import urllib.error
 import urllib.request
 
 from makanlah import config
+from makanlah.excerpts import argues, strip_pins
 
 # DashScope rejects an embedding batch larger than 10 for text-embedding-v3 with
 # a bare HTTP 400 and no explanatory body. This is correctness, not throughput.
@@ -250,15 +251,57 @@ def repair_excerpt(excerpt, name, aliases, post_text, window=220):
 
     Measured in the spike: the extractor stitched non-contiguous lines into text
     that read correctly and was not in the post. Returns (excerpt, origin).
+
+    The repair is anchored on the model's own words before it is anchored on the
+    venue name, and that order is the whole point. A name-anchored window starts
+    at the line the name is on, and on a RedNote listicle that line is the pin:
+
+        model returned   食物都很有诚意 每一道都能吃出用心
+        old repair gave  📍Deeriang Restaurant / 48-G, Jalan Sultan, 50000 KL
+
+    So the guard against a fabricated quote was reintroducing exactly the
+    address-as-testimony problem it sits next to (#25). Usually the model has not
+    invented anything at all -- it has re-wrapped or joined real lines -- so the
+    longest run of its own text that IS in the post recovers what it meant.
     """
     if excerpt and excerpt in post_text:
         return excerpt, 'model'
-    for needle in [name, *(aliases or [])]:
-        if not needle:
-            continue
+
+    # 1. The model's own words, where they are genuinely in the post.
+    names = [n for n in [name, *(aliases or [])] if n]
+    found = _longest_present_run(excerpt, post_text)
+    if found and argues(found, names):
+        return found, 'repaired'
+
+    # 2. A window at the venue name, skipping the lines that only locate it.
+    for needle in names:
         i = post_text.find(needle)
         if i < 0:
             continue
         start = post_text.rfind('\n', 0, i) + 1
-        return post_text[start : start + window].strip(), 'repaired'
+        span = post_text[start : start + window].strip()
+        for candidate in (strip_pins(span), span):
+            if candidate and argues(candidate, names):
+                return candidate, 'repaired'
+    # Nothing here says anything. Dropping the mention is the correct outcome, not
+    # a failure: PRODUCT.md calls a ranked entry with no real post behind it a
+    # hallucination with a rating, and an excerpt that only locates the place is
+    # the same claim wearing a citation. Measured cost of holding this line: 152
+    # of 1705 mentions and 27 of 243 venues (#25).
     return None, 'dropped'
+
+
+def _longest_present_run(excerpt, post_text):
+    """The longest run of consecutive lines from `excerpt` that is verbatim in
+    `post_text`. Returns a real substring or None -- the trigger requires one."""
+    if not excerpt:
+        return None
+    lines = [ln for ln in excerpt.split('\n') if ln.strip()]
+    best = None
+    for start in range(len(lines)):
+        for end in range(len(lines), start, -1):
+            run = '\n'.join(lines[start:end])
+            if run in post_text and (best is None or len(run) > len(best)):
+                best = run
+                break
+    return best

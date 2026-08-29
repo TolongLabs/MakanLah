@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ingest'))
 
-from strip_pin_lines import MIN_REMAINDER, _weight, strip_pins  # noqa: E402
+from strip_pin_lines import MIN_REMAINDER, strip_pins, weight  # noqa: E402
 
 
 class TestStrips:
@@ -47,7 +47,7 @@ class TestLeavesAlone:
         assert strip_pins('Food came promptly. Very flavorful and tasty, we ordered the small claypot') is None
 
     def test_a_remainder_too_short_to_be_testimony_is_left_alone(self):
-        assert _weight('好吃') < MIN_REMAINDER
+        assert weight('好吃') < MIN_REMAINDER
         assert strip_pins('📍興记肉骨茶\n好吃') is None
 
     def test_empty_and_none_are_handled(self):
