@@ -26,9 +26,7 @@ def _settings(monkeypatch):
     monkeypatch.setattr(
         config,
         'settings',
-        lambda: real.__class__(**{**real.__dict__, 'embed_api_key': 'test-key'})
-        if hasattr(real, '__dict__')
-        else real,
+        lambda: real.__class__(**{**real.__dict__, 'embed_api_key': 'test-key'}) if hasattr(real, '__dict__') else real,
     )
     yield
 
@@ -59,7 +57,7 @@ class TestEmbedDeadline:
         monkeypatch.setattr(models, '_post', fake_post)
         models.embed([f'row {i}' for i in range(models.EMBED_BATCH * 3)])
         assert len(budget) >= 2, 'expected several batches'
-        assert all(b < a for a, b in zip(budget, budget[1:])), (
+        assert all(b < a for a, b in zip(budget, budget[1:], strict=False)), (
             f'each batch got a fresh timeout ({budget}); the deadline must shrink as it is spent, '
             'or three batches cost three times the bound'
         )
@@ -71,7 +69,7 @@ class TestEmbedDeadline:
 
         monkeypatch.setattr(models, '_post', slow_post)
         started = time.monotonic()
-        with pytest.raises(Exception):
+        with pytest.raises((RuntimeError, TimeoutError)):
             models.embed(['a'])
         elapsed = time.monotonic() - started
         assert elapsed < 20, f'embed took {elapsed:.1f}s to give up'
