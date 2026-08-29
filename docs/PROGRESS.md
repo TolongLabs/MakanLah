@@ -24,6 +24,58 @@ console before repinning.
 
 ---
 
+## 2026-08-29 — The API Is Live, And #6 Is Closed
+
+**`https://makanlah-api.vercel.app`**, Vercel Hobby, region `sin1`. The client on Pages calls it: a real browser at
+`makanlah-b5h.pages.dev` completes guest auth and `/recommend` and gets **3 results, the first with 3 citations across
+both `google_maps` and `rednote`** — a corroboration pair in production. `/recommend` for `肉骨茶` returns 7 cited
+results in **2.51s**. Before today the shipped bundle called `http://127.0.0.1:8000`, so the public site worked for
+nobody.
+
+### Render Was Not The Answer, And The Reason Matters
+
+Its 750 free instance-hours are **per workspace per calendar month**, not per service. `kawan-backend`,
+`cukaipandai-api` and `layak-backend` had already consumed them, so Render had suspended all three; `catatmd-api`
+survived only because it is on paid Starter. Adding MakanLah as a fourth free service means any one of them can suspend
+the other three, which is the wrong property for a launch week.
+
+**The keep-warm ping this file previously floated would have made it worse, not better.** One always-on free service is
+744 hours — the entire pool. Do not add one.
+
+### Two Options In The Research Doc Are Now Dead
+
+`docs/superpowers/research/2026-08-28-free-public-deployment.md` was built on secondary sources and two of its six
+options no longer exist as described. **Cloudflare Python Workers ships no PostgreSQL driver at all** — not `psycopg`,
+not `psycopg2`, not `asyncpg` — so option 1 was a rewrite of `db.py`, not a deploy. **Hugging Face Docker Spaces are no
+longer free** and block every outbound port except 80, 443 and 8080, which excludes Postgres on 5432 regardless.
+**Koyeb's free compute tier no longer exists.** Check the vendor page, not a listicle.
+
+Vercel Hobby is **single-region but you choose the region**, which is the property that made it work: `sin1` sits beside
+Neon in `ap-southeast-1` and the model API in Singapore. The `iad1` default would have added a transpacific round trip
+to every query and nothing would have looked broken. The owner read the Hobby terms — _"non-commercial, personal use
+only"_ — and accepted them for this project.
+
+### The Deploy Looked Correct For The Wrong Reason
+
+The first deploy uploaded **25.4MB**, the whole repo, **including `.env`**. `config.py` calls `load_dotenv()` against
+the repo root, so the bundled file silently satisfied every credential: `/health` reported `database: true` while
+nothing was configured in Vercel at all.
+
+It was never reachable — the catch-all route hands every path to FastAPI, and four probes returned 404 — and that
+deployment has been deleted, with the five values moved into Vercel's encrypted store. **`/health` could not have caught
+this, because it passes either way.** What caught it was listing the bundle's files: 125 files, no `.env`, and `/health`
+still answering 200 with 1,507 posts.
+
+**This is the recurring shape again, in a new place**: an absent configuration and a correct one were indistinguishable
+from outside until something asserted which one was there.
+
+### Open
+
+**#59** — six venue groups the Han fold collides that `normalize()` cannot see. **#15** — 1,008 truncated Google Maps
+posts, which needs the signed-in browser and stays orchestrator-only.
+
+---
+
 ## 2026-08-29 — The Frontend Session: A Mark, And Motion That Survives Reduced Motion
 
 Contributed by the frontend session; wording is theirs, merged here because `docs/PROGRESS.md` is one file and two
