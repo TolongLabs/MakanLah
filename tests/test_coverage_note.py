@@ -84,3 +84,52 @@ class TestTheNoteIsHonestNotDecorative:
         # Absence of a pork mention says nothing about certification, and
         # inferring from cuisine is the failure mode this exists to prevent.
         assert coverage_gaps('bak kut teh') == []
+
+
+class TestGapEvidenceMustBeWhole:
+    """A halal claim may not rest on a fragment or on a negation.
+
+    UAT found 鱼你 flagged on a Google Maps excerpt reading "...Yonny is the
+    'halal' counterpart, and that distinction is the" -- it stops mid-sentence,
+    and the clause that would say what the distinction means is exactly what #15
+    truncated away. The word is in scare quotes in the original too.
+
+    Negation is not in the corpus today: nine phrasings were searched for and
+    none is present. It goes live the moment a re-scrape adds one post, and the
+    failure is the worst available -- telling someone a venue meets their
+    constraint when the post says it does not. Regression test, not a rewrite.
+    """
+
+    def entry(self, excerpt):
+        return {'venue': {'id': 'v', 'name': 'v'}, 'citations': [{'excerpt': excerpt, 'post_url': 'u'}]}
+
+    def marks(self, excerpt):
+        from makanlah.rank import mark_gap_coverage
+
+        out = mark_gap_coverage([self.entry(excerpt)], ['halal'])
+        return out[0]['venue']['gap_mentions']
+
+    def test_a_whole_sentence_carries_the_claim(self):
+        assert self.marks('全马 15 家分店的国民老店，清真友好，逛累了就能进来补能量。') == ['halal']
+
+    def test_an_excerpt_cut_off_mid_sentence_does_not(self):
+        assert self.marks("Turns out Yonny is the 'halal' counterpart, and that distinction is the") == []
+
+    def test_a_trailing_comma_is_still_a_fragment(self):
+        assert self.marks('This place is halal,') == []
+
+    @pytest.mark.parametrize(
+        'text',
+        [
+            'Sadly this place is not halal.',
+            'Tempat ini bukan halal.',
+            'Restoran ini tidak halal.',
+            'There is no halal option here.',
+            '这家不是非清真的餐厅。',
+        ],
+    )
+    def test_a_negated_mention_never_carries_the_claim(self, text):
+        assert self.marks(text) == []
+
+    def test_a_plain_positive_english_mention_carries_it(self):
+        assert self.marks('The whole menu is halal certified.') == ['halal']
