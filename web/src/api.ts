@@ -10,9 +10,10 @@ export type Citation = {
     instead of asserting a number. The API does not send it yet, so it is optional. */
 export type Match = {
   basis?: 'dish' | 'text' | 'semantic'
-  dish_hit?: boolean
-  lexical?: number
-  vector?: number
+  /** The dish the query matched on, null when the match was not a dish match. */
+  dish?: string | null
+  /** Retrieval cosine. Never rendered, for the same reason as `score`. See issue #7. */
+  similarity?: number
 }
 
 export type Venue = {

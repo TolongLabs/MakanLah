@@ -97,7 +97,7 @@ function MixedLanguage() {
   return (
     <section className="page section section-split">
       <div>
-        <h2 className="h-section">One Sentence, Three Languages</h2>
+        <h2 className="h-section">One Post, Three Languages</h2>
         <p className="body-soft section-lede">
           KL writes about food in Malay, Chinese and English at once, often inside a single line. A pipeline that reads
           only one of them still returns results, which is the problem: it looks like it is working while it quietly
