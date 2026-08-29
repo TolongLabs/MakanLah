@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import psycopg
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from makanlah import auth, companion, config, copilot, db, ledger, rank, suggest
@@ -42,6 +43,33 @@ app = FastAPI(
     redoc_url=None,
     openapi_url='/openapi.json' if _DOCS else None,
 )
+
+
+# ORDER MATTERS AND IS THE WHOLE FIX (#81). `add_middleware` inserts at the front,
+# so the LAST one added is the OUTERMOST. This one is registered first precisely so
+# CORSMiddleware wraps it: an exception that escapes to Starlette's own
+# ServerErrorMiddleware is handled OUTSIDE the CORS layer, and its 500 goes back with
+# no `Access-Control-Allow-Origin`. The browser then reports a CORS misconfiguration,
+# somebody audits CORS_ORIGINS -- which is correct -- and the real server fault is
+# invisible from the client. Measured: a malformed POST /companion returned 422 WITH
+# the header, while a raising GET /suggestions returned 500 without it.
+#
+# Catching here so the response passes back out through CORS is the fix. It does not
+# widen the CORS policy: the header is added by the same middleware under the same
+# rules, so an origin it would refuse is still refused.
+@app.middleware('http')
+async def report_a_fault_as_a_fault(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as e:
+        # Still a 500, and still logged with its traceback. Turning a fault into a
+        # 200 would restore the header and be a worse lie than the missing one.
+        logger.exception('unhandled fault on %s %s', request.method, request.url.path)
+        # The class name, never the message: a message can carry SQL, a row or a
+        # path. `error` is named the same as the degraded path's field so a client
+        # reads one shape, and `degraded` is absent because this is not an outage.
+        return JSONResponse(status_code=500, content={'error': type(e).__name__})
+
 
 _cors = config.settings()
 app.add_middleware(
