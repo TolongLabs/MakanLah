@@ -88,6 +88,17 @@
   right: calc(var(--s5) * -1);
 }
 
+/* Tucked inside the plate on a phone, where there is no margin to hang it in. The
+   right inset is --s4 rather than --s3 because the stamp is rotated: a 7 degree turn
+   grows the painted box past the element box, and at --s3 it pushed the document 10px
+   wider than the viewport. Measured, not guessed. */
+@media (max-width: 30rem) {
+  .specimen .stamp {
+    top: var(--s4);
+    right: var(--s4);
+  }
+}
+
 /* A plate laid on the ground needs its own opaque field: testimony over a pattern is
    the one place this motif would cost legibility. Declared after the base rule so the
    cascade reads top to bottom in specificity order. */

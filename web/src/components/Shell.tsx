@@ -17,7 +17,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="nav-inner">
           <Link className="wordmark" to="/">
             <Chop size={26} />
-            <span>MakanLah</span>
+            <span className="wordmark-name">MakanLah</span>
           </Link>
           <nav className="nav-links" aria-label="Main">
             <NavLink className="nav-link" to="/discover">
