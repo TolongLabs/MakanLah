@@ -1,9 +1,9 @@
-# Progress — 2026-08-28 · agents can merge; citations now carry testimony
+# Progress — 2026-08-29 · citations carry testimony, and the latency target is met
 
-**`main` is at `4eafe26`.** Eleven PRs merged today — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30 — and no
-feature branches remain. **239 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather
-than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers
-from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `61325b4`.** 18 PRs merged — #3, #5, #14, #17, #18, #23, #24, #27, #28, #29, #30, #32, #35, #37, #38,
+#39, #40, #42. **256 Python tests, 74 web tests, lint and format clean, CI green.** Verified on `main` rather than on a
+branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the
+corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
 **fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
@@ -161,14 +161,32 @@ Each was found by running something, not by reading code.
   without naming one
 - Growing the corpus is now one command: `ingest/capture_rednote.py --target N`, then `ingest/pipeline.py`
 
-**No open PRs, no feature branches.** Open issues: **#25** RedNote pin-line excerpts · **#26** ranking leans on address
-text · **#31** two branches read as a duplicate · **#16** p95 · **#15** 1,008 posts missing text · **#6** deploy.
+**Open issues: #41** latency tail under burst · **#31** two branches read as a duplicate · **#15** 1,008 posts missing
+text · **#6** deploy. #25, #16, #26, #34 and #36 all closed today.
 
 **#6 is not a technical blocker.** `wrangler` is installed and already authenticated to the account hosting the Pages
 site. It stops on a **platform-terms question**, which `AUTONOMY.md` names as one of the four things that end a run:
 deploying means serving cached third-party excerpts publicly, and putting a live Neon credential into Cloudflare. Both
 are the owner's call. **This also blocks the LinkedIn post** — the demo points at `127.0.0.1:8000`, so a reader who
 clicks through today reaches a client with no backend.
+
+## Three Findings Worth Carrying Forward
+
+**The re-rank lane had no free quota and nobody could see it.** `qwen3.8-flash` reads `Not Supported` in the ModelStudio
+console: every `/recommend` and every `/ask` was billed from token one. Free-quota state is not readable from the API
+key, so nothing in the repo could say so — which is why `scripts/quota.py` now exists. Re-pinning to
+`qwen3.7-flash-2026-07-15` (dated, 1M free, expires 2026-10-22) took **p95 4.36s → 2.89s, meeting the 3s target in
+[`PRD.md`](PRD.md) for the first time**, raised p@5 0.982 → 0.992, and costs 4.6× less. **The lane was the budget**; the
+`max_tokens` tuning tried earlier was always going to be wasted effort.
+
+**The invariant asked the wrong question.** Every excerpt check asked _was this written?_ and never _does this say
+anything?_, so a postal address passed as testimony 82 times in 243 venues. The sharpest case: `repair_excerpt`, the
+guard against fabricated quotes, anchored its repair on the venue name — and on a RedNote listicle that line **is** the
+pin line, so the fabrication guard was reinserting addresses precisely where the model had done best.
+
+**Spend is bounded in ringgit, with a share per visitor.** A global budget alone is a bigger bucket for one attacker to
+drain: they take the day and every real visitor sees a degraded app. `IP_DAILY_SHARE` means a troll burns a tenth and
+everyone else is unaffected.
 
 ## The Citation Quality Pass, 2026-08-28 Evening
 
@@ -197,7 +215,25 @@ should never have seen (**#26**).
 characters is a paragraph where 30 Latin characters is half a sentence. Weighting CJK double raised the repair count
 **22 → 30**, all eight recovered being Chinese testimony a character count was discarding.
 
-### The Next Step On #25, Scoped
+### #25 Is Closed
+
+The replay ran on 38 posts from the raw cache — no platform touched, 2% of the extraction lane's free quota.
+
+|                                  | before      | after        |
+| -------------------------------- | ----------- | ------------ |
+| RedNote address-shaped excerpts  | 103 (32.5%) | **2 (0.8%)** |
+| Google Maps address-shaped       | 5 (0.4%)    | 5 (0.4%)     |
+| Venues leading with an address   | 82 (33.7%)  | **3 (1.2%)** |
+| Two-source pairs with an address | 48/175      | **4/134**    |
+
+**52 mentions and 9 venues were dropped for having nothing to say**, which is the policy rather than a fault: they land
+in the `uncited_venue` view, unrankable rather than deleted. Ranking held at **p@5 0.976, top1 50/51**.
+
+**`truth.json` is one step behind the corpus on purpose.** Two venues it labels correct are now unrankable because their
+only excerpts were pin lines. Regenerating it with `build_truth.py` needs its own baseline run — the obvious next
+housekeeping task.
+
+### The Old Next Step, Kept For Its Reasoning
 
 A replay over `ingest/pipeline.py` would fix most of the remaining 71. It reads the raw cache and touches no platform.
 **It is gated on two things, both measured rather than guessed:**
