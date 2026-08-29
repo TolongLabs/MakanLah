@@ -118,3 +118,28 @@ class TestVercelConfig:
     def test_entrypoint_exports_an_asgi_app(self):
         src = (ROOT / 'api' / 'index.py').read_text()
         assert 'from api.main import app' in src
+
+
+class TestHealthNamesItsBuild:
+    """ "Is the fix deployed?" must be answerable from outside the process.
+
+    Two sessions disagreed for seven minutes about whether a ranking change was
+    live, with no way to tell whether they were hitting the same build. The
+    client has carried build.json since it was first deployed; the API reported
+    corpus counts and four self-reported booleans and nothing about itself.
+
+    This is the same shape as /health reporting `database: true` from a bundled
+    dotenv: a status surface that cannot distinguish two states it is asked to
+    distinguish.
+    """
+
+    def test_health_exposes_a_commit_field(self):
+        src = (ROOT / 'api' / 'main.py').read_text()
+        assert "'commit': commit" in src, 'health must name the commit it is running'
+
+    def test_the_commit_is_read_from_the_environment_not_invented(self):
+        src = (ROOT / 'api' / 'main.py').read_text()
+        assert 'VERCEL_GIT_COMMIT_SHA' in src
+        # Absent the variable it must report None rather than a placeholder: an
+        # unknown build is a fact, and a fabricated one is worse than silence.
+        assert "or os.environ.get('GIT_COMMIT_SHA')" in src
