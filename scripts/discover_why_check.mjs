@@ -191,14 +191,20 @@ note(!list.includes('Michelin Bib Gourmand'), 'no model-written prose on a ranke
 await page.locator('.why-more-toggle').first().click()
 await page.waitForTimeout(150)
 const firstDetail = await page.locator('.result').first().locator('.why-more-body').innerText()
-note(!/positive|critical|mixed/i.test(firstDetail), 'no sentiment where its count disagrees with the post count')
+// Held entirely (#149): `negative <= -0.2` catches mild qualification, and eight of
+// ten venues carrying a negative bucket contain no negative language at all. Both
+// directions stay dark -- showing only the favourable half biases every card.
+note(!/positive|critical|mixed/i.test(firstDetail), 'no sentiment verdict while the buckets are untrusted')
 note(firstDetail.trim().length > 0, `the disclosure opens onto real content (${firstDetail.trim().length} chars)`)
 note(!/close in meaning/i.test(firstDetail), 'the disclosure does not restate the subtitle above it')
 
 await page.locator('.result').nth(2).locator('.why-more-toggle').click()
 await page.waitForTimeout(150)
 const thirdDetail = await page.locator('.result').nth(2).locator('.why-more-body').innerText()
-note(/1 of 3 posts critical/.test(thirdDetail), `sentiment leads with the complaint  ${JSON.stringify(thirdDetail)}`)
+// This fixture's counts DO agree (3 vs 3), so it would render but for the hold. It is
+// the case that proves the hold is doing the work rather than the unit gate.
+note(!/critical|positive|mixed/i.test(thirdDetail), 'held even where the counts agree')
+note(/across 2 platforms/.test(thirdDetail), `the rest of the disclosure still renders  ${JSON.stringify(thirdDetail)}`)
 
 await browser.close()
 if (fail.length > 0) {

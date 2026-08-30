@@ -296,7 +296,51 @@ export function mentionLine(gap: string): string {
  * Silent on a single mention: with one post the excerpt directly below IS the
  * sentiment, and labelling it restates what the reader is already looking at.
  */
+
+/**
+ * **Off, and this is the second thing that had to be true before the line could
+ * ship.** The first was that the counts describe the same posts, which #147 fixed —
+ * production now reads 33/33 agreeing on an independent query sample, and the gate
+ * below correctly lit up. The second is that the BUCKETS ARE RIGHT, and they are
+ * not.
+ *
+ * Measured across four queries, of the ten venues carrying a negative bucket,
+ * **eight contain no negative language whatsoever** while carrying positive
+ * language. Confirmed by eye rather than only by keyword, which matters because a
+ * crude instrument can manufacture its own finding:
+ *
+ * - `王美记 Restoran Wong Mei Kee` buckets **0 positive, 2 negative**. Its excerpts
+ *   say "Siew Yok 烧肉 deserves 5 stars with thick meat and crispy surface" and
+ *   "definitely worth checking out".
+ * - `山海 Shan hai udon` buckets one negative off a review whose only complaint is
+ *   that a yuzu drink "taste quite weird", beside "Very delicious" and "Love their
+ *   tempura".
+ * - Three separate bak kut teh shops bucket 0 positive / 1 negative on excerpts
+ *   carrying only praise.
+ *
+ * `negative <= -0.2` is catching mild qualification, and this module then renders it
+ * as "critical" — a verdict about a real restaurant that the posts do not support.
+ * That is the exact failure this product exists not to commit.
+ *
+ * **Rendering only the positive half is NOT the fix and would be worse**: suppressing
+ * unfavourable readings while printing favourable ones biases every card toward good
+ * news. Either the split is trustworthy and both halves show, or neither does.
+ *
+ * One line to flip once the threshold is right. Tracked as #149.
+ */
+const CLASSIFICATION_TRUSTED = false
 export function sentimentLine(s: Venue['sentiment'], livePosts: number): string | null {
+  return CLASSIFICATION_TRUSTED ? sentimentPhrase(s, livePosts) : null
+}
+
+/**
+ * The wording, separated from the decision to show it.
+ *
+ * Kept exported and under test while the line is held. Copy that is switched off and
+ * untested rots quietly, and the whole point of a one-line flag is that flipping it
+ * ships something already known to be correct.
+ */
+export function sentimentPhrase(s: Venue['sentiment'], livePosts: number): string | null {
   if (!s) return null
   const total = s.positive + s.mixed + s.negative
   if (total < 2) return null

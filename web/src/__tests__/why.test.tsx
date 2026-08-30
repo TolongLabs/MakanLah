@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { Result } from '../api'
 import { ResultRow } from '../components/ResultRow'
-import { sentimentLine, whyDetail, whyRow } from '../evidence'
+import { sentimentLine, sentimentPhrase, whyDetail, whyRow } from '../evidence'
 import { citation, result } from './fixtures/result'
 
 function renderRow(r: Result) {
@@ -110,14 +110,31 @@ describe('the disclosure only opens onto something', () => {
   })
 })
 
+describe('sentiment is held until the buckets can be trusted', () => {
+  it('renders nothing at all, in either direction', () => {
+    // Measured across four queries: of ten venues carrying a negative bucket, EIGHT
+    // contain no negative language whatsoever. 王美记 buckets 0 positive / 2 negative
+    // on excerpts saying "deserves 5 stars" and "definitely worth checking out", and
+    // this module would render that as "2 of 2 posts critical" -- a verdict about a
+    // real restaurant the posts do not support.
+    //
+    // Both directions, deliberately. Showing only the favourable half would bias
+    // every card toward good news, which is worse than showing neither. #149.
+    expect(sentimentLine({ positive: 4, mixed: 0, negative: 0 }, 4)).toBeNull()
+    expect(sentimentLine({ positive: 1, mixed: 1, negative: 2 }, 4)).toBeNull()
+  })
+})
+
 describe('sentiment is counts, never an average', () => {
   it('leads with the complaint wherever there is one', () => {
     // `makanlah` buckets asymmetrically -- positive >= 0.6, negative <= -0.2 -- so a
     // single negative is somebody with a real complaint rather than a mild review
     // rounded down. Burying it under a positive majority is the one thing this line
     // must not do.
-    expect(sentimentLine({ positive: 3, mixed: 2, negative: 4 }, 9)).toBe('4 of 9 posts critical, 3 positive, 2 mixed.')
-    expect(sentimentLine({ positive: 9, mixed: 0, negative: 1 }, 10)).toMatch(/^1 of 10 posts critical/)
+    expect(sentimentPhrase({ positive: 3, mixed: 2, negative: 4 }, 9)).toBe(
+      '4 of 9 posts critical, 3 positive, 2 mixed.'
+    )
+    expect(sentimentPhrase({ positive: 9, mixed: 0, negative: 1 }, 10)).toMatch(/^1 of 10 posts critical/)
   })
 
   it('prints unanimity, because unanimity turned out to be the rare case', () => {
@@ -125,12 +142,12 @@ describe('sentiment is counts, never an average', () => {
     // everywhere discriminates nothing. Measured, that reasoning was backwards: 163
     // of 186 multi-mention venues span more than one bucket, so agreement is the
     // 12% case and is the informative one.
-    expect(sentimentLine({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('All 4 posts positive.')
-    expect(sentimentLine({ positive: 0, mixed: 3, negative: 0 }, 3)).toBe('All 3 posts mixed.')
+    expect(sentimentPhrase({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('All 4 posts positive.')
+    expect(sentimentPhrase({ positive: 0, mixed: 3, negative: 0 }, 3)).toBe('All 3 posts mixed.')
   })
 
   it('splits a mixed reading without an average', () => {
-    expect(sentimentLine({ positive: 3, mixed: 1, negative: 0 }, 4)).toBe('3 of 4 posts positive, 1 mixed.')
+    expect(sentimentPhrase({ positive: 3, mixed: 1, negative: 0 }, 4)).toBe('3 of 4 posts positive, 1 mixed.')
   })
 
   it('REFUSES to print when the counts are not about the same posts', () => {
@@ -140,14 +157,14 @@ describe('sentiment is counts, never an average', () => {
     // ungated line puts "1 post" in the subtitle and "All 9 posts positive" four
     // lines under it -- self-contradicting, and inflating the evidence behind a pick
     // exactly the way counting dead citations did in #111.
-    expect(sentimentLine({ positive: 9, mixed: 0, negative: 0 }, 1)).toBeNull()
-    expect(sentimentLine({ positive: 12, mixed: 3, negative: 0 }, 3)).toBeNull()
+    expect(sentimentPhrase({ positive: 9, mixed: 0, negative: 0 }, 1)).toBeNull()
+    expect(sentimentPhrase({ positive: 12, mixed: 3, negative: 0 }, 3)).toBeNull()
   })
 
   it('stays silent on a single post, where the excerpt below IS the sentiment', () => {
-    expect(sentimentLine({ positive: 1, mixed: 0, negative: 0 }, 1)).toBeNull()
-    expect(sentimentLine(null, 3)).toBeNull()
-    expect(sentimentLine(undefined, 3)).toBeNull()
+    expect(sentimentPhrase({ positive: 1, mixed: 0, negative: 0 }, 1)).toBeNull()
+    expect(sentimentPhrase(null, 3)).toBeNull()
+    expect(sentimentPhrase(undefined, 3)).toBeNull()
   })
 })
 
