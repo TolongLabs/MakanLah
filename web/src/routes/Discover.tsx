@@ -202,6 +202,14 @@ export function Discover() {
               </button>
             ))}
           </fieldset>
+          {/* ALWAYS present, not only once there are answers to change. The wizard
+              is where the companion lives and its only route from here used to be
+              an inline "Change" inside a conditional sentence -- the owner could
+              not find it at all. Named for what it does rather than for editing a
+              setting. */}
+          <Link className="btn btn-quiet find-taste" to="/taste">
+            {summary.length > 0 ? 'Redo My Taste' : 'Answer Four Questions'}
+          </Link>
           {summary.length > 0 && (
             <p className="find-prefs">
               Filtered by your answers: {shown.map((r) => r.value).join(', ')}.{' '}
@@ -223,9 +231,6 @@ export function Discover() {
                   Drop The Craving
                 </button>
               )}{' '}
-              <Link className="link" to="/taste">
-                Change
-              </Link>
             </p>
           )}
         </div>

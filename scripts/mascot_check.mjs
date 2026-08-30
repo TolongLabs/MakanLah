@@ -212,6 +212,52 @@ const browser = await chromium.launch()
   await page.close()
 }
 
+// ------------------------------------------- she does not follow the cursor
+//
+// `pixi-live2d-display` defaults `autoInteract` to true, which makes her eyes and
+// head track the pointer across the whole document. Removed on request, and
+// asserted here because a library upgrade would silently restore a default.
+//
+// Measured as a RATIO against a control, not as an absolute. The model breathes,
+// blinks and sways on its own, so "the pixels changed" proves nothing: the floor
+// is how much they change with the pointer held still, and gaze has to clear it.
+// Validated in both directions before being trusted -- with autoInteract true the
+// ratio is 2.38, with it false 0.55.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
+  const page = await ctx.newPage()
+  await page.goto(`${BASE}/taste`, { waitUntil: 'networkidle' })
+  const canvas = page.locator('.companion canvas')
+  await canvas.waitFor({ state: 'attached', timeout: 20000 }).catch(() => {})
+  if (await canvas.count()) {
+    await page.waitForTimeout(4000)
+    const frame = async () => decodePng(await canvas.screenshot())
+    const delta = (a, c) => {
+      const n = Math.min(a.pixels.length, c.pixels.length)
+      let sum = 0
+      for (let i = 0; i < n; i++) sum += Math.abs(a.pixels[i] - c.pixels[i])
+      return sum / n
+    }
+    await page.mouse.move(720, 450)
+    await page.waitForTimeout(800)
+    const still = await frame()
+    await page.waitForTimeout(800)
+    const noise = delta(still, await frame())
+    await page.mouse.move(8, 8)
+    await page.waitForTimeout(800)
+    const left = await frame()
+    await page.mouse.move(1432, 892)
+    await page.waitForTimeout(800)
+    const moved = delta(left, await frame())
+    say(
+      moved < noise * 2,
+      `she does not follow the cursor  idle=${noise.toFixed(2)} corner-to-corner=${moved.toFixed(2)} ` +
+        `ratio=${(moved / (noise || 0.001)).toFixed(2)} (tracking is >=2)`
+    )
+  }
+  await ctx.close()
+}
+
 // ------------------------------- the chunk fails: onboarding must still work
 //
 // Break the subject on purpose. `React.lazy` plus `Suspense` handles a PENDING

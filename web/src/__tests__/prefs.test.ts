@@ -81,3 +81,20 @@ describe('budget options', () => {
     expect(BUDGET.map((b) => b.value)).toContain('any')
   })
 })
+
+describe('summarise refuses to recite an answer it cannot name', () => {
+  it('drops a value the label table does not know', () => {
+    // `isPrefs` checks these are strings, not that they are KNOWN strings, so an
+    // older build's vocabulary or a hand-edited localStorage key reaches here. It
+    // rendered as "Answered: 肉骨茶, Family, 3 km, ." -- a separator with nothing
+    // behind it. Found by looking at the dashboard card, not by a test.
+    const rows = summarise({ craving: ['肉骨茶'], mood: 'familiar' as never, range_m: 3000 })
+    expect(rows.map((r) => r.term)).toEqual(['Craving', 'Within'])
+    expect(rows.every((r) => Boolean(r.value))).toBe(true)
+  })
+
+  it('keeps the ones it does know', () => {
+    const rows = summarise({ craving: [], mood: 'comfort', company: 'family', budget: 'cheap' })
+    expect(rows.map((r) => r.value)).toEqual(['Family', 'Something familiar', 'Cheap'])
+  })
+})

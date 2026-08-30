@@ -37,7 +37,7 @@ import type { MascotMood } from '../evidence'
 export const MODEL = {
   url: '/models/liveroid/LiveroiD_A-Y01/LiveroiD_A-Y01.model3.json',
   idleMotionGroup: '',
-  scale: 0.381,
+  scale: 0.19,
   anchorY: 0.343
 } as const
 

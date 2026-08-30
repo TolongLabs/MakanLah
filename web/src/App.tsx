@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { Shell } from './components/Shell'
+import { Dashboard } from './routes/Dashboard'
 import { Discover } from './routes/Discover'
 import { Landing } from './routes/Landing'
 import { Privacy } from './routes/Privacy'
@@ -32,6 +33,7 @@ function Chromed() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/taste" element={<Taste />} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/r/:venueId" element={<Venue />} />

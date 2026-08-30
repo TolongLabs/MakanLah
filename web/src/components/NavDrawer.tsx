@@ -117,8 +117,19 @@ export function NavDrawer({
           </Link>
         </div>
         <nav className="nav-drawer-nav" aria-label="Mobile">
+          {session && (
+            <NavLink className="nav-drawer-link" to="/dashboard" onClick={onClose}>
+              Dashboard
+            </NavLink>
+          )}
           <NavLink className="nav-drawer-link" to="/discover" onClick={onClose}>
             Discover
+          </NavLink>
+          {/* The wizard had exactly one route into it from inside the app: an inline
+              "Change" link inside a sentence that only rendered once you already had
+              answers. The owner could not find it. This is the durable door. */}
+          <NavLink className="nav-drawer-link" to="/taste" onClick={onClose}>
+            Your Taste
           </NavLink>
           {session ? (
             <>
@@ -141,6 +152,12 @@ export function NavDrawer({
           )}
         </nav>
         <div className="nav-drawer-footer">
+          {/* No shared-guest disclosure anywhere in the product now. The topbar
+              label went, then the sign-in consent copy, and the owner was asked
+              directly about this last one and said to remove it too. Recorded
+              because it is a deliberate decision rather than an omission: a guest
+              is no longer told that other guests can see what they are doing. */}
+          {session && <p className="nav-drawer-signed-in">{session.user.email ?? 'Signed In'}</p>}
           <ThemeSwitch />
         </div>
       </div>

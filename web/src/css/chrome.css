@@ -174,12 +174,11 @@
   white-space: nowrap;
 }
 
-/* The shared guest reads in --warn, the token for "this is not the normal state".
-   It is the same register as a stale corpus, and for the same reason: the user is
-   looking at something they should not assume is private. */
-.nav-account-shared {
-  color: var(--warn);
-  max-width: none;
+.nav-drawer-signed-in {
+  font-size: var(--t-sm);
+  color: var(--ink-soft);
+  margin-bottom: var(--s3);
+  overflow-wrap: anywhere;
 }
 
 .nav-signout {
@@ -307,6 +306,14 @@
   transition:
     background var(--dur-fast) var(--ease),
     border-color var(--dur-fast) var(--ease);
+}
+
+/* Leading, not trailing. It replaces the wordmark on every screen but the landing,
+   so it is the leftmost element and carries the left edge on its own -- the chop
+   does not sit beside it. `.nav-inner` is space-between, so with the wordmark gone
+   this is the first flex child and the actions stay hard right. */
+.nav-drawer-toggle-lead {
+  margin-inline-end: auto;
 }
 
 .nav-drawer-toggle:hover {
