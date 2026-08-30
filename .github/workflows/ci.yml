@@ -186,6 +186,18 @@ jobs:
       - name: A glass surface must be visible against its ground
         run: node scripts/glass-contrast.mjs http://127.0.0.1:4188
 
+      # The chips carry post counts, served in descending order, so the number on each
+      # is evidence volume. `fitOneRow` hid a wrapped chip and read the next chip's
+      # offsetTop in the same loop -- but `hidden` reflows immediately, so the chips
+      # after it moved up into the gap and were measured against the layout the hiding
+      # had just created. At 390px `fish` (246) fit the space `curry` (272) vacated and
+      # survived, while the two dishes ranked above it did not. Every other width came
+      # out a prefix by luck. jsdom has no layout, so offsetTop is 0 and no unit test
+      # can see this; it needs a browser. Caught on production by this check before it
+      # was fixed, which is the mutation test.
+      - name: The chip row must be a prefix of the ranking
+        run: node scripts/chip_row_check.mjs http://127.0.0.1:4188
+
       # Two things here fail silently. Mounting the character in the ask dialog
       # without unmounting her from the aside gives one character two WebGL
       # contexts, and on some drivers the second kills the first -- the page keeps
