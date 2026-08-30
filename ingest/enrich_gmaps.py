@@ -49,7 +49,7 @@ def review_url(venue_name, city='Kuala Lumpur'):
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
-def pending_venues(con, limit=None, only_missing=True):
+def pending_venues(con, limit=None, only_missing=True, offset=0):
     """Venues that have no Google Maps evidence yet.
 
     'Missing coordinates' was the original predicate and is now the wrong one:
@@ -67,9 +67,14 @@ def pending_venues(con, limit=None, only_missing=True):
                      select 1 from mention m
                      join source_post p on p.id = m.post_id
                      where m.venue_id = venue.id and p.platform = 'google_maps')"""
-    sql += ' order by (select count(*) from mention m where m.venue_id = venue.id) desc'
+    # Ordered by evidence, so a run cut short covers what matters most -- which also
+    # means every `--limit N` run without an offset re-captures the SAME top N. The
+    # repair of #15's 1008 truncated posts needs to walk past them, not repeat them.
+    sql += ' order by (select count(*) from mention m where m.venue_id = venue.id) desc, venue.id'
     if limit:
         sql += f' limit {int(limit)}'
+    if offset:
+        sql += f' offset {int(offset)}'
     return [dict(r) for r in con.execute(sql).fetchall()]
 
 
@@ -145,11 +150,11 @@ def _apply_records(con, records, stats):
     return stats
 
 
-async def run(limit=None, want_reviews=True, only_missing=True):
+async def run(limit=None, want_reviews=True, only_missing=True, offset=0):
     if not cdp.alive():
         raise SystemExit('CDP is not up. Run: scripts/chrome-session.sh start')
     with db.connect(direct=True) as con:
-        venues = pending_venues(con, limit, only_missing)
+        venues = pending_venues(con, limit, only_missing, offset)
         print(f'{len(venues)} venues to enrich', flush=True)
         if not venues:
             return {}
@@ -200,8 +205,9 @@ def main():
     ap.add_argument('--limit', type=int, default=None)
     ap.add_argument('--no-reviews', action='store_true')
     ap.add_argument('--all-venues', action='store_true', help='not just the ones missing coordinates')
+    ap.add_argument('--offset', type=int, default=0, help='skip the first N, to walk past venues already re-captured')
     a = ap.parse_args()
-    stats = asyncio.run(run(a.limit, not a.no_reviews, not a.all_venues))
+    stats = asyncio.run(run(a.limit, not a.no_reviews, not a.all_venues, a.offset))
     print(stats)
 
 
