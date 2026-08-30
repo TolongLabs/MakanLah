@@ -1,43 +1,40 @@
 <!doctype html>
 <meta charset="utf-8" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Noto+Serif+SC:wght@400&display=swap" rel="stylesheet" />
+<link href="slide.css" rel="stylesheet" />
 <style>
-  :root {
-    --paper: #f7f7f4; --ink: #16180f; --ink-soft: #5c5f52; --rule: #d9dad0;
-    --enamel: #0b6b5e; --seal: #c3272b;
-    --chrome: "Archivo", system-ui, sans-serif;
-    --testimony: "Newsreader", Georgia, serif;
+  .flow { margin-top: 62px; display: grid; grid-template-columns: repeat(5, 1fr); column-gap: 42px; }
+  .step { border-top: 2px solid var(--rule-strong); padding-top: 20px; }
+  .step .n {
+    font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 17px;
+    letter-spacing: 0.17em; color: var(--ink-faint);
   }
-  * { margin: 0; box-sizing: border-box; }
-  body {
-    width: 1920px; height: 1080px; background: var(--paper); color: var(--ink);
-    font-family: var(--chrome); padding: 92px 120px 200px; display: flex; flex-direction: column;
+  .step .t { margin-top: 12px; font-size: 33px; font-weight: 600; letter-spacing: -0.012em; }
+  .step .d { margin-top: 13px; font-family: var(--testimony); font-size: 22px; line-height: 1.62; color: var(--ink-soft); }
+  /* Step 05 is the product's whole claim, so it is the one step the seal marks --
+     cinnabar means "attested", which is exactly what citing does. */
+  .step.attested { border-top-color: var(--seal); }
+  .step.attested .t { color: var(--seal); display: flex; align-items: center; gap: 11px; }
+  .step.attested .chop { width: 27px; height: 27px; flex: none; }
+  .rules {
+    margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 74px;
+    border-top: 1px solid var(--rule); padding-top: 34px;
   }
-  .eyebrow {
-    font-size: 21px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--ink-soft); font-weight: 500;
-  }
-  h1 { font-size: 62px; font-weight: 600; letter-spacing: -0.02em; margin-top: 18px; }
-  .sub { font-family: var(--testimony); font-size: 30px; color: var(--ink-soft); margin-top: 16px; max-width: 1180px; }
-  .flow { display: flex; align-items: stretch; gap: 0; margin-top: 104px; }
-  .step { flex: 1; padding-right: 34px; border-top: 3px solid var(--ink); padding-top: 20px; }
-  .step:last-child { padding-right: 0; border-top-color: var(--seal); }
-  .step .n { font-size: 18px; color: var(--ink-soft); letter-spacing: 0.14em; }
-  .step .t { font-size: 37px; font-weight: 600; margin-top: 12px; }
-  .step .d { font-family: var(--testimony); font-size: 25px; color: var(--ink-soft); margin-top: 16px; line-height: 1.6; }
-  .rules { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; border-top: 1px solid var(--rule); padding-top: 40px; }
-  .rule-k { font-size: 27px; font-weight: 600; }
-  .rule-v { font-family: var(--testimony); font-size: 23px; color: var(--ink-soft); margin-top: 9px; line-height: 1.5; }
-  .seal { color: var(--seal); }
-  .foot { margin-top: 34px; font-size: 20px; color: var(--ink-soft); letter-spacing: 0.05em; }
+  .rule-k { font-size: 26px; font-weight: 600; letter-spacing: -0.008em; }
+  .rule-v { margin-top: 9px; font-family: var(--testimony); font-size: 22px; line-height: 1.55; color: var(--ink-soft); }
 </style>
 <body>
-  <div class="eyebrow">How It Works</div>
+  <div class="masthead">
+    <div class="brand"><svg class="chop" viewBox="0 0 100 100" aria-hidden="true"><mask id="m01"><rect width="100" height="100" fill="#fff"/><path d="M49.47234042553191 18.999999999999993 53.693617021276594 21.90212765957446 52.638297872340424 22.957446808510632Q65.56595744680851 30.608510638297865 80.60425531914893 34.565957446808504L77.70212765957447 39.578723404255314Q62.92765957446808 35.09361702127659 48.94468085106383 26.123404255319144Q37.33617021276596 35.621276595744675 20.97872340425532 40.634042553191485L19.395744680851063 35.621276595744675Q37.599999999999994 29.81702127659574 49.47234042553191 18.999999999999993ZM70.57872340425531 37.99574468085106V62.26808510638297H34.43404255319149V75.4595744680851L48.680851063829785 71.7659574468085L50.26382978723404 76.51489361702127L31.79574468085106 81.0L29.157446808510635 77.83404255319148V37.99574468085106H48.1531914893617L45.25106382978723 33.246808510638296L50.26382978723404 31.663829787234036Q52.638297872340424 34.565957446808504 53.95744680851064 37.99574468085106ZM34.43404255319149 43.008510638297864V47.757446808510636H65.30212765957447V43.008510638297864ZM34.43404255319149 52.506382978723394V57.25531914893617H65.30212765957447V52.506382978723394ZM45.51489361702127 63.587234042553185 62.66382978723404 68.86382978723404Q67.94042553191488 65.69787234042553 71.1063829787234 62.00425531914893L75.59148936170212 64.9063829787234L68.20425531914893 70.97446808510638L79.54893617021276 76.25106382978723L76.6468085106383 81.0Q59.761702127659575 72.29361702127659 42.34893617021277 67.80851063829786Z" fill="#000"/></mask><rect width="100" height="100" fill="currentColor" mask="url(#m01)"/></svg><div class="wm">MakanLah</div></div>
+    <div class="slug"><span>How It Works</span><span class="no">01 / 03</span></div>
+  </div>
+  <div class="eyebrow">Architecture</div>
   <h1>Nothing is fetched while you wait.</h1>
   <p class="sub">
-    The corpus is built in the background. A request only ever reads what is already on disk, so a slow
-    platform is a background problem, never yours.
+    The corpus is built in the background. A request only ever reads what is already stored, so a slow
+    platform is a background problem and never yours.
   </p>
 
   <div class="flow">
@@ -49,7 +46,8 @@
       <div class="d">Normalised, deduplicated, geocoded. Postgres, not a cache of somebody else's API.</div></div>
     <div class="step"><div class="n">04</div><div class="t">Rank</div>
       <div class="d">Craving, company, distance and the hour of the day, scored locally.</div></div>
-    <div class="step"><div class="n">05</div><div class="t seal">Cite</div>
+    <div class="step attested"><div class="n">05</div>
+      <div class="t">Cite <svg class="chop" viewBox="0 0 100 100" aria-hidden="true"><mask id="c5"><rect width="100" height="100" fill="#fff"/><path d="M49.47234042553191 18.999999999999993 53.693617021276594 21.90212765957446 52.638297872340424 22.957446808510632Q65.56595744680851 30.608510638297865 80.60425531914893 34.565957446808504L77.70212765957447 39.578723404255314Q62.92765957446808 35.09361702127659 48.94468085106383 26.123404255319144Q37.33617021276596 35.621276595744675 20.97872340425532 40.634042553191485L19.395744680851063 35.621276595744675Q37.599999999999994 29.81702127659574 49.47234042553191 18.999999999999993ZM70.57872340425531 37.99574468085106V62.26808510638297H34.43404255319149V75.4595744680851L48.680851063829785 71.7659574468085L50.26382978723404 76.51489361702127L31.79574468085106 81.0L29.157446808510635 77.83404255319148V37.99574468085106H48.1531914893617L45.25106382978723 33.246808510638296L50.26382978723404 31.663829787234036Q52.638297872340424 34.565957446808504 53.95744680851064 37.99574468085106ZM34.43404255319149 43.008510638297864V47.757446808510636H65.30212765957447V43.008510638297864ZM34.43404255319149 52.506382978723394V57.25531914893617H65.30212765957447V52.506382978723394ZM45.51489361702127 63.587234042553185 62.66382978723404 68.86382978723404Q67.94042553191488 65.69787234042553 71.1063829787234 62.00425531914893L75.59148936170212 64.9063829787234L68.20425531914893 70.97446808510638L79.54893617021276 76.25106382978723L76.6468085106383 81.0Q59.761702127659575 72.29361702127659 42.34893617021277 67.80851063829786Z" fill="#000"/></mask><rect width="100" height="100" fill="currentColor" mask="url(#c5)"/></svg></div>
       <div class="d">Every result carries the post it came from, or it is not returned at all.</div></div>
   </div>
 
@@ -63,5 +61,4 @@
       <div class="rule-v">An entry that cannot be cited is dropped before the response is built, never returned with a caveat.</div>
     </div>
   </div>
-  <div class="foot">MakanLah — architecture</div>
 </body>
