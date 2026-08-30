@@ -26,6 +26,77 @@ console before repinning.
 
 ---
 
+## 2026-08-30 — Resumed. #144 Unblocked, #141 Built, The Gap Surface Reads Its Flag
+
+**Three peers came back from the restart with no role between them.** The handoff table in `docs/dev1-resume.md` names
+`makanlah-13` / `makanlah-8d` / `makanlah-fb`; the live sessions are `makanlah-f3`, `makanlah-92` and `makanlah-73`.
+**Session names do not survive a restart, so a handoff must not use one as an address.** `scratchpad/UAT-ROUND2.md` did
+not survive either: scratchpads are session-scoped and all three were empty. Roles were re-taken by agreement, not
+recovered. Peer 2 is frontend and holds the tree.
+
+### #144's Three Answers: Two Of Them Changed Nothing
+
+Answered by Peer 1 under [`AUTONOMY.md`](AUTONOMY.md), the owner having delegated. **One-tap disclosure and no model
+blurb on the card were already the built state**, verified in the rendered DOM at 390px rather than from source: the
+disclosure is a `<details>` with no `open`, and the blurb renders only on `/r/:venueId`. **A question can be answered by
+looking at what shipped**, and two of the three were.
+
+**The third was not a yes/no at all.** #141 is unimplemented work, deferred until this branch's structural rework
+landed. Built at the answered density.
+
+| Setting | Value                               | Checked Against                |
+| ------- | ----------------------------------- | ------------------------------ |
+| Lattice | 24px pitch, ~1px dot                | Composited pixels, not the CSS |
+| Light   | `#dcddd2` on `#f7f7f4`, **1.28:1**  | Gutter sample, 84 dots         |
+| Dark    | `#262820` on `#12130f`, **1.25:1**  | Same lattice, same count       |
+| Script  | 兴记肉骨茶 + a full Chinese excerpt | Not Latin placeholder          |
+
+**The two themes land within 0.03 of each other**, which is what "survives both themes" had to mean to be checkable.
+Drawn as a gradient rather than the mask `.ground` uses, because a gradient reads `var(--dot)` and a data URI cannot.
+
+### The Gap Surface Now Names Each Entry's Evidence Class
+
+The park note's first item. `85b9220` shipped `verifiable` and `live_citations` per entry and the client never read
+them. Each entry now says **"9 posts still open"** or **"No post still opens"** instead of all of them reading alike.
+
+**Both fields are optional and the note disappears when they are absent.** An older API sends neither, and a missing
+flag read as `false` turns "we cannot tell" into "nobody wrote about this" — inventing the exact claim the flag was
+added to prevent. **Silence is the honest fallback; `false` is a claim.**
+
+### #170: Three Of Five Advertised Filters Reach Nothing
+
+Found by Peer 3, confirmed here by controls rather than by reading source.
+
+| Body                                                    | HTTP |
+| ------------------------------------------------------- | ---- |
+| `prefs` as a bare string, a bare integer, or `null`     | 200  |
+| `radius_m: 999999` and `radius_m: 50`, a declared field | 422  |
+
+**A declared field rejects a bad value; `prefs` accepts every shape**, which is what an undeclared field looks like. Two
+additions to the issue: **`budget` and `cuisine` are dead request fields** — declared at `api/main.py:93-94` and read
+nowhere, since `:159` passes only `query, lat, lng, radius_m, limit` — and **Drop The Craving cannot change the
+results**, because it re-runs the same term at the same radius with the only differing input inside the discarded
+object. The false comment that hid this is corrected; the product half is untaken.
+
+**A same-query A/B does not measure this and nearly said the opposite.** Two sequential calls differing only in the
+craving returned different result counts, which reads as evidence `prefs` works. An identical payload sent twice also
+varies across time and matches within a burst, so `/recommend` is time-sensitive and the A/B was measuring the clock.
+**The 200-vs-422 table is the decisive test.** Same shape as a check agreeing with itself: the control is what turned a
+plausible finding into a real one.
+
+### Notes For The Next Session
+
+- **`gh` cannot read check-runs with this token** (`gh pr checks`, `gh api .../check-runs` both 403). `guard-merge.sh`
+  falls back to `gh run list`, so merging still works. Use `gh run list --branch <ref>` to read CI
+- **`/recommend` does not emit `distance_gap` at a tight radius.** `bak kut teh` at `radius_m=300` returns `results: []`
+  with no gap of either kind; the same query at radius 0 returns 5 picks. It degrades honestly to "Nothing for X within
+  0.3 km of you", so it is a quality gap rather than a lie. Peer 1 has it, behind #170
+- **`readingFor()`'s five labels stay sentence case.** `One source`, `Two sources`, `Thin evidence`, `Nothing to read`,
+  `Listening`. TitleCase arguably applies; five labels that read as a deliberate set are a set, and converting them one
+  at a time is how a consistent thing becomes inconsistent
+
+---
+
 ## 2026-08-30 — PAUSED For A Workstation Restart
 
 **`main` is deployable. Deploy it on resume and tell both peers the sha** — Peer 3 asked to be pinged with whichever
