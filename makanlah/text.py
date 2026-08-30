@@ -116,3 +116,43 @@ def fold_variants(name):
         s = re.sub(r'[^一-鿿]+', ' ', s)
         s = ' '.join(s.split())
     return s
+
+
+# An area label is OUR metadata, not somebody's words. An untranslated excerpt is
+# the product working; an untranslated area label is a navigation aid a Malay or
+# English reader cannot read (#115). 15 venues, 13% of every labelled venue,
+# carried a Han-script area -- and `Petaling Street`, `Kuala Lumpur` and
+# `City Centre` were ALREADY separate labels in the same corpus, so one place was
+# being counted as two.
+#
+# Only mappings that are a script or language rendering of the SAME proper noun
+# appear here. `印度区` ("Indian district") is left alone deliberately: it could be
+# Brickfields or Masjid India, and picking one would be inventing a fact about a
+# restaurant's location. `双子塔/Pavilion商场` names two places in one label and is
+# left for the same reason. **Guessing geography is the failure this product exists
+# to avoid**, and a label we cannot resolve honestly stays as written.
+_AREA_ALIASES = {
+    '茨廠街': 'Petaling Street',
+    '茨厂街': 'Petaling Street',
+    '柏威年廣場': 'Pavilion',
+    '柏威年': 'Pavilion',
+    '吉隆坡': 'Kuala Lumpur',
+    '市中心': 'City Centre',
+    '阿罗街': 'Jalan Alor',
+    'kuchai lama': 'Kuchai Lama',
+    'oldklangroad': 'Old Klang Road',
+}
+
+
+def canonical_area(area):
+    """One label per place, in a language the reader chose.
+
+    Applied where the area is READ, never to excerpt text -- an excerpt is
+    somebody's words and translating it breaks the citation. Canonicalising an
+    area is also not merging a venue: two venues sharing an area are still two
+    venues, and `place_id` remains the only thing that merges anything (#59).
+    """
+    if not area:
+        return area
+    hit = _AREA_ALIASES.get(area.strip())
+    return hit if hit else _AREA_ALIASES.get(area.strip().lower(), area)

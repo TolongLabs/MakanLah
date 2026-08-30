@@ -51,6 +51,11 @@ for i in $(seq 0 $((n - 1))); do
     | "$PY" "$SPEAK" "$DIR/seg/$i.wav"
 done
 
+# A beat says when a moment happens, not how long the line about it takes to
+# read. Push any line that would still be speaking when the next one starts --
+# before subtitles are cut, so the words on screen carry the corrected times too.
+python3 "$(dirname "$0")/schedule.py" "$DIR" || exit 1
+
 # Subtitles come from the same lines.json and the same wavs, so the words on
 # screen cannot drift from the words being spoken.
 python3 "$(dirname "$0")/subtitles.py" "$DIR"
