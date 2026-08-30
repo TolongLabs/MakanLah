@@ -82,11 +82,17 @@ He was right, and fixing him is most of what this repository is a record of.
 |         <sub>4,523 posts read, 814 places named, 0 picks we made up.</sub>         |    <sub>Four questions, answered by a companion who cites nothing.</sub>    |
 
 <div align="center">
-  <a href="https://makanlah-b5h.pages.dev"><b>Try It</b></a> ·
-  <a href="https://github.com/TolongLabs/MakanLah/releases/download/v0.1.0/makanlah-demo.mp4"><b>Watch The Demo</b></a> ·
-  <a href="../scripts/demo/deck/index.html"><b>Deck</b></a>
-  <p><sub>The demo is a 166-second walkthrough: landing, the taste wizard, a ranked search, one venue's full citation
-  trail, and the copilot answering from posts. Subtitles are in the same release.</sub></p>
+
+<video src="https://github.com/TolongLabs/MakanLah/raw/main/docs/media/makanlah-demo.mp4" controls muted width="100%">
+  <a href="https://github.com/TolongLabs/MakanLah/raw/main/docs/media/makanlah-demo.mp4">Watch the demo</a>
+</video>
+
+<sub>A walkthrough: landing, the taste wizard, a ranked search, one venue's full citation trail, and the copilot
+answering from posts.
+<a href="https://github.com/TolongLabs/MakanLah/releases/download/v0.1.0/narration.srt">Subtitles</a>.</sub>
+
+<p><a href="https://makanlah-b5h.pages.dev"><b>Try It</b></a> · <a href="../scripts/demo/deck/index.html"><b>Deck</b></a></p>
+
 </div>
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
