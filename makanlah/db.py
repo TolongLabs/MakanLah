@@ -263,7 +263,19 @@ def venue_documents(con, only_missing_for=None):
 # ------------------------------------------------------------------ ranking
 
 
-def filter_candidates(con, *, lat=None, lng=None, radius_m=None, limit=400):
+# How many venues reach the ranker. It bounds the vector search and keeps a
+# truncation deterministic; it is not a relevance decision, and it must stay
+# larger than the corpus or it becomes one.
+#
+# It was 400, chosen when there were 247 venues, so it never bound. At 823 it
+# truncated by DISTANCE and took whole dishes out of the vocabulary the lexical
+# lane is built from: 400 candidates gave 624 terms and no `steamboat`, the full
+# 740 in range gave 806 and had it. `steamboat` returned 2 results in the
+# afternoon and 0 that evening with the corpus three times larger.
+CANDIDATE_CEILING = 2000
+
+
+def filter_candidates(con, *, lat=None, lng=None, radius_m=None, limit=CANDIDATE_CEILING):
     """Stage 1. Distance in SQL before the vector index is touched.
 
     Filtering after retrieval wastes the index and returns a great match forty
