@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiBase, type Chip, type Prefs, type RecommendResponse, recommend, suggestions } from '../api'
 import { AskCompanion, type AskTarget } from '../components/AskCompanion'
 import { ResultRow } from '../components/ResultRow'
-import { evidenceOf, listBasisLine, sharedBasis } from '../evidence'
+import { coverageLine, evidenceOf, listBasisLine, sharedBasis } from '../evidence'
 import { count } from '../format'
 import { loadPrefs, summarise } from '../prefs'
 import { RANGE } from '../taste/options'
@@ -138,6 +138,7 @@ export function Discover() {
 
   const results = data?.results ?? []
   const gap = data?.evidence_gap ?? null
+  const gaps = data?.coverage_gaps ?? []
   // One caveat about the list beats the same sentence on every row.
   const common = sharedBasis(results)
   const commonLine = listBasisLine(common)
@@ -266,10 +267,28 @@ export function Discover() {
               <p className="result-count">
                 {count(results.length, 'pick')} for <strong lang="und">{asked}</strong>
               </p>
+              {/* COVERAGE, not relevance, and the distinction is the whole point.
+                  A Malay halal query used to come back under "None of these match
+                  your words exactly", which answers a question she did not ask
+                  while staying silent on the one she did. This sits above the
+                  basis line because it outranks it: not holding the information
+                  at all is a larger fact than how the matching was done. */}
+              {gaps.map((g) => (
+                <p className="notice-coverage" key={g}>
+                  {coverageLine(g)}
+                </p>
+              ))}
               {commonLine && <p className="basis list-basis">{commonLine}</p>}
               <ol className="results">
                 {results.map((r, i) => (
-                  <ResultRow key={r.venue.id} result={r} rank={r.rank ?? i + 1} showBasis={!common} onAsk={setTarget} />
+                  <ResultRow
+                    key={r.venue.id}
+                    result={r}
+                    rank={r.rank ?? i + 1}
+                    showBasis={!common}
+                    gaps={gaps}
+                    onAsk={setTarget}
+                  />
                 ))}
               </ol>
             </>

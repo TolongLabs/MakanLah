@@ -252,3 +252,77 @@ describe('the companion and the page agree about what has happened', () => {
     expect(phase()).toBe('empty')
   })
 })
+
+/**
+ * The list-level half. `coverage_gaps` names what the corpus cannot answer at
+ * all, which is a different sentence from how well the matching went — and the
+ * Malay persona only ever saw the second one.
+ */
+const HALAL = {
+  results: [
+    {
+      venue: {
+        id: 'v1',
+        name: 'Hock Kee Heritage',
+        area: null,
+        lat: null,
+        lng: null,
+        maps_url: '',
+        dishes: [],
+        gap_mentions: ['halal']
+      },
+      rank: 1,
+      why: '',
+      distance_m: null,
+      match: { basis: 'semantic', dish: null, similarity: 0.5 },
+      citations: [
+        {
+          post_url: 'https://maps/1',
+          excerpt: '清真友好',
+          platform: 'google_maps',
+          author_handle: null,
+          posted_at: null
+        }
+      ]
+    },
+    {
+      venue: { id: 'v2', name: '鱼你', area: null, lat: null, lng: null, maps_url: '', dishes: [], gap_mentions: [] },
+      rank: 2,
+      why: '',
+      distance_m: null,
+      match: { basis: 'semantic', dish: null, similarity: 0.5 },
+      citations: [
+        { post_url: 'https://rednote/2', excerpt: '好吃', platform: 'rednote', author_handle: 'a', posted_at: null }
+      ]
+    }
+  ],
+  degraded: false,
+  sources_used: ['google_maps', 'rednote'],
+  coverage_gaps: ['halal']
+}
+
+describe('the page says what the corpus cannot answer', () => {
+  it('states the coverage gap, not just the match quality', async () => {
+    recommend.mockReset().mockResolvedValue(HALAL)
+    show({ prefs: { craving: ['halal'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText(/We hold no halal information/i)).toBeTruthy())
+  })
+
+  it('does not let the relevance line stand in for it', async () => {
+    // The exact substitution UAT found: a relevance disclaimer answering a
+    // question she did not ask, while the page stayed silent on the one she did.
+    recommend.mockReset().mockResolvedValue(HALAL)
+    show({ prefs: { craving: ['halal'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText(/We hold no halal information/i)).toBeTruthy())
+    const body = document.body.textContent ?? ''
+    const relevanceOnly = /match your words exactly|close in meaning/i.test(body)
+    expect(relevanceOnly && !/We hold no halal information/i.test(body)).toBe(false)
+  })
+
+  it('says nothing about coverage when the query raised no gap', async () => {
+    recommend.mockReset().mockResolvedValue({ ...HALAL, coverage_gaps: [] })
+    show({ prefs: { craving: ['nasi lemak'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText('Hock Kee Heritage')).toBeTruthy())
+    expect(screen.queryByText(/We hold no halal information/i)).toBeNull()
+  })
+})
