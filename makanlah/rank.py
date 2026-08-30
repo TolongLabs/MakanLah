@@ -196,6 +196,46 @@ def mark_gap_coverage(entries, gaps):
     return entries
 
 
+# A summary is prose a model wrote. It is not a citation, and it must not be able
+# to assert something the citation layer has already refused to support.
+_GAP_CLAIM = {
+    'halal': re.compile(r'halal|muslim|清真|masjid|mosque|mesra\s+muslim', re.I),
+}
+
+
+def withhold_unsupported_gap_claims(entries, gaps):
+    """Drop a `why` that asserts a dietary property the evidence does not carry.
+
+    `gap_mentions`, the mosque exclusion and the truncated-excerpt withdrawal all
+    enforce the halal line at the CITATION layer. `why` is generated from the same
+    excerpts and sits downstream of all three, so it re-derived the claims without
+    the constraints and routed around every one of them.
+
+    Measured on prod at 0a9e84a, query `tempat makan halal untuk keluarga`: two of
+    three results asserted a halal property with `gap_mentions == []`. Sisters Place
+    read `mesra Muslim` -- Muslim-friendly -- from a reviewer describing THEMSELVES
+    as a Chinese Muslim. A person ate here is not this place is permissible, and in
+    Malay that line reads as an assurance.
+
+    The whole line goes rather than the clause. Editing a sentence in Malay or
+    Chinese to remove one claim is a second inference on top of the first, and
+    being dull about halal costs nothing next to being wrong about it.
+    """
+    if not gaps:
+        return entries
+    for e in entries:
+        why = e.get('why')
+        if not why:
+            continue
+        supported = set(e.get('venue', {}).get('gap_mentions') or [])
+        for gap in gaps:
+            pattern = _GAP_CLAIM.get(gap)
+            if pattern and gap not in supported and pattern.search(why):
+                e['why'] = None
+                break
+    return entries
+
+
 def add_corroboration(entries):
     """Attach the signals that make "independent sources" checkable (#87).
 
@@ -491,6 +531,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     results = add_corroboration(results)
     gaps = coverage_gaps(query)
     results = mark_gap_coverage(results, gaps)
+    results = withhold_unsupported_gap_claims(results, gaps)
 
     sources = sorted({c['platform'] for r in results for c in r['citations']})
     return {
