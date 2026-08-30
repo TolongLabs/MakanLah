@@ -210,6 +210,34 @@ So when a check reports a defect, the first question is not "how do I fix the co
 > **Does the defect reproduce outside the instrument that found it?** A direct probe, a second tool, a human looking at
 > the screen. If it does not reproduce, the instrument is the finding.
 
+**That rule is incomplete on its own, and completing it is not a technicality — as written it discards #120, which was
+launch-gating.** The blank `/taste` screen surfaced only because a peer's machine was resource-starved:
+`ERR_INSUFFICIENT_RESOURCES` failed the `MascotStage` fetch. It did not reproduce on a healthy box, production served
+the chunk with a 200, and by the rule above the correct conclusion was "the instrument is the finding". The peer nearly
+stopped there.
+
+What saved it was asking a second question. Not _was the trigger mine_, but **was the app's response to that trigger
+correct** — and it was not: an unguarded dynamic import took down the entire onboarding screen, the first thing every
+guest sees.
+
+So the discriminator is not reproduction. It is a control that separates the two questions:
+
+| Hold this fixed                     | Ask                 | Tells you                     |
+| ----------------------------------- | ------------------- | ----------------------------- |
+| Trigger present, subject unchanged  | Does it reproduce?  | Whose trigger it is           |
+| Trigger present, **subject varied** | Does it still fail? | Whether the response is sound |
+
+For #120 that was chunk-blocked against chunk-allowed with everything else identical — `bodyLen=0, panels=0` against
+`bodyLen=379, panels=4`. Same instrument, same starved machine, **one variable**, which made it a fact about the app
+even though the trigger could only be produced by accident.
+
+> **Ask whether the instrument created the CONDITION or the SYMPTOM. A condition you caused can still reveal a response
+> that is wrong.**
+
+Flaky networks, dropped chunks and starved devices are real users' conditions too; a swap-exhausted laptop is a rough
+simulation of a bad mobile connection rather than a pure artifact. The two halves cover each other: false alarms are
+caught by _does it reproduce_, and real fragilities survive by _does the subject respond correctly under the condition_.
+
 **Fix the class, not the instance.** Three separate probes failed the same way — a geometry assertion that never
 established the element was on screen. A `.option` matched hidden step panels, a right-edge check measured a parked
 drawer, and a clipping check measured `sr-only` nodes. One shared gate retires all three: flag an element only if the
