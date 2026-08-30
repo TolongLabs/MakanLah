@@ -230,46 +230,28 @@ def _only_friendly_evidence(citations):
 
 
 def withhold_unsupported_gap_claims(entries, gaps):
-    """Drop a `why` that asserts a dietary property the evidence does not carry.
+    """Drop every `why` in a response whose query raised a coverage gap.
 
-    `gap_mentions`, the mosque exclusion and the truncated-excerpt withdrawal all
-    enforce the halal line at the CITATION layer. `why` is generated from the same
-    excerpts and sits downstream of all three, so it re-derived the claims without
-    the constraints and routed around every one of them.
+    Structural, not textual, and deliberately blunt. `why` is regenerated per
+    request by a model, so a filter matching its OUTPUT is only as good as the
+    phrasing it anticipated. Measured over 12 identical calls at 1696ba1: 5
+    non-empty lines, 4 of them asserting halal -- `Nasional halal, dekat Masjid
+    Jamek`, `Tempat sarapan halal dan mesra Muslim` -- while the same query
+    returned an empty `why` on other calls. Withdrawal held on most requests and
+    leaked on some. **A safeguard that is probabilistic on halal is not a
+    safeguard**, and single-sample verification cannot tell the two apart.
 
-    Measured on prod at 0a9e84a, query `tempat makan halal untuk keluarga`: two of
-    three results asserted a halal property with `gap_mentions == []`. Sisters Place
-    read `mesra Muslim` -- Muslim-friendly -- from a reviewer describing THEMSELVES
-    as a Chinese Muslim. A person ate here is not this place is permissible, and in
-    Malay that line reads as an assurance.
-
-    The whole line goes rather than the clause. Editing a sentence in Malay or
-    Chinese to remove one claim is a second inference on top of the first, and
-    being dull about halal costs nothing next to being wrong about it.
+    So no summary survives a gap query, including one that would have been fine.
+    It costs a defensible line -- 清真友好，国民老店 quotes the poster and infers
+    nothing -- and buys a guarantee that does not depend on what a model said this
+    time. The evidence itself is untouched: `gap_mentions` still marks the venues
+    whose own posts speak to the topic, and the citation is still on the card for
+    the reader to judge.
     """
     if not gaps:
         return entries
     for e in entries:
-        why = e.get('why')
-        if not why:
-            continue
-        supported = set(e.get('venue', {}).get('gap_mentions') or [])
-        for gap in gaps:
-            pattern = _GAP_CLAIM.get(gap)
-            if pattern and gap not in supported and pattern.search(why):
-                e['why'] = None
-                break
-            # Supported topic, overstated degree (#123). A friendliness remark may
-            # licence "mesra Muslim"; it may not licence "dinyatakan halal", which
-            # in Malay asserts halal STATUS and implies certification.
-            if (
-                gap == 'halal'
-                and gap in supported
-                and _STATUS_ASSERTION.search(why)
-                and _only_friendly_evidence(e.get('citations') or [])
-            ):
-                e['why'] = None
-                break
+        e['why'] = None
     return entries
 
 

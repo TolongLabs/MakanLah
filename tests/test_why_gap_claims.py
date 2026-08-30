@@ -1,87 +1,56 @@
-"""A summary may not assert a dietary property the citations do not carry.
+"""No summary survives a query that raised a coverage gap.
 
-Built from the three real prod results at 0a9e84a, query
-`tempat makan halal untuk keluarga`, where two of three asserted halal with
-`gap_mentions == []`.
+Structural rather than textual, because `why` is regenerated per request by a
+model. The earlier text-matching version withdrew correctly on most calls and
+leaked on others: over 12 identical calls at 1696ba1, 5 non-empty lines came
+back and 4 asserted halal. The variants below are the real leaked strings.
 """
 
 from makanlah.rank import withhold_unsupported_gap_claims
 
 
-def entry(name, why, mentions):
-    return {'why': why, 'venue': {'id': name, 'name': name, 'gap_mentions': mentions}}
-
-
-def test_drops_a_halal_claim_the_citations_withdrew():
-    # 鱼你: the excerpt ends mid-qualifier and scare-quoted, so gap_mentions is
-    # empty. The summary asserted it anyway.
-    e = entry('鱼你', 'Adalah rakan kongsi halal kepada Fish With You yang popular.', [])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] is None
-
-
-def test_drops_muslim_friendly_inferred_from_the_reviewers_own_identity():
-    # Sisters Place: "As a Chinese Muslim Penang-aite, I actually enjoy..." became
-    # a property of the restaurant. A Muslim person ate here is not this place is
-    # Muslim-friendly, and `mesra Muslim` reads as an assurance in Malay.
-    e = entry('Sisters Place', 'Makanan Cina autentik yang mesra Muslim dan berpatutan.', [])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] is None
-
-
-def test_keeps_a_claim_the_citations_do_carry():
-    # Hock Kee Heritage: 清真友好 is real, written by a person, and survives.
-    why = 'Dinyatakan halal dan mesra Muslim, sesuai untuk keluarga.'
-    e = entry('Hock Kee Heritage', why, ['halal'])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] == why
-
-
-def test_leaves_a_why_that_makes_no_dietary_claim_alone():
-    why = 'Sesuai untuk keluarga, harga berpatutan.'
-    e = entry('X', why, [])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] == why
-
-
-def test_no_gap_in_the_query_changes_nothing():
-    why = 'Tempat halal yang popular.'
-    e = entry('X', why, [])
-    assert withhold_unsupported_gap_claims([e], [])[0]['why'] == why
-
-
-def test_mosque_wording_cannot_carry_the_claim_either():
-    # "dekat masjid" -- near a mosque -- is the 清真寺 confusion the gap exclusion
-    # exists to prevent, reappearing as supporting reasoning in prose.
-    e = entry('Y', 'Lokasi strategik dekat masjid, sesuai untuk keluarga.', [])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] is None
-
-
-# #123: supported topic, overstated degree.
-
-
-def entry_c(name, why, mentions, excerpts):
+def entry(name, why, mentions=None, excerpts=()):
     return {
         'why': why,
-        'venue': {'id': name, 'name': name, 'gap_mentions': mentions},
+        'venue': {'id': name, 'name': name, 'gap_mentions': mentions or []},
         'citations': [{'excerpt': x} for x in excerpts],
     }
 
 
-def test_friendly_evidence_cannot_licence_a_status_assertion():
-    # Hock Kee Heritage on prod: 清真友好 is one poster's "halal-friendly".
-    e = entry_c(
-        'Hock Kee',
-        'Dinyatakan halal dan mesra Muslim, sesuai untuk keluarga.',
-        ['halal'],
-        ['占美清真寺的姐妹一定要来！这家清真友好，很推荐。'],
-    )
+LEAKED = [
+    'Nasional halal, sesuai keluarga, lokasi strategik dekat masjid.',
+    'Nasional halal, dekat Masjid Jamek, sesuai untuk keluarga.',
+    'Tempat sarapan halal dan mesra Muslim yang sesuai untuk keluarga.',
+    'Adalah rakan kongsi halal kepada Fish With You yang popular.',
+    'Makanan Cina autentik yang mesra Muslim dan berpatutan.',
+    'Dinyatakan halal dan mesra Muslim, sesuai untuk keluarga.',
+]
+
+
+def test_every_variant_that_reached_prod_is_withdrawn():
+    entries = [entry(f'v{i}', w, ['halal']) for i, w in enumerate(LEAKED)]
+    out = withhold_unsupported_gap_claims(entries, ['halal'])
+    assert [e['why'] for e in out] == [None] * len(LEAKED)
+
+
+def test_a_defensible_line_goes_too_because_the_guarantee_cannot_be_conditional():
+    # 清真友好，国民老店 quotes the poster and infers nothing. It still goes: the
+    # rule cannot depend on judging text a model regenerates each request.
+    e = entry('Hock Kee', '清真友好，国民老店，性价比高适合家庭', ['halal'], ['这家清真友好，很推荐。'])
     assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] is None
 
 
-def test_friendly_evidence_still_licences_a_friendly_claim():
-    why = 'Mesra Muslim, sesuai untuk keluarga.'
-    e = entry_c('Hock Kee', why, ['halal'], ['这家清真友好，很推荐。'])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] == why
+def test_a_query_with_no_gap_keeps_every_summary():
+    entries = [entry('a', 'Soup is rich.'), entry('b', 'Famous for coconut rice.')]
+    out = withhold_unsupported_gap_claims(entries, [])
+    assert [e['why'] for e in out] == ['Soup is rich.', 'Famous for coconut rice.']
 
 
-def test_a_real_certification_statement_licences_the_status_claim():
-    why = 'Disahkan halal, sesuai untuk keluarga.'
-    e = entry_c('Z', why, ['halal'], ['This place is halal certified, we checked the cert'])
-    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] == why
+def test_the_evidence_itself_is_never_touched():
+    # The claim goes; the testimony stays. gap_mentions and citations are what the
+    # reader judges for themselves, and they must survive the withdrawal.
+    e = entry('Hock Kee', 'Nasional halal, dekat Masjid Jamek.', ['halal'], ['这家清真友好，很推荐。'])
+    out = withhold_unsupported_gap_claims([e], ['halal'])[0]
+    assert out['why'] is None
+    assert out['venue']['gap_mentions'] == ['halal']
+    assert out['citations'][0]['excerpt'] == '这家清真友好，很推荐。'
