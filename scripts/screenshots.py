@@ -67,12 +67,10 @@ ROUTES = [
 # Owner asked for the wider set on 2026-08-30, overriding the note above: the README
 # should show the product, not only its one load-bearing claim. /discover still leads.
 README_SHOTS = [
-    ('discover-desktop-light', '/discover', 1440, 900, 'light'),
-    ('discover-desktop-dark', '/discover', 1440, 900, 'dark'),
-    ('discover-phone-light', '/discover', 390, 844, 'light'),
-    ('landing-desktop-light', '/', 1440, 900, 'light'),
-    ('taste-desktop-light', '/taste', 1440, 900, 'light'),
-    ('venue-desktop-light', f'/r/{VENUE_ID}', 1440, 900, 'light'),
+    ('discover-phone', '/discover', 390, 844, 'light'),
+    ('landing-phone', '/', 390, 844, 'light'),
+    ('taste-phone', '/taste', 390, 844, 'light'),
+    ('venue-phone', f'/r/{VENUE_ID}', 390, 844, 'light'),
 ]
 
 # The sweep's craving is deliberately fuzzy, which is right for testing the "closest in

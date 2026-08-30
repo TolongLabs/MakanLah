@@ -56,6 +56,8 @@ what you asked for.
 The output is not a score. It is a restaurant, a distance, a price band, and **the post that made us mention it**,
 quoted verbatim with a link you can open.
 
+<img src="img/problem-4koma.webp" alt="Four panel comic: every place is 4.2 stars; a friend recommends one; the post is unfindable; MakanLah shows the place and the post that named it" width="100%">
+
 A Malaysian tester put the original problem plainly:
 
 > I feel like the restaurants options are kinda limited. Why ah? A lot of the restaurants I know that have good reviews
@@ -69,69 +71,23 @@ He was right, and fixing him is most of what this repository is a record of.
 
 ## What It Looks Like
 
-Seven frames, all shot against production at `2ede89f` on 2026-08-30, 18:37 UTC. Nothing is mocked and nothing is a
-mockup.
+|                                          Find                                           |                                       Evidence                                        |
+| :-------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: |
+| <img src="img/discover-phone-framed.webp" alt="Ranked picks on /discover" width="100%"> | <img src="img/venue-phone-framed.webp" alt="Every post about one venue" width="100%"> |
+|             <sub>Ranked picks, each carrying the post that named it.</sub>              |     <sub>Every post about one place, in whichever language it was written.</sub>      |
 
-<img src="img/landing-desktop-light.webp" alt="MakanLah landing page: Loved By Malaysians. Not invented by a robot." width="100%">
+|                                       Arrive                                       |                                   Onboard                                   |
+| :--------------------------------------------------------------------------------: | :-------------------------------------------------------------------------: |
+| <img src="img/landing-phone-framed.webp" alt="MakanLah landing page" width="100%"> | <img src="img/taste-phone-framed.webp" alt="The taste wizard" width="100%"> |
+|         <sub>4,523 posts read, 814 places named, 0 picks we made up.</sub>         |    <sub>Four questions, answered by a companion who cites nothing.</sub>    |
 
-**The three numbers under the hero are read from the corpus, not written into the page.** `4,523` posts read, `814`
-places named, and `0` picks we made up — the last one is the product's whole argument, and it is the only one that has
-to stay at zero.
-
-### The Core Loop
-
-<img src="img/discover-desktop-light.webp" alt="/discover on desktop: search, dish chips, and ranked picks each carrying the post it came from" width="100%">
-
-**Every card carries its evidence.** `NALE` is there because three people wrote about it, and the excerpt under the name
-is one of those posts rather than a generated summary. `Google Maps · Ray Mak · 3 months ago` is the citation.
-
-**The pink card is the product being honest.** _"Only one post backs this. Worth a look, not a promise."_ A pick with
-thin evidence says so, in the place it would otherwise have sounded confident.
-
-<img src="img/discover-desktop-dark.webp" alt="The same view in dark theme, with Wanjo椰浆饭 ranked first" width="100%">
-
-**`Wanjo椰浆饭` is not a rendering accident.** Venue names arrive in whichever script the poster used, and a layout that
-only survives Latin text fails silently here. Mixed script is tested rather than avoided.
-
-### The Evidence, In Full
-
-<img src="img/venue-desktop-light.webp" alt="Venue page for 阿喜, listing every post about it across both platforms" width="100%">
-
-**This page is the one rule made literal.** Every post about `阿喜`, each openable, an English Google Maps review beside
-a Chinese RedNote post — with `This post no longer opens.` printed under the one that died.
-
-**The header and the lede count different things on purpose.** _"3 posts, Google Maps and RedNote"_ is what the corpus
-holds; _"One platform carries this place so far"_ is what a reader can still open, because both RedNote posts are dead.
-Corroboration is only claimed on evidence that survives.
-
-### Onboarding, And Phone
-
-<table>
-<tr>
-<td width="62%" valign="top">
-<img src="img/taste-desktop-light.webp" alt="The taste wizard, step 1 of 4, with the companion asking what you are craving" width="100%">
-</td>
-<td width="38%" valign="top">
-<img src="img/discover-phone-light.webp" alt="/discover at phone width, chips and distance control stacked" width="100%">
-</td>
-</tr>
-</table>
-
-**The companion writes the wizard's lines and is deliberately kept away from the citation trail.** She sees no corpus
-row, names no venue and makes no claim — `makanlah/companion.py` drops any line that drifts into one. With no API key
-she still talks, from scripted lines.
-
-**The chip row is one row at every width, by decision** — a second row would push the results down, and the results are
-the point. Desktop fits six, the phone fits three, and what is hidden is always a suffix of the ranking: the row can be
-shorter than the list but never a different list. The distance control below it is a 2×2 grid here; it was an
-`inline-flex` row until #197, which left a band of empty pill on every phone — 244px at 390, and 284px at 430, the worst
-case.
-
-<sub>Chips are ranked by how often the corpus mentions each dish and are time-banded. This was the <b>late night
-supper</b> band, reading <b>soup</b> 728, <b>rice</b> 665, <b>chicken</b> 619, <b>curry</b> 272, <b>BKT</b> 256,
-<b>fish</b> 246, confirmed against <code>/suggestions</code> in the same minute as the capture — the phone frame shows
-the first three of those. A different hour reads differently, so these numbers date the screenshot rather than describe
-a fixed row.</sub>
+<div align="center">
+  <a href="https://makanlah-b5h.pages.dev"><b>Try It</b></a> ·
+  <a href="https://github.com/TolongLabs/MakanLah/releases/download/v0.1.0/makanlah-demo.mp4"><b>Watch The Demo</b></a> ·
+  <a href="../scripts/demo/deck/index.html"><b>Deck</b></a>
+  <p><sub>The demo is a 166-second walkthrough: landing, the taste wizard, a ranked search, one venue's full citation
+  trail, and the copilot answering from posts. Subtitles are in the same release.</sub></p>
+</div>
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
@@ -165,28 +121,26 @@ platform while a user waits**.
 
 ```mermaid
 flowchart LR
-  subgraph B["Hermes Agent · ingestion around the clock · nobody is waiting"]
-    direction TB
-    RN["RedNote"] --> CAP["capture to raw cache"]
-    GM["Google Maps<br/>Places API"] --> CAP
-    FB["Food blogs<br/>via Firecrawl"] --> CAP
-    CAP --> EX["extract<br/>EN · MS · ZH"]
-    EX --> RV["resolve venue"]
-    RV --> GC["geocode"]
-    GC --> EM["embed"]
+  RN[RedNote] --> CAP
+  GM[Google Maps Places API] --> CAP
+  FB[Food blogs via Firecrawl] --> CAP
+  subgraph HERMES[Hermes Agent - ingestion, around the clock]
+    CAP[capture to raw cache] --> EX[extract EN, MS, ZH]
+    EX --> RV[resolve venue]
+    RV --> GC[geocode]
+    GC --> EM[embed]
   end
-  EM --> DB[("Neon<br/>Postgres + pgvector")]
-  subgraph R["Request path · Vercel sin1 · a user is waiting"]
-    direction TB
-    Q["query"] --> DF["distance filter"]
-    DF --> PV["pgvector retrieval"]
-    DF --> LX["lexical dish lane"]
-    PV --> RR["LLM re-rank"]
-    LX --> RR
-    RR --> CT["attach citations<br/>from the database"]
-    CT --> OUT["results"]
-  end
+  EM --> DB[(Neon Postgres, pgvector)]
   DB --> DF
+  Q[query] --> DF
+  subgraph REQ[Request path - Vercel sin1, a user is waiting]
+    DF[distance filter] --> PV[pgvector retrieval]
+    DF --> LX[lexical dish lane]
+    PV --> RR[LLM re-rank]
+    LX --> RR
+    RR --> CT[attach citations from the database]
+  end
+  CT --> OUT[results]
 ```
 
 An exact dish match takes the lexical lane and goes in front of the semantic results. The two lanes exist because
@@ -233,19 +187,19 @@ handling are written once and imported by two processes that otherwise share not
 
 ```mermaid
 flowchart TB
-  U["Somebody hungry"] --> W
-  subgraph HOSTED["Hosted"]
-    W["web/ · Cloudflare Pages<br/>static, holds no secret"]
-    A["api/ · FastAPI on Vercel sin1<br/>reads the corpus, never scrapes"]
-    W -->|HTTPS| A
+  U[Somebody hungry] --> W
+  subgraph HOSTED[Hosted]
+    W[web - Cloudflare Pages, holds no secret]
+    A[api - FastAPI on Vercel sin1, never scrapes]
   end
-  A --> N[("Neon · ap-southeast-1")]
-  subgraph LOCAL["Workstation · off the request path entirely"]
-    I["Hermes Agent · ingest/<br/>holds the signed-in session"]
+  W --> A
+  A --> N[(Neon, ap-southeast-1)]
+  subgraph LOCAL[Workstation - off the request path]
+    I[Hermes Agent and ingest - holds the signed-in session]
   end
   I --> N
-  L["makanlah/ · shared library"] -.->|imported by| A
-  L -.->|imported by| I
+  L[makanlah - shared library] -.-> A
+  L -.-> I
 ```
 
 | Piece       | Runs               | Job                                                         |
@@ -263,30 +217,30 @@ forget.
 
 ```mermaid
 erDiagram
-  source_post ||--o{ mention : "is quoted by"
-  venue ||--o{ mention : "is evidenced by"
-  venue ||--o{ venue_embedding : "is retrieved through"
-  source_post {
-    text platform "rednote or google_maps"
-    text url "the link a reader can open"
-    text_array langs "plural by design, never one column"
-    timestamptz posted_at
+  SOURCE_POST ||--o{ MENTION : "is quoted by"
+  VENUE ||--o{ MENTION : "is evidenced by"
+  VENUE ||--o{ VENUE_EMBEDDING : "is retrieved through"
+  SOURCE_POST {
+    string platform "rednote or google_maps"
+    string url "the link a reader can open"
+    string langs "array, plural by design"
+    date posted_at
   }
-  mention {
-    text excerpt "verbatim span, enforced by trigger"
-    text_array dishes
-    real sentiment "-1 to 1"
-    smallint price_band "1 to 4, or null"
+  MENTION {
+    string excerpt "verbatim span, enforced by trigger"
+    string dishes "array"
+    float sentiment "-1 to 1"
+    int price_band "1 to 4, or null"
   }
-  venue {
-    text name
-    text_array aliases
-    double lat "null until geocoding catches up"
-    double lng
+  VENUE {
+    string name
+    string aliases "array"
+    float lat "null until geocoding catches up"
+    float lng
   }
-  venue_embedding {
-    vector embedding "1024 dimensions"
-    text model
+  VENUE_EMBEDDING {
+    string embedding "vector, 1024 dimensions"
+    string model
   }
 ```
 
