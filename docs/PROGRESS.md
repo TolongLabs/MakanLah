@@ -26,6 +26,69 @@ console before repinning.
 
 ---
 
+## 2026-08-30 — PAUSED For A Workstation Restart
+
+**`main` is deployable. Deploy it on resume and tell both peers the sha** — Peer 3 asked to be pinged with whichever
+build is live.
+
+### What Happened Right Before The Pause
+
+PR #166 changed `tally_sentiment` to count dead posts, built on Peer 2's diagnosis that `1919餐馆` was misscored. **Peer
+2 retracted that diagnosis and it was right to.** The mention scores **−1.0 correctly**; the post is `dead: true` and is
+excluded because nobody can open it.
+
+**Both peers then independently argued for reverting, and the deciding reason is the same one:** if sentiment counts
+dead posts while `add_corroboration` does not, the two numbers on one card describe different populations — **which is
+#143 arriving from the other direction.** Reverted. The `distance_gap` half of #166 is kept: it is unaffected, Peer 3
+wanted it, and Peer 2's client for it is built and green.
+
+### The Thing That Is Still Wrong, And It Is Copy Not Arithmetic
+
+Peer 3's sharper point, which survives the revert and is **Peer 2's to fix**: the line reads **"Of the N posts here"**,
+and _here_ means on this card. If the card renders a dead post's excerpt while the line counts only openable ones, **the
+sentence is false as English however correct the arithmetic is** — the reader is looking at a post the number excludes.
+
+Two consistent options: never render a dead excerpt on a card, or say _"of the N posts you can open"_. This is the same
+shape as the corroboration stamp fixed earlier today — **true per the rule, false as English**.
+
+### Three Chinese-Text Heuristics Were Written Today And All Three Were Wrong
+
+Carry this into #159, which touches Han text throughout:
+
+- Peer 2's `length < 3` name guard flagged **鱼你**, a real two-character venue
+- Peer 3's negative-excerpt sweep matched **踩雷 inside 不踩雷** and **雷 inside 無雷**, inverting all three hits
+- My gap matcher matched **`ckt` inside `elder garden mo(ckt)ail`** and **`sate` inside `ro(sate)d chicken`**
+
+None were visible to an English-language test pass. The rule that worked: **whole-word for Latin, substring for Han**,
+because 肉骨茶 inside 中药肉骨茶 is genuinely the same dish and there is no word boundary to lean on.
+
+### A Scope Error All Three Sessions Made
+
+Peer 2 justified printing unanimity on **163 of 186 multi-mention venues span more than one bucket** — my figure,
+describing a venue's **whole record**. The line describes the **cited, live, trimmed** posts, two or three, where **36
+of 44 read "all positive" — 82%, not 12%**. The number was not wrong; it answered a different question than the card
+asks. Same shape as reporting #143 fixed while production still disagreed on 5 of 25.
+
+### Where Everything Stopped
+
+| Branch / PR                                | State                                                                                                                                                                  |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **#165**                                   | Open, green — an earlier docs checkpoint                                                                                                                               |
+| **#144**                                   | Open, green, **blocked on three one-word answers from the owner** (Peer 2's): disclosure one-tap or always-open, whether the model blurb returns, dot density for #141 |
+| **`feat/gmaps-discovery-wip`** (`250c602`) | **Unverified.** `discover()` for #157, never run against a signed-in browser; `LIST_JS` is a guess at the results-feed DOM. Do not merge because it compiles           |
+| Peer 2                                     | Parked clean at `80511ce`, preview deploy-verified                                                                                                                     |
+| Peer 3                                     | Parked, record at `scratchpad/UAT-ROUND2.md`                                                                                                                           |
+
+**Peer 3's one open question**: on Peer 2's preview `834d3d2`, `1919餐馆` returned 3 cards with **no sentiment line
+found**. They explicitly flag this as probably their own selector — they matched a quoted copy string literally — and it
+needs a 1440 and a non-lean run. **Assume the instrument until someone checks.**
+
+**Next up is #157**, Maps venue discovery — the ceiling on everything else and the thing a real tester actually
+complained about. All three sessions agree it precedes the copilot, whose schema is settled and whose client half Peer 2
+has already built.
+
+---
+
 ## 2026-08-30 (Late) — The Pitch Deck, And A Fix I Reported Before It Was Fixed
 
 **`main` is at `ccdc65f` and `/health` reports `ccdc65f`.** Three PRs landed: **#145** and **#147** (sentiment counts)

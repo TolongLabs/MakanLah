@@ -360,7 +360,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     for venue_id, cites in pool.items():
         shown = diverse_citations(cites, per_venue)
         out[venue_id]['citations'] = shown
-        kept[venue_id] = {c['post_id'] for c in shown}
+        kept[venue_id] = {c['post_id'] for c in shown if not c.get('dead')}
     for venue_id, counts in tally_sentiment(rows, kept).items():
         out[venue_id]['sentiment'] = counts
     return out
@@ -381,14 +381,16 @@ def tally_sentiment(rows, kept=None):
       ships, and tallying every post in the corpus instead gave Village Park 7
       sentiment against 3 posts, none of the extra four on the card.
 
-    Dead posts ARE counted here, which is the opposite of what corroboration does,
-    and the difference is deliberate. Corroboration claims a reader can go and check
-    two independent people, so a post nobody can open is not a second source (#111).
-    This summarises the testimony on the card, and the card SHOWS a dead citation --
-    labelled, but shown. 1919餐馆 displayed 「别去」 (don't go) and read `all
-    positive`, because the tally skipped the dead post the reader was looking at.
-    **What we show is what we count**, or the summary contradicts the evidence
-    beside it.
+    Dead posts are excluded, matching add_corroboration exactly. This was briefly
+    changed and changed back, and the reasoning is worth keeping: 1919餐馆 renders a
+    dead 「别去」 (don't go) excerpt above a line reading `all positive`, which looks
+    like the tally missing it. It is not -- that mention scores -1.0 correctly and is
+    excluded because nobody can open the post.
+
+    Counting it would make sentiment and corroboration describe different sets on the
+    same card, which is #143 arriving from the other direction. The fix for the
+    apparent contradiction is the word "here" in the copy and the unopenable label on
+    the dead row, not counting evidence we have told the reader they cannot check.
 
     Several mentions behind one identity are averaged, not reduced to the worst.
     That rule was written for one author's own disagreeing sentences and it is wrong
@@ -400,6 +402,8 @@ def tally_sentiment(rows, kept=None):
     """
     by_venue = {}
     for r in rows:
+        if r['dead']:
+            continue
         if kept is not None and str(r['post_id']) not in kept.get(r['venue_id'], ()):
             continue
         if r['sentiment'] is None:
