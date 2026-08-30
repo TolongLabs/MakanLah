@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="700" viewBox="0 0 1100 700" role="img" aria-labelledby="title desc">
+  <title id="title">The citation trail, as tables</title>
+  <desc id="desc">Entity relationship diagram with mention at the center, joining source posts to venues and venue embeddings so every recommendation retains evidence.</desc>
+  <defs>
+    <style>
+      text { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #172536; }
+      .table { fill: #ffffff; stroke: #315d79; stroke-width: 2; }
+      .head { fill: #315d79; }
+      .join-head { fill: #287052; }
+      .row { stroke: #d3dde4; stroke-width: 1; }
+      .title { font-size: 24px; font-weight: 750; }
+      .table-title { font-size: 16px; font-weight: 700; fill: #ffffff; }
+      .field { font-size: 13px; font-weight: 700; }
+      .detail { font-size: 12px; fill: #445869; }
+      .relation { fill: none; stroke: #526f82; stroke-width: 2.2; }
+      .relation-label { font-size: 12px; font-weight: 700; fill: #3d596c; }
+      .cardinality { font-size: 13px; font-weight: 750; fill: #315d79; }
+    </style>
+  </defs>
+  <rect width="1100" height="700" fill="#f3f6f8" />
+  <text class="title" x="550" y="40" text-anchor="middle">The citation trail, as tables</text>
+
+  <g transform="translate(40 130)">
+    <rect class="table" width="280" height="270" rx="12" />
+    <path class="head" d="M12 0 H268 Q280 0 280 12 V54 H0 V12 Q0 0 12 0 Z" />
+    <text class="table-title" x="20" y="34">source_post</text>
+    <line class="row" x1="0" y1="108" x2="280" y2="108" />
+    <line class="row" x1="0" y1="162" x2="280" y2="162" />
+    <line class="row" x1="0" y1="216" x2="280" y2="216" />
+    <text class="field" x="18" y="77">platform</text><text class="detail" x="18" y="97">rednote or google_maps</text>
+    <text class="field" x="18" y="131">url</text><text class="detail" x="18" y="151">the link a reader can open</text>
+    <text class="field" x="18" y="185">langs</text><text class="detail" x="18" y="205">array, plural by design</text>
+    <text class="field" x="18" y="246">posted_at</text>
+  </g>
+
+  <g transform="translate(410 205)">
+    <rect class="table" width="280" height="270" rx="12" />
+    <path class="join-head" d="M12 0 H268 Q280 0 280 12 V54 H0 V12 Q0 0 12 0 Z" />
+    <text class="table-title" x="20" y="34">mention</text>
+    <line class="row" x1="0" y1="118" x2="280" y2="118" />
+    <line class="row" x1="0" y1="166" x2="280" y2="166" />
+    <line class="row" x1="0" y1="214" x2="280" y2="214" />
+    <text class="field" x="18" y="77">excerpt</text><text class="detail" x="18" y="97">verbatim span, enforced by trigger</text>
+    <text class="field" x="18" y="146">dishes</text><text class="detail" x="86" y="146">array</text>
+    <text class="field" x="18" y="194">sentiment</text><text class="detail" x="98" y="194">-1 to 1</text>
+    <text class="field" x="18" y="242">price_band</text><text class="detail" x="106" y="242">1 to 4, or null</text>
+  </g>
+
+  <g transform="translate(780 80)">
+    <rect class="table" width="280" height="270" rx="12" />
+    <path class="head" d="M12 0 H268 Q280 0 280 12 V54 H0 V12 Q0 0 12 0 Z" />
+    <text class="table-title" x="20" y="34">venue</text>
+    <line class="row" x1="0" y1="102" x2="280" y2="102" />
+    <line class="row" x1="0" y1="150" x2="280" y2="150" />
+    <line class="row" x1="0" y1="216" x2="280" y2="216" />
+    <text class="field" x="18" y="83">name</text>
+    <text class="field" x="18" y="131">aliases</text><text class="detail" x="78" y="131">array</text>
+    <text class="field" x="18" y="177">lat</text><text class="detail" x="18" y="198">null until geocoding catches up</text>
+    <text class="field" x="18" y="246">lng</text>
+  </g>
+
+  <g transform="translate(780 440)">
+    <rect class="table" width="280" height="174" rx="12" />
+    <path class="head" d="M12 0 H268 Q280 0 280 12 V54 H0 V12 Q0 0 12 0 Z" />
+    <text class="table-title" x="20" y="34">venue_embedding</text>
+    <line class="row" x1="0" y1="118" x2="280" y2="118" />
+    <text class="field" x="18" y="78">embedding</text><text class="detail" x="18" y="99">vector, 1024 dimensions</text>
+    <text class="field" x="18" y="148">model</text>
+  </g>
+
+  <path class="relation" d="M320 265 H410" />
+  <text class="cardinality" x="333" y="253">1</text><text class="cardinality" x="384" y="253">many</text>
+  <text class="relation-label" x="365" y="286" text-anchor="middle">is quoted by</text>
+
+  <path class="relation" d="M780 286 H735 Q712 286 690 310" />
+  <text class="cardinality" x="754" y="275">1</text><text class="cardinality" x="698" y="296">many</text>
+  <text class="relation-label" x="744" y="316" text-anchor="end">is evidenced by</text>
+
+  <path class="relation" d="M920 350 V440" />
+  <text class="cardinality" x="930" y="374">1</text><text class="cardinality" x="930" y="430">many</text>
+  <rect x="840" y="382" width="160" height="24" rx="5" fill="#f3f6f8" />
+  <text class="relation-label" x="920" y="399" text-anchor="middle">is retrieved through</text>
+
+  <text x="550" y="525" text-anchor="middle" font-size="14" font-weight="650" fill="#287052">
+    <tspan x="550">The join that keeps every</tspan><tspan x="550" dy="20">recommendation citable</tspan>
+  </text>
+</svg>

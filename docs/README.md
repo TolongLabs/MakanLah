@@ -83,9 +83,7 @@ He was right, and fixing him is most of what this repository is a record of.
 
 <div align="center">
 
-<video src="https://github.com/TolongLabs/MakanLah/raw/main/docs/media/makanlah-demo.mp4" controls muted width="100%">
-  <a href="https://github.com/TolongLabs/MakanLah/raw/main/docs/media/makanlah-demo.mp4">Watch the demo</a>
-</video>
+[<img src="img/demo-preview.webp" alt="A ten second loop of the MakanLah walkthrough" width="100%">](https://github.com/TolongLabs/MakanLah/releases/download/v0.1.0/makanlah-demo.mp4)
 
 <sub>A walkthrough: landing, the taste wizard, a ranked search, one venue's full citation trail, and the copilot
 answering from posts.
@@ -125,29 +123,7 @@ Two runtimes that never share a request. **Hermes Agent works the sources around
 session and deciding what to read next. The API is hosted, reads a normalized corpus, and **never fetches from a
 platform while a user waits**.
 
-```mermaid
-flowchart LR
-  RN[RedNote] --> CAP
-  GM[Google Maps Places API] --> CAP
-  FB[Food blogs via Firecrawl] --> CAP
-  subgraph HERMES[Hermes Agent - ingestion, around the clock]
-    CAP[capture to raw cache] --> EX[extract EN, MS, ZH]
-    EX --> RV[resolve venue]
-    RV --> GC[geocode]
-    GC --> EM[embed]
-  end
-  EM --> DB[(Neon Postgres, pgvector)]
-  DB --> DF
-  Q[query] --> DF
-  subgraph REQ[Request path - Vercel sin1, a user is waiting]
-    DF[distance filter] --> PV[pgvector retrieval]
-    DF --> LX[lexical dish lane]
-    PV --> RR[LLM re-rank]
-    LX --> RR
-    RR --> CT[attach citations from the database]
-  end
-  CT --> OUT[results]
-```
+<img src="img/diagram-pipeline.svg" alt="Ingestion sources flow through Hermes into Neon, while a separate request path retrieves, ranks, and attaches citations" width="100%">
 
 An exact dish match takes the lexical lane and goes in front of the semantic results. The two lanes exist because
 `roti canai` and _"something not too heavy"_ are different questions, and one retriever answers them both badly.
@@ -191,22 +167,7 @@ the corpus actually is.
 Three deployables and one shared library. The library exists so the corpus schema, the embedding client and the language
 handling are written once and imported by two processes that otherwise share nothing.
 
-```mermaid
-flowchart TB
-  U[Somebody hungry] --> W
-  subgraph HOSTED[Hosted]
-    W[web - Cloudflare Pages, holds no secret]
-    A[api - FastAPI on Vercel sin1, never scrapes]
-  end
-  W --> A
-  A --> N[(Neon, ap-southeast-1)]
-  subgraph LOCAL[Workstation - off the request path]
-    I[Hermes Agent and ingest - holds the signed-in session]
-  end
-  I --> N
-  L[makanlah - shared library] -.-> A
-  L -.-> I
-```
+<img src="img/diagram-topology.svg" alt="The web client calls the API over HTTPS, while the API and off-request-path ingestion worker share Neon and a common library" width="100%">
 
 | Piece       | Runs               | Job                                                         |
 | ----------- | ------------------ | ----------------------------------------------------------- |
@@ -221,34 +182,7 @@ flowchart TB
 no post behind it cannot be selected — the guarantee lives in the schema rather than in a code path somebody could
 forget.
 
-```mermaid
-erDiagram
-  SOURCE_POST ||--o{ MENTION : "is quoted by"
-  VENUE ||--o{ MENTION : "is evidenced by"
-  VENUE ||--o{ VENUE_EMBEDDING : "is retrieved through"
-  SOURCE_POST {
-    string platform "rednote or google_maps"
-    string url "the link a reader can open"
-    string langs "array, plural by design"
-    date posted_at
-  }
-  MENTION {
-    string excerpt "verbatim span, enforced by trigger"
-    string dishes "array"
-    float sentiment "-1 to 1"
-    int price_band "1 to 4, or null"
-  }
-  VENUE {
-    string name
-    string aliases "array"
-    float lat "null until geocoding catches up"
-    float lng
-  }
-  VENUE_EMBEDDING {
-    string embedding "vector, 1024 dimensions"
-    string model
-  }
-```
+<img src="img/diagram-schema.svg" alt="Entity relationship diagram showing mentions joining source posts to venues, with venues linked to their embeddings" width="100%">
 
 **`mention.excerpt` is enforced by a database trigger, not by convention.** The spike caught the extractor returning
 excerpts that read correctly and were not in the post, stitched from non-contiguous lines. A fabricated quote behind a
