@@ -56,7 +56,7 @@ def review_url(venue_name, city='Kuala Lumpur', place_id=None):
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
-def pending_venues(con, limit=None, only_missing=True, offset=0):
+def pending_venues(con, limit=None, only_missing=True, offset=0, discovered_only=False):
     """Venues that have no Google Maps evidence yet.
 
     'Missing coordinates' was the original predicate and is now the wrong one:
@@ -67,8 +67,16 @@ def pending_venues(con, limit=None, only_missing=True, offset=0):
 
     Best-evidenced venues first, so a run cut short covers what matters most.
     """
-    sql = """select id, name, area from venue
-             where exists (select 1 from mention m where m.venue_id = venue.id)"""
+    # `exists (mention)` alone was the whole predicate, and it is what made Maps an
+    # enricher rather than a source (#157): a venue discovered ON Maps has no mention
+    # yet, so the stage that would give it one skipped it forever. A discovered venue
+    # is unrecommendable until this runs over it -- both recommendation paths inner-join
+    # `mention` -- so excluding it here is what stranded it.
+    known = 'exists (select 1 from mention m where m.venue_id = venue.id)'
+    if discovered_only:
+        sql = f'select id, name, area from venue where place_id is not null and not {known}'
+    else:
+        sql = f'select id, name, area from venue where ({known} or place_id is not null)'
     if only_missing:
         sql += """ and not exists (
                      select 1 from mention m

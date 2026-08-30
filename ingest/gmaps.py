@@ -16,6 +16,7 @@ nothing re-fetched that the corpus already has.
 """
 
 import asyncio
+import json
 import re
 import urllib.parse
 
@@ -83,6 +84,87 @@ def _coords_from(href):
 def _place_id_from(href):
     m = PLACE_ID.search(href or '')
     return m.group(1) if m else None
+
+
+# The results feed of a Maps search. `resolve` reads querySelector -- the FIRST
+# result -- because it exists to turn a known name into a place. Discovery needs
+# the whole list, which is the difference between enriching a venue and finding one.
+LIST_JS = """JSON.stringify([...document.querySelectorAll('a[href*="/maps/place/"]')]
+  .map(a => ({
+    href: a.getAttribute('href') || '',
+    name: (a.getAttribute('aria-label') || '').trim()
+  }))
+  .filter(x => x.name && x.href))"""
+
+# Maps renders about seven results and loads the rest only as the feed scrolls.
+# Measured on 'nasi lemak Bangsar': 7 anchors on arrival, 47 after six scrolls and
+# still climbing. Reading the feed without this collects a seventh of the page.
+SCROLL_JS = """(() => {
+  const f = document.querySelector('div[role="feed"]');
+  if (!f) return 0;
+  f.scrollTop = f.scrollHeight;
+  return document.querySelectorAll('a[href*="/maps/place/"]').length;
+})()"""
+
+# Klang Valley. Same bound resolve() applies, for the same reason: a hit outside
+# it matched the wrong place, and a wrong coordinate is worse than a null one.
+KLANG_VALLEY = (2.6, 3.6, 101.2, 102.1)
+
+
+def parse_feed(items, limit=60):
+    """Anchor dicts from LIST_JS -> [{name, place_id, lat, lng}], deduped.
+
+    Kept separate from the navigation so the discard rules are testable without a
+    browser. Every rule here throws a row away, and each one is a row that would
+    otherwise enter the corpus as a venue nobody can verify.
+    """
+    out, seen = [], set()
+    for d in items or []:
+        if not isinstance(d, dict):
+            continue
+        name = (d.get('name') or '').strip()
+        href = d.get('href') or ''
+        if not name:
+            continue
+        lat, lng = _coords_from(href)
+        place_id = _place_id_from(href)
+        if lat is None or not place_id or place_id in seen:
+            continue
+        lo_lat, hi_lat, lo_lng, hi_lng = KLANG_VALLEY
+        if not (lo_lat <= lat <= hi_lat and lo_lng <= lng <= hi_lng):
+            continue
+        seen.add(place_id)
+        out.append({'name': name, 'place_id': place_id, 'lat': lat, 'lng': lng})
+        if len(out) >= limit:
+            break
+    return out
+
+
+async def discover(page, query, limit=60, scrolls=8):
+    """Search Maps and return every place the results feed will give up.
+
+    The only path by which a venue can enter the corpus without a RedNote post
+    naming it first (#157). Returns [] rather than raising when the feed is not
+    there -- a query with no results is a normal outcome, not an error.
+    """
+    await page.goto(f'https://www.google.com/maps/search/{urllib.parse.quote(query)}/?hl=en', settle=9)
+    seen_count = 0
+    for _ in range(scrolls):
+        n = await page.js(SCROLL_JS)
+        try:
+            n = int(n)
+        except (TypeError, ValueError):
+            break
+        if n <= seen_count:
+            break
+        seen_count = n
+        if n >= limit:
+            break
+        await asyncio.sleep(2.5)
+    raw = await page.js(LIST_JS)
+    if not raw:
+        return []
+    return parse_feed(json.loads(raw), limit=limit)
 
 
 async def resolve(page, name, area=None, city='Kuala Lumpur'):
