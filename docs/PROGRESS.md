@@ -26,6 +26,73 @@ console before repinning.
 
 ---
 
+## 2026-08-30 (Launch Run) — What A Real Tester Broke, And The Queue That Came Out Of It
+
+**`main` and `/health` are both at `785992a`.** Ten PRs merged today: #145, #146, #147, #148, #150, #151, #154, #156,
+#161, #162.
+
+**A Malaysian tester used prod and found the ceiling on the whole product.** He said the restaurant list was too thin
+and he could not see prices. Both are measured and real:
+
+- **Every venue enters through RedNote.** `capture_rednote.py` searches ~20 hand-written keywords; `enrich_gmaps.py:64`
+  then iterates `venue where exists (mention)`. Google Maps supplies **1,388 of 1,653 mentions — 84% of the evidence —
+  and cannot introduce a single restaurant.** A popular place Maps knows about that RedNote influencers ignored is
+  invisible by construction. **#157**
+- **Price: 49 of 1,653 mentions, 45 of 256 venues.** Maps' price level is on place records we already load and we
+  discard it. **#158**
+
+**The keyword question is the deeper one, and the answer is that there is no knowledge.** `KEYWORDS` is 20 strings typed
+once; nothing records **which keyword discovered which post**, so no run can tell a productive term from an exhausted
+one. Meanwhile **549 distinct hashtags sit unused in the 119 posts we already captured** — `#吉隆坡探店`, `#kl探店`,
+`#pjcafe`, `#宝藏餐厅分享`. `探店` is the platform's dominant food-discovery convention and we have never searched it.
+**#159** proposes `KEYWORDS` become a table carrying provenance and new-venues-per-post yield. **#160 is the sequential
+launch queue.**
+
+**Peer 3's F1 was the worst live defect and is fixed.** At walking distance in PJ, **10 of 10 dish queries returned
+venues serving none of the dish asked for** — `nasi lemak` returned pasta, tacos and a bakery, ranked, with
+`coverage_gaps: []` and a corroboration stamp on each. **Every citation was real; the ranked answer asserted a relevance
+no post supported.** Cause: `vocabulary` is built from the candidate pool, so a dish outside the radius was
+indistinguishable from one nobody has written about. `recommend` now emits `distance_gap`. Verified live: **6 of 10 now
+gap**, the same 6 confirmed as substitutions; the other 4 are dishes the corpus has no string for.
+
+**Detection is wide, naming is strict, and that distinction cost two false claims to learn.** `canonical()` matches by
+substring and the alias table holds short forms, so **`ckt` matched `elder garden mo(ckt)ail`** and **`sate` matched
+`ro(sate)d chicken`** — putting a tea house on a char kway teow gap. Latin aliases now match as whole words; Han keeps
+substring, because 肉骨茶 inside 中药肉骨茶 is the same dish.
+
+**Sentiment took four rounds and every round was caught by someone else reading the output.** #145 counted per live
+post; #147 counted the citations that ship; #151 stopped worst-wins across a collapsed identity; #156 moved the cut to
+−0.4. Peer 2 found the second and third **by reading cards, not numbers**. The last cause: I fitted cut points to Maps'
+star scale while the opinionated negative writing lives in RedNote's continuous model scores. **Maps is quantised to
+{−1, −0.5, 0, 0.5, 1}, so any cut in (−0.5, 0) moves RedNote alone** — which made it safe to fit to RedNote's own 14
+negative mentions, read by hand.
+
+**#154 closed #87 in the mirror.** `post_url` was never a post identity: Maps has no per-review URL, so 1,388 mentions
+share 178 URLs. Upper House shipped three testimonies by three people and rendered "1 post" with no stamp.
+
+**Language: 1,388 untagged posts → 2.** `enrich_gmaps.py` hardcoded `langs=['und']` while RedNote always called
+`detect_langs`. Widening the detector was safe because `detect_langs` is plural — measured 47 rows change, **0 lose a
+tag**.
+
+**Ingredient queries: 0 of 14 resolved → 13 of 13.** `chicken` 46 dishes, `rice` 31, `crab` 8. Mood queries still match
+nothing.
+
+**Two things I got wrong today, recorded because both are the same shape.** I reported #143 fixed when production still
+disagreed on 5 of 25 — the unit tests built their own rows, so they tested my idea of the input while the trim happened
+elsewhere. And I shipped a `query_place_id` fix for a bug that did not exist: `citationHref()` was already repairing it
+client-side. **A payload defect is not a defect until you check whether the client transforms that field.** Peer 3 named
+the rule after making the same error twice.
+
+**Worker lane:** OpenCode on `glm-4.7-flash`. **`glm-5.3-flash` returns empty completions or hangs** regardless of
+prompt — reproduced on a one-line prompt; the standing orders still name it. The worker on #140 produced a usable draft,
+**stopped 2 of 6 tests short and did not say so** (`break` after the first match), and imported `re` unused. Third
+plausible-but-wrong worker output today.
+
+**Devin is still unusable**: `Refusing to run in an untrusted workspace` despite `trusted_workspaces.json`. The
+Chatterbox voice spike never ran; the eight Kokoro previews in `makanlah-video/handoff/` remain the only voice samples.
+
+---
+
 ## 2026-08-30 (Late) — The Pitch Deck, And A Fix I Reported Before It Was Fixed
 
 **`main` is at `ccdc65f` and `/health` reports `ccdc65f`.** Three PRs landed: **#145** and **#147** (sentiment counts)
