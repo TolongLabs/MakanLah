@@ -240,6 +240,34 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s6);
   padding-block: var(--s5) var(--s8);
+  /* The ground below paints at z-index -1, which is only predictable inside a
+     stacking context this element owns. Same reason .ground isolates in base.css. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* #141's sketchboard ground, sparse on purpose.
+
+   A 24px grid with a ~1px dot is far enough apart that no excerpt ever sits ON
+   texture -- DESIGN.md requires the ground never compete with the evidence, and
+   density is the setting that decides whether it does. Denser reads as a screen,
+   not a sketchboard, and puts a dot inside the counter of every Han glyph.
+
+   Drawn with a gradient rather than the mask the Shippou ground uses, because a
+   gradient reads var(--dot) directly where a data URI cannot. Same constraint that
+   comment in base.css names, solved the cheaper way when the motif is a dot.
+
+   `fixed` rather than `absolute`: .page is width-capped and the ground is the
+   PAGE's, so an absolute inset would band the dots into a 76rem column and stop
+   them wherever the results happen to end. */
+.discover::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at center, var(--dot) 0.9px, transparent 1.6px);
+  background-size: 24px 24px;
 }
 
 @media (min-width: 60rem) {
