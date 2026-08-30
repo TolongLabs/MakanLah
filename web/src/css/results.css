@@ -543,7 +543,15 @@
 /* The caption names up to five wizard answers, two of which can be a dish string
    in any of three scripts. 16rem wrapped it into a tall narrow column. */
 .find-why .tooltip-bubble {
-  max-width: 22rem;
+  /* 22rem is 352px, and it was a flat cap. The bubble is position:absolute, so at a
+     360px viewport it laid out from left:19 to right:371 and pushed the document's
+     scroll extent to 371 -- the whole page scrolled sideways at the narrowest width
+     DESIGN.md says is tested, because of a panel that is invisible until hover.
+     Confirmed causally rather than by inspection: hiding this one element takes the
+     document from 371 back to 360.
+     The second term caps it to the viewport less the page's own inline padding, so
+     the bubble can never be the widest thing on the page. */
+  max-width: min(22rem, calc(100vw - 2.5rem));
   white-space: normal;
   text-align: left;
 }
