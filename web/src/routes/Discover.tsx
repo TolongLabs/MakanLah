@@ -21,6 +21,45 @@ const APPLIED_TERM: Record<string, string> = { company: 'With', mood: 'Mood', bu
 const CLIENT_TERMS = new Set(['Craving', 'Within'])
 
 type Geo = { lat: number; lng: number } | null
+
+/**
+ * The position, but only if the browser already has permission to give it.
+ *
+ * #172. Geo rides router state from the wizard and is deliberately NOT persisted:
+ * coordinates are a durable record of where somebody lives, readable by anything
+ * on the origin long after the visit that produced them. The RADIUS is a
+ * preference rather than a location and is already kept in `prefs.range_m`.
+ *
+ * So a returning user arrived with a radius they had chosen and no way to apply
+ * it, and got a KL-wide search where the wizard user got a bounded one -- second
+ * visit strictly worse on the same query and the same corpus.
+ *
+ * Asking the permission registry first is what makes this silent. `granted` means
+ * the user already said yes on this origin, so `getCurrentPosition` resolves
+ * without a new prompt. Anything else returns null and NOTHING is called, because
+ * firing a permission prompt on page load is its own defect.
+ */
+async function grantedPosition(): Promise<Geo> {
+  if (!navigator.geolocation || !navigator.permissions?.query) return null
+  try {
+    const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
+    if (status.state !== 'granted') return null
+  } catch {
+    // Firefox refused `geolocation` as a permission name for years. Unknown means
+    // unknown, and an unknown permission is not consent.
+    return null
+  }
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => resolve(null),
+      // A cached fix is what makes this fast enough to gate the first search on.
+      // The timeout is the ceiling on how long a returning user waits before the
+      // page gives up and searches KL-wide, which is what it did before anyway.
+      { timeout: 4000, maximumAge: 300_000 }
+    )
+  })
+}
 type Handoff = { prefs?: Prefs; geo?: Geo; geoRefused?: boolean }
 
 /**
@@ -56,7 +95,11 @@ export function Discover() {
   // Deliberately empty. See note 1 above.
   const [query, setQuery] = useState('')
   const [radius, setRadius] = useState(() => prefs?.range_m ?? 0)
-  const [geo] = useState<Geo>(handoff.geo ?? null)
+  // A ref rather than state, because nothing RENDERS the position -- only the
+  // request carries it. It is also written synchronously rather than left to the
+  // next render, for the same reason `useCravingRef` is: the first search reads it
+  // the moment the position resolves and React has not re-rendered yet.
+  const geoRef = useRef<Geo>(handoff.geo ?? null)
   const [geoRefused] = useState(Boolean(handoff.geoRefused))
 
   const [loading, setLoading] = useState(false)
@@ -96,14 +139,15 @@ export function Discover() {
       setAsked(term)
       setTarget(null)
       try {
-        const useRadius = radiusM > 0 && geo
+        const here = geoRef.current
+        const useRadius = radiusM > 0 && here
         setAskedRadius(useRadius ? radiusM : 0)
         const applied = prefs && !useCravingRef.current ? { ...prefs, craving: [] } : prefs
         const res = await recommend({
           query: term,
           limit: 10,
           ...(applied ? { prefs: applied } : {}),
-          ...(useRadius ? { lat: geo.lat, lng: geo.lng, radius_m: radiusM } : {})
+          ...(useRadius && here ? { lat: here.lat, lng: here.lng, radius_m: radiusM } : {})
         })
         setData(res)
         cacheResults(res.results)
@@ -114,7 +158,7 @@ export function Discover() {
         setLoading(false)
       }
     },
-    [geo, prefs]
+    [prefs]
   )
 
   // The wizard is the front door: arriving here having never answered it means the
@@ -128,7 +172,28 @@ export function Discover() {
       navigate('/taste', { replace: true })
       return
     }
-    void run(cravingOf(prefs), prefs.range_m ?? 0)
+    const radius = prefs.range_m ?? 0
+    // Nothing to recover: either the wizard handed the position over, or no radius
+    // was asked for and a position would change nothing.
+    if (geoRef.current || radius === 0) {
+      void run(cravingOf(prefs), radius)
+      return
+    }
+    // #172. Gate the FIRST search on the silent lookup rather than re-running after
+    // it. A re-run costs a second model-backed call and visibly replaces results
+    // the reader is already looking at; this waits instead, bounded, and only for
+    // the one case that needs it -- a returning user with a radius and no position.
+    //
+    // Loading is set HERE rather than left to run(). The lookup happens before the
+    // first request, so without this the page renders its empty state for as long
+    // as the position takes -- a blank screen where it used to show results
+    // immediately, which is a worse first paint than the bug being fixed.
+    setLoading(true)
+    void (async () => {
+      const here = await grantedPosition()
+      if (here) geoRef.current = here
+      void run(cravingOf(prefs), radius)
+    })()
   }, [navigate, prefs, run])
 
   useEffect(() => {

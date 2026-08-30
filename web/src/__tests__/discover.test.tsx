@@ -526,3 +526,51 @@ describe('the distance row survives a failed search', () => {
     expect(text).not.toMatch(/1 km/)
   })
 })
+
+describe('a returning user gets their radius back without a new prompt', () => {
+  // #172 part 2. Coordinates are deliberately NOT persisted -- they are a durable
+  // record of where somebody lives. But a user who already granted geolocation on
+  // this origin can have the radius back silently: ask the permission registry
+  // first, and only call getCurrentPosition when it already says `granted`.
+  function stubGeo(state: PermissionState, coords?: { lat: number; lng: number }) {
+    Object.defineProperty(navigator, 'permissions', {
+      configurable: true,
+      value: { query: vi.fn().mockResolvedValue({ state }) }
+    })
+    const getCurrentPosition = vi.fn((ok: PositionCallback, fail?: PositionErrorCallback) => {
+      if (coords) ok({ coords: { latitude: coords.lat, longitude: coords.lng } } as GeolocationPosition)
+      else fail?.({ code: 1 } as GeolocationPositionError)
+    })
+    Object.defineProperty(navigator, 'geolocation', { configurable: true, value: { getCurrentPosition } })
+    return getCurrentPosition
+  }
+
+  const returning = { craving: ['nasi lemak'], range_m: 1000 }
+
+  it('sends the radius once permission is already granted', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    stubGeo('granted', { lat: 3.139, lng: 101.6869 })
+    show({ prefs: returning })
+    await waitFor(() => expect(recommend).toHaveBeenCalled())
+    expect(recommend.mock.calls[0]?.[0]).toMatchObject({ lat: 3.139, lng: 101.6869, radius_m: 1000 })
+  })
+
+  it('never calls getCurrentPosition when permission has not been granted', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    const getCurrentPosition = stubGeo('prompt')
+    show({ prefs: returning })
+    await waitFor(() => expect(recommend).toHaveBeenCalled())
+    // The whole point: no cold prompt on load.
+    expect(getCurrentPosition).not.toHaveBeenCalled()
+    expect(recommend.mock.calls[0]?.[0]).not.toHaveProperty('radius_m')
+  })
+
+  it('searches once, not twice, so the results never visibly change under the reader', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    stubGeo('granted', { lat: 3.139, lng: 101.6869 })
+    show({ prefs: returning })
+    await waitFor(() => expect(recommend).toHaveBeenCalled())
+    await new Promise((r) => setTimeout(r, 20))
+    expect(recommend).toHaveBeenCalledTimes(1)
+  })
+})
