@@ -27,8 +27,26 @@ export function citable(citations: Citation[]): Citation[] {
 
 /** Two posts from one account is one person saying it twice. Corroboration means two
     platforms, which is the part a single platform going dark cannot fake. */
+/** Citations a reader can actually open: deduped by post, and not measured dead.
+    `dead` is tri-state and only `true` counts against a citation -- `null` is
+    unchecked, and treating unchecked as dead deletes real testimony. */
+export function openable(citations: Citation[]): Citation[] {
+  return citable(citations).filter((c) => c.dead !== true)
+}
+
+/**
+ * #111. This counted a DEAD post toward "Two sources", so the companion could say
+ * "Two platforms carry this one, written by different people" beside a card
+ * rendering exactly one testimony -- because `leadPair` had correctly refused the
+ * dead citation that `evidenceOf` had just counted. Two functions in this file
+ * disagreeing about what a source is.
+ *
+ * Measured on prod: 7 of 48 results across 15 queries overclaimed. Latent only
+ * because Discover passes the top pick alone, and a 15% base rate makes that a
+ * question of which query rather than whether.
+ */
 export function evidenceOf(result: Result): Evidence {
-  const cited = citable(result.citations)
+  const cited = openable(result.citations)
   if (!cited.length) return 'none'
   return new Set(cited.map((c) => c.platform)).size >= 2 ? 'corroborated' : 'single'
 }

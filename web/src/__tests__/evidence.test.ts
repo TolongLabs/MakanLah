@@ -9,6 +9,7 @@ import {
   leadPair,
   listBasisLine,
   moodFor,
+  openable,
   sharedBasis,
   sharedPostCount
 } from '../evidence'
@@ -313,6 +314,33 @@ describe('leadPair against the shape prod actually returns', () => {
         expect(cite.dead, `rank ${row.rank} -> ${cite.post_url}`).not.toBe(true)
       }
     }
+  })
+
+  /**
+   * The check Peer 1 asked for by name, and the reason it is shaped this way: a
+   * check that re-runs `evidenceOf` to confirm `evidenceOf` agrees with itself and
+   * proves nothing. This asserts two INDEPENDENT functions reach the same verdict
+   * over real data -- the claim the companion makes, against the testimony the card
+   * can actually render.
+   */
+  it('never claims corroboration the card cannot show', () => {
+    for (const row of rows) {
+      const claimed = evidenceOf({ citations: row.citations } as Result) === 'corroborated'
+      const shown = leadPair(row.citations).length > 1
+      expect(claimed, `rank ${row.rank}: evidenceOf said corroborated, leadPair rendered one`).toBe(shown)
+    }
+  })
+
+  it('has a row where the two used to disagree', () => {
+    // Without this the agreement test above passes on a fixture where nothing was
+    // ever at stake. Ranks 4 and 5 are the real 阿喜 and 三美 shape: a live Google
+    // Maps citation plus RedNote citations that are all dead, which is two
+    // platforms by the old count and one openable post in fact.
+    const twoPlatformsIfDeadCounts = rows.filter((r) => new Set(citable(r.citations).map((c) => c.platform)).size > 1)
+    const oneOpenablePlatform = twoPlatformsIfDeadCounts.filter(
+      (r) => new Set(openable(r.citations).map((c) => c.platform)).size === 1
+    )
+    expect(oneOpenablePlatform.length).toBeGreaterThan(0)
   })
 
   it('still cites every card', () => {
