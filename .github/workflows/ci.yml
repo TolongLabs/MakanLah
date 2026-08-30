@@ -175,6 +175,17 @@ jobs:
           BASE: http://127.0.0.1:4188
         run: node scripts/discover_why_check.mjs "$BASE"
 
+      # The owner reported the footer had "no background" and he was right, on a
+      # branch where every glass property was set correctly. `--glass` is white at
+      # 58%, which over the cream --paper composites to #fcfcfa: five values off the
+      # page ground and invisible. scripts/opaque-check.mjs passed it happily,
+      # because it asks whether a surface is solid OR GLASS and glass is glass. So
+      # this one never reads a style -- it screenshots the page, takes row means
+      # either side of the footer's top edge, and fails under 1.10:1. Mutation-tested
+      # by pointing .foot back at --glass, which reddens this and nothing else.
+      - name: A glass surface must be visible against its ground
+        run: node scripts/glass-contrast.mjs http://127.0.0.1:4188
+
       # Two things here fail silently. Mounting the character in the ask dialog
       # without unmounting her from the aside gives one character two WebGL
       # contexts, and on some drivers the second kills the first -- the page keeps
