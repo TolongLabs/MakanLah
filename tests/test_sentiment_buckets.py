@@ -89,3 +89,23 @@ def test_venues_are_counted_separately():
     got = tally_sentiment(rows)
     assert got['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
     assert got['v2'] == {'positive': 0, 'mixed': 0, 'negative': 1}
+
+
+def test_only_the_posts_the_card_shows_are_counted():
+    # citations are trimmed to per_venue before they ship and add_corroboration
+    # counts what survives. Tallying every live post in the corpus gave Village Park
+    # 7 sentiment against 3 posts -- four real posts that were not on the card.
+    rows = [_row('v1', f'p{i}', 1.0) for i in range(1, 8)]
+    kept = {'v1': {'p1', 'p2', 'p3'}}
+    assert sum(tally_sentiment(rows, kept)['v1'].values()) == 3
+
+
+def test_a_kept_set_that_excludes_everything_reports_nothing():
+    assert tally_sentiment([_row('v1', 'p1', 1.0)], {'v1': set()}) == {}
+
+
+def test_no_kept_set_means_count_every_live_post():
+    # The two-argument form must stay usable without the filter, or the pure
+    # function silently changes meaning for any other caller.
+    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', -1.0)]
+    assert sum(tally_sentiment(rows)['v1'].values()) == 2

@@ -307,9 +307,12 @@ def venues_with_citations(con, venue_ids, per_venue=3):
             }
         )
 
+    kept = {}
     for venue_id, cites in pool.items():
-        out[venue_id]['citations'] = diverse_citations(cites, per_venue)
-    for venue_id, counts in tally_sentiment(rows).items():
+        shown = diverse_citations(cites, per_venue)
+        out[venue_id]['citations'] = shown
+        kept[venue_id] = {c['post_url'] for c in shown if not c.get('dead')}
+    for venue_id, counts in tally_sentiment(rows, kept).items():
         out[venue_id]['sentiment'] = counts
     return out
 
@@ -318,13 +321,22 @@ def venues_with_citations(con, venue_ids, per_venue=3):
 RANK_BUCKET = {'positive': 0, 'mixed': 1, 'negative': 2}
 
 
-def tally_sentiment(rows):
-    """Bucket counts per venue, one vote per POST and only posts a reader can open.
+def tally_sentiment(rows, kept=None):
+    """Bucket counts per venue, one vote per POST, over posts the card can show.
 
-    Counting mention rows made a card say "1 post" and "All 9 posts positive" at
-    once -- 9 of 10 venues disagreed with their own corroboration count. Counting
-    dead posts repeats #111: a breakdown that cannot be traced to an openable post
-    is the unverifiable assertion this product exists not to make.
+    Three separate things had to be true before this number meant anything, and the
+    first two were fixed a commit apart:
+
+    - One vote per post. Counting mention rows made a card read "1 post" and "All 9
+      posts positive" at once.
+    - No dead posts. Counting them repeats #111 -- a breakdown that cannot be traced
+      to an openable post is the unverifiable assertion this product exists not to
+      make.
+    - The same posts corroboration counts. `citations` is trimmed to per_venue before
+      it ships, and add_corroboration counts what survives that trim. Tallying every
+      live post in the corpus instead gave Village Park 7 sentiment against 3 posts:
+      four of those seven were real, and none of them were on the card. `kept` is the
+      set of post_urls that survived, so every counted post is one a reader can open.
 
     When one post yields several mention rows the most critical bucket wins. A
     complaint must not be averaged away by the same post's milder lines.
@@ -332,6 +344,8 @@ def tally_sentiment(rows):
     by_venue = {}
     for r in rows:
         if r['dead']:
+            continue
+        if kept is not None and r['post_url'] not in kept.get(r['venue_id'], ()):
             continue
         b = sentiment_bucket(r['sentiment'])
         if not b:
