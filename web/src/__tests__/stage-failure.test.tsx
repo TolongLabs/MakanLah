@@ -74,7 +74,7 @@ describe('when the mascot chunk cannot be fetched', () => {
   })
 
   it('leaves the results companion usable too', async () => {
-    render(<AskCompanion evidence="single" degraded={false} phase="picks" target={null} onClear={() => {}} />)
+    render(<AskCompanion evidence="single" degraded={false} phase="picks" />)
     await waitFor(() => expect(screen.getByText(/Only one post backs this/i)).toBeTruthy())
     expect(screen.getByText(/Tap Ask on any pick/i)).toBeTruthy()
   })

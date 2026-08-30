@@ -1,38 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import type { Citation, Result } from '../api'
+import type { Result } from '../api'
 import { ResultRow } from '../components/ResultRow'
-
-function citation(over: Partial<Citation> = {}): Citation {
-  return {
-    post_url: 'https://www.rednote.com/explore/abc',
-    excerpt: '汤底浓郁药材香，肉质软烂入味，配白饭简直绝配！Sedap sangat.',
-    platform: 'rednote',
-    author_handle: 'author_ab12',
-    posted_at: 'Feb 17',
-    ...over
-  }
-}
-
-function result(over: Partial<Result> = {}): Result {
-  return {
-    venue: {
-      id: 'v1',
-      name: '兴记肉骨茶 Hing Kee Bakuteh',
-      area: 'Jalan Ipoh',
-      lat: 3.2,
-      lng: 101.67,
-      maps_url: 'https://www.google.com/maps/search/?api=1&query=x',
-      dishes: ['肉骨茶', 'nasi lemak', 'ayam goreng berempah']
-    },
-    rank: 1,
-    why: 'Rich herbal broth, and the locals keep going back.',
-    distance_m: 1200,
-    citations: [citation()],
-    ...over
-  }
-}
+import { citation, result } from './fixtures/result'
 
 function renderRow(r: Result) {
   return render(
@@ -76,12 +47,12 @@ describe('a result', () => {
     // Showing "0 m" would claim the venue is where the user is standing. A venue with
     // null coordinates stays rankable by preference instead.
     const { container } = renderRow(result({ distance_m: null }))
-    expect(container.querySelector('.meta-line')?.textContent).not.toMatch(/\d+\s*(m|km)\b/)
+    expect(container.querySelector('.why-row')?.textContent ?? '').not.toMatch(/\d+\s*(m|km)\b/)
   })
 
   it('does show distance when there is a coordinate', () => {
     const { container } = renderRow(result({ distance_m: 1200 }))
-    expect(container.querySelector('.meta-line')?.textContent).toContain('1.2 km')
+    expect(container.querySelector('.why-row')?.textContent).toContain('1.2 km')
   })
 
   it('never renders the retrieval score, which orders nothing the user sees', () => {
@@ -141,7 +112,7 @@ describe('evidence on a row', () => {
 
   it('says nothing about basis when the API does not report one', () => {
     const { container } = renderRow(result())
-    expect(container.querySelector('.basis')).toBeNull()
+    expect(container.querySelector('.why-lead')).toBeNull()
   })
 })
 

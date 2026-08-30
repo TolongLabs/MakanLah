@@ -86,21 +86,19 @@ describe('Testimony for a post that no longer opens', () => {
  */
 describe('the companion says only what is true of the screen she is on', () => {
   it('invites a tap only where there is something to tap', () => {
-    const { rerender } = render(
-      <AskCompanion evidence={null} degraded={false} phase="empty" target={null} onClear={() => {}} />
-    )
+    const { rerender } = render(<AskCompanion evidence={null} degraded={false} phase="empty" />)
     expect(screen.queryByText(/Tap Ask on any pick/i)).toBeNull()
-    rerender(<AskCompanion evidence="single" degraded={false} phase="picks" target={null} onClear={() => {}} />)
+    rerender(<AskCompanion evidence="single" degraded={false} phase="picks" />)
     expect(screen.getByText(/Tap Ask on any pick/i)).toBeTruthy()
   })
 
   it('does not tell somebody who has searched to go and answer the questions', () => {
-    render(<AskCompanion evidence={null} degraded={false} phase="empty" target={null} onClear={() => {}} />)
+    render(<AskCompanion evidence={null} degraded={false} phase="empty" />)
     expect(screen.queryByText(/Answer the four questions/i)).toBeNull()
   })
 
   it('still says it before anything has been searched', () => {
-    render(<AskCompanion evidence={null} degraded={false} phase="idle" target={null} onClear={() => {}} />)
+    render(<AskCompanion evidence={null} degraded={false} phase="idle" />)
     expect(screen.getByText(/Answer the four questions/i)).toBeTruthy()
   })
 })

@@ -348,7 +348,9 @@ poorly in Malay has failed, not partly passed. Write the result to `superpowers/
 ```
 POST /recommend
   { query, lat, lng, radius_m, prefs?, budget?, cuisine?, limit? }
-→ { results: [ { venue: {id, name, area, lat, lng, maps_url, dishes},
+→ { results: [ { venue: {id, name, area, lat, lng, maps_url, dishes,
+                         corroboration: {posts, authors, platforms},
+                         sentiment: {positive, mixed, negative}},
                  rank, why, match: {basis, dish, similarity},
                  distance_m,
                  citations: [ {post_url, excerpt, platform, author_handle, posted_at, dead} ] } ],
@@ -440,6 +442,23 @@ dish from a mood query needs a signal `#85` measured and did not find: retrieval
 came from the re-rank, so a higher number could appear below a lower one. `match.basis` is one of `dish` (an alias hit
 on `mention.dishes`), `text` (lexical hit in an excerpt) or `semantic` (vector only), so the UI can say _why_ an entry
 is present rather than asserting a number.
+
+**`match.similarity` is never rendered, and the reason is measured rather than stylistic.** Sampling 35 live results
+across five queries on 2026-08-30: **15 carry `basis: 'dish'` with `similarity: 0.0`, which is 63% of every dish match
+in the sample.** `興记肉骨茶` is the clearest — a venue the lexical lane found and the vector lane never saw. Printed as
+a percentage that reads "0% match" on one of the strongest answers the corpus holds. **Basis first, number never.**
+
+`venue.corroboration` counts only citations that are not measured dead (#111). `venue.sentiment` buckets mentions at
+`positive >= 0.6` and `negative <= -0.2` — deliberately asymmetric, because the scale is crowded at the top (871 of 1653
+mentions sit at exactly 1.0) so positive needs a high bar, while one person reporting a bad meal is worth surfacing even
+when nine disagree. Counts, never an average: a mean over that distribution reads "positive" on nearly every venue and
+discriminates nothing.
+
+**The two counts are not yet on the same basis, and the client gates on it.** `sentiment` counts mention rows while
+`corroboration` counts live posts; across ten live `nasi lemak` results nine disagreed, several by nine to one. The web
+client renders the sentiment breakdown only where the totals match, so a card can never say "1 post" in its subtitle and
+"All 9 posts positive" below it. Tracked as `#143`; the line lights up on its own once the API filters mentions to live
+posts.
 
 ### The Copilot Never Introduces A Fact
 

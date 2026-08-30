@@ -435,27 +435,6 @@
   }
 }
 
-@media (max-width: 63.99rem) {
-  .discover-body {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .discover-aside {
-    order: -1;
-  }
-
-  .ask-companion {
-    padding: var(--s4);
-  }
-}
-
-.rail-heading {
-  font-size: var(--t-sm);
-  font-weight: 600;
-  margin-bottom: var(--s3);
-}
-
 .search {
   display: flex;
   gap: var(--s2);
@@ -976,4 +955,147 @@
   border: 0;
   background: none;
   cursor: pointer;
+}
+
+/* ------------------------------------------------- why this result is on screen */
+
+/* The answer to the owner's question, as the card's subtitle rather than as its
+   eighth line. It replaces the old `.meta-line` on a result and absorbs what that
+   line carried, so the card gained information and lost two rows at the same time.
+
+   Tokens separated by a rendered middot rather than by punctuation in the string:
+   the separator then belongs to the layout, wraps with it, and never strands a
+   dangling "·" at the end of a line when the last fact is absent. Half the sampled
+   results have no area and a third have no author, so absent facts are the normal
+   case and the row has to look deliberate with two tokens as well as with four. */
+.why-row {
+  margin-top: var(--s2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s2);
+  font-size: var(--t-ms);
+  color: var(--ink-faint);
+}
+
+.why-row > * + *::before {
+  content: "·";
+  margin-right: var(--s2);
+  color: var(--rule-strong);
+}
+
+/* The lead token is the answer; everything after it is context. Set at full ink
+   against faint metadata, which is the entire hierarchy fix in one declaration --
+   the old card set the basis line in the same grey as the two sentences around it,
+   and that is why it read as a footnote. */
+.why-lead {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------- the detail disclosure */
+
+/* Native <details>, so it is keyboard operable, findable by in-page search when
+   open, and has no state to get out of step with the DOM. It renders at all only
+   when `whyDetail` returned something the row did not already say. */
+.why-more {
+  margin-top: var(--s3);
+  font-size: var(--t-sm);
+}
+
+.why-more-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 24px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+}
+
+.why-more-toggle::-webkit-details-marker {
+  display: none;
+}
+
+/* Our own marker, because the platform ones differ per browser and one of them is a
+   filled triangle heavy enough to out-weigh the venue name beside it. */
+.why-more-toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentcolor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.why-more-toggle:hover {
+  color: var(--ink);
+}
+
+.why-more[open] .why-more-toggle::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-more-toggle::before {
+    transition: none;
+  }
+}
+
+.why-more-body {
+  margin-top: var(--s2);
+  padding-left: var(--s4);
+  display: grid;
+  gap: var(--s1);
+  color: var(--ink-faint);
+  max-width: 54ch;
+}
+
+/* She still comes before the picks below the desktop breakpoint, because what she
+   says is a caveat about the list -- "only one post backs this" -- and a caveat
+   after the thing it qualifies has already been read is not a caveat.
+
+   WHAT SHE IS NOT, ANY MORE, IS A CARD. The hoisted panel cost 229px at 390 and put
+   the first pick at y=799 in an 844px viewport -- below the fold, on the page whose
+   entire promise is a decision in two minutes. Most of that was chrome around one
+   sentence: panel padding, a border, a shadow, and a hint telling the reader to tap
+   a control they could not yet see.
+
+   The hint goes because it is now wrong here rather than merely redundant. It says
+   "tap Ask on any pick", and above the fold there is no pick to tap. Every card
+   carries its own Ask, and Ask now opens in front of the page rather than in this
+   panel -- which is also what freed her from having to be reachable up here at all. */
+@media (max-width: 63.99rem) {
+  .discover-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .discover-aside {
+    order: -1;
+  }
+
+  .ask-companion {
+    gap: var(--s2);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .ask-hint {
+    display: none;
+  }
+
+  .ask-bubble {
+    padding: var(--s3) var(--s4);
+  }
+}
+
+.rail-heading {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  margin-bottom: var(--s3);
 }

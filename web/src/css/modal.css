@@ -1,0 +1,159 @@
+/* Floating panels over a dimmed, blurred page.
+   Used by the Ask dialog and by All Sources, both on /discover. */
+
+/* Native <dialog> renders in the top layer, above every stacking context on the
+   page, so it needs no z-index and cannot be trapped by an `overflow: hidden`
+   ancestor the way an absolutely positioned div can. That is most of why this is a
+   dialog element and not a portal. */
+.modal {
+  padding: 0;
+  border: 0;
+  background: none;
+  max-width: 100vw;
+  max-height: 100dvh;
+  width: 100%;
+  height: 100%;
+  overscroll-behavior: contain;
+  /* The dialog box IS the click target for the backdrop, so it fills the viewport
+     and centres the panel inside itself. Padding here rather than on the panel
+     keeps `event.target === dialog` meaning "the backdrop and nothing else". */
+  display: grid;
+  place-items: end center;
+  color: var(--ink);
+}
+
+@media (min-width: 40rem) {
+  .modal {
+    place-items: center;
+    padding: var(--s6) var(--s4);
+  }
+}
+
+/* Dimmed AND blurred, which is the request. The blur is doing real work here rather
+   than being decoration: the page underneath is a dense list of quoted text, and
+   dimming alone leaves it legible enough to compete with the panel in front of it. */
+.modal::backdrop {
+  background: rgb(12 13 10 / 45%);
+  backdrop-filter: blur(6px);
+}
+
+.modal-panel {
+  width: min(42rem, 100%);
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  /* Phone: a sheet anchored to the bottom edge, square where it meets it. Reaching
+     the top-right of a full-height dialog with a thumb is the standard mobile modal
+     failure, and the actions inside this one are all near the bottom. */
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  box-shadow: var(--e3);
+}
+
+@media (min-width: 40rem) {
+  .modal-panel {
+    border-radius: var(--r-panel);
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding: var(--s5) var(--s5) var(--s4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.modal-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* Venue names arrive in Han script, in Latin, and often in both at once. They keep
+   the writer's script and are never transliterated, so the title has to survive a
+   name twice as tall as the English around it. */
+.modal-title-subject {
+  font-weight: 600;
+}
+
+.modal-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px 0 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--ink-faint);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-chip);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.modal-body {
+  padding: var(--s5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-actions {
+  margin-top: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.modal-body .trail + .modal-actions {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* The trail is the whole content of the All Sources dialog, so it does not repeat
+   the heading the panel already carries in its title bar. */
+.modal-body .trail > .h-sub {
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+/* The ask form leads the dialog rather than trailing it: the field is what the
+   reader came here to use, and it holds focus from the moment it opens. */
+.ask-form-modal {
+  margin-bottom: var(--s4);
+}
+
+.ask-bubble-modal {
+  margin: 0;
+}
+
+/* The trail was written for a full page, where a 48px tail and a 12rem source
+   column are right. Inside a 42rem panel that tail lands between the last item's
+   rule and the actions rule, reading as an empty row, and the source column takes a
+   third of the width to hold the word "RedNote". */
+.modal-body .trail {
+  padding-block: 0;
+}
+
+.modal-body .trail-list > .trail-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+@media (min-width: 48rem) {
+  .modal-body .trail-item {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: var(--s4);
+  }
+}

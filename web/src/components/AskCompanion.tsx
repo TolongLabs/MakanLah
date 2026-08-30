@@ -1,5 +1,4 @@
-import { type FormEvent, lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { type AskResponse, ask, type Citation } from '../api'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { rememberVoice, speaker, synth, voiceEnabled } from '../companion/voice'
 import { type CompanionPhase, type Evidence, type MascotMood, moodFor, readingFor } from '../evidence'
 import type { Live2DStage } from '../live2d/Live2DStage'
@@ -11,8 +10,6 @@ const MascotStage = lazy(() => import('../live2d/MascotStage'))
    the stage got CSS room on a tablet while React still refused to mount it. */
 const STAGE_AT = '(min-width: 48rem)'
 
-export type AskTarget = { id: string; name: string } | null
-
 /**
  * The companion on the results page, where she has two jobs rather than a presence.
  *
@@ -21,23 +18,19 @@ export type AskTarget = { id: string; name: string } | null
  * agree on the top one" is the difference between a recommendation and a mention,
  * and it is the product's whole claim said out loud.
  *
- * **And she is how you interrogate a pick.** Tapping Ask on a result puts that
- * venue in her hands; the question goes to `/ask`, which answers from that venue's
- * citations or says the posts do not cover it. That second outcome is the feature.
- * A chatbot cannot say "nobody wrote about that" because it has no evidence trail
- * to be honest about, and she says it constantly.
+ * **And she is how you interrogate a pick**, though the interrogation itself now
+ * happens in `AskModal`, in front of the page. It lived here and could not: on a
+ * phone this aside sits below every result, so Ask targeted a form several screens
+ * down and appeared to do nothing at all.
  *
- * SHE NEVER ANSWERS FROM HER OWN KNOWLEDGE. Every word in an answer comes back from
- * the API with citations attached, and a `covered: false` reply renders as a refusal
- * with no citations rather than as a hedge. The line she says while idle is written
- * locally from `readingFor`, not generated.
+ * What stays is what benefits from being ambient rather than modal — the character,
+ * and an unprompted reading of the evidence. The line she says is written locally by
+ * `readingFor` and is not generated.
  */
 export function AskCompanion({
   evidence,
   degraded,
-  phase = 'idle',
-  target,
-  onClear
+  phase = 'idle'
 }: {
   evidence: Evidence | null
   degraded: boolean
@@ -45,8 +38,6 @@ export function AskCompanion({
       carry this: `curious` means both "ask me something" and "I found nothing",
       and only one of those should tell you to answer the onboarding questions. */
   phase?: CompanionPhase
-  target: AskTarget
-  onClear: () => void
 }) {
   const mood: MascotMood = moodFor(evidence, degraded)
   const reading = readingFor(mood, phase)
@@ -57,14 +48,8 @@ export function AskCompanion({
   const [voice, setVoice] = useState(voiceEnabled)
   const [talking, setTalking] = useState(false)
 
-  const [question, setQuestion] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [answer, setAnswer] = useState<AskResponse | null>(null)
-  const [errored, setErrored] = useState(false)
-
   const stage = useRef<Live2DStage | null>(null)
   const say = useRef<ReturnType<typeof speaker> | null>(null)
-  const field = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     say.current = speaker()
@@ -81,16 +66,7 @@ export function AskCompanion({
     return () => mq.removeEventListener('change', on)
   }, [])
 
-  // A new target clears the last answer and takes focus, so Ask on a second venue
-  // never shows the first venue's answer under the second venue's name.
-  useEffect(() => {
-    setAnswer(null)
-    setErrored(false)
-    setQuestion('')
-    if (target) field.current?.focus()
-  }, [target])
-
-  const spoken = answer ? answer.answer : `${reading.read}. ${reading.note}`
+  const spoken = `${reading.read}. ${reading.note}`
 
   // Speak whatever is currently on her lips, when it changes and the voice is on.
   useEffect(() => {
@@ -122,22 +98,6 @@ export function AskCompanion({
     }
   }, [talking])
 
-  async function onAsk(e: FormEvent) {
-    e.preventDefault()
-    const q = question.trim()
-    if (!q || !target) return
-    setBusy(true)
-    setErrored(false)
-    try {
-      setAnswer(await ask(target.id, q))
-    } catch {
-      setAnswer(null)
-      setErrored(true)
-    } finally {
-      setBusy(false)
-    }
-  }
-
   return (
     <div className={live ? 'ask-companion is-live' : 'ask-companion'}>
       {wide && !failed && (
@@ -161,62 +121,14 @@ export function AskCompanion({
       )}
 
       <div className="ask-bubble" aria-live="polite">
-        {/* WAITING AND FINISHED-WITH-NOTHING ARE DIFFERENT CLAIMS and used to look
-            identical: the only in-flight signal was the submit button's label, so a
-            hung renderer and an ignored click were indistinguishable from outside.
-            That cost a UAT round -- a crashed tab was reported as "the UI drops the
-            answer on the floor", and it took two clean reproductions to rule out.
-            She now says she is reading, and says it in the bubble where the answer
-            will appear. */}
-        {busy ? (
-          <p className="ask-read ask-waiting">Reading her posts…</p>
-        ) : answer ? (
-          <>
-            <p className="ask-answer">{answer.answer}</p>
-            {answer.covered ? (
-              <Sources citations={answer.citations} />
-            ) : (
-              <p className="ask-uncovered">Nobody wrote about that one. I am not going to guess it for you.</p>
-            )}
-          </>
-        ) : (
-          <>
-            <p className="ask-read">{reading.read}</p>
-            <p className="ask-note">{reading.note}</p>
-          </>
-        )}
-        {errored && <p className="ask-uncovered">I could not reach the posts just now. Try that again in a moment.</p>}
+        <p className="ask-read">{reading.read}</p>
+        <p className="ask-note">{reading.note}</p>
       </div>
 
-      {target ? (
-        <form className="ask-form" onSubmit={onAsk}>
-          <p className="ask-target">
-            Asking about <strong lang="und">{target.name}</strong>
-            <button type="button" className="ask-clear" onClick={onClear}>
-              Done
-            </button>
-          </p>
-          <div className="ask-row">
-            <input
-              ref={field}
-              className="ask-input"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Is it halal? Good for a group?"
-              aria-label={`Ask about ${target.name}`}
-              maxLength={300}
-            />
-            <button type="submit" className="btn btn-primary" disabled={busy || !question.trim()}>
-              {busy ? 'Reading…' : 'Ask'}
-            </button>
-          </div>
-        </form>
-      ) : (
-        // Only where there is something to tap. On the evidence-gap screen there
-        // are deliberately zero pickable cards, and inviting a tap on a pick that
-        // is not there is the same false claim as the reading above it.
-        phase === 'picks' && <p className="ask-hint">Tap Ask on any pick and I will read its posts for you.</p>
-      )}
+      {/* Only where there is something to tap. On the evidence-gap screen there are
+          deliberately zero pickable cards, and inviting a tap on a pick that is not
+          there is the same false claim as the reading above it. */}
+      {phase === 'picks' && <p className="ask-hint">Tap Ask on any pick and I will read its posts for you.</p>}
 
       {synth() && (
         <button
@@ -240,23 +152,5 @@ export function AskCompanion({
         </button>
       )}
     </div>
-  )
-}
-
-/** The citations behind an answer, attached by the API from database rows and never
-    parsed out of what the model said. Without these the answer is just a claim. */
-function Sources({ citations }: { citations: Citation[] }) {
-  if (citations.length === 0) return null
-  return (
-    <ul className="ask-sources">
-      {citations.map((c) => (
-        <li key={c.post_url}>
-          <a className="link" href={c.post_url} target="_blank" rel="noreferrer noopener">
-            {c.platform === 'google_maps' ? 'Google Maps' : 'RedNote'}
-            {c.posted_at ? `, ${c.posted_at}` : ''}
-          </a>
-        </li>
-      ))}
-    </ul>
   )
 }

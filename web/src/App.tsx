@@ -1,5 +1,6 @@
-import { Route, Routes } from 'react-router-dom'
+import { type Location, Route, Routes, useLocation } from 'react-router-dom'
 import { Shell } from './components/Shell'
+import { SourcesModal } from './components/SourcesModal'
 import { Dashboard } from './routes/Dashboard'
 import { Discover } from './routes/Discover'
 import { Landing } from './routes/Landing'
@@ -27,10 +28,27 @@ export default function App() {
   )
 }
 
+/**
+ * `/r/:venueId` renders two ways from one route, and which one depends on where the
+ * reader came from.
+ *
+ * Clicking All Sources on a result sets `backgroundLocation`, so the results stay
+ * mounted underneath and the trail opens over them — nothing is lost, the scroll
+ * position survives, and browser back closes the dialog. A cold load, a refresh, a
+ * shared link or a cmd-click has no such state and gets the full page.
+ *
+ * The alternative, a piece of component state on /discover, would have kept the
+ * address bar on /discover while the reader looked at one venue's evidence. The
+ * citation trail is the most shareable thing this product has; a URL that does not
+ * follow the reader to it is a link they cannot send anybody.
+ */
 function Chromed() {
+  const location = useLocation()
+  const background = (location.state as { backgroundLocation?: Location } | null)?.backgroundLocation
+
   return (
     <Shell>
-      <Routes>
+      <Routes location={background ?? location}>
         <Route path="/" element={<Landing />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -39,6 +57,11 @@ function Chromed() {
         <Route path="/r/:venueId" element={<Venue />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {background && (
+        <Routes>
+          <Route path="/r/:venueId" element={<SourcesModal />} />
+        </Routes>
+      )}
     </Shell>
   )
 }

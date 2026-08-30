@@ -46,6 +46,18 @@ export type Venue = {
       author on one post are one voice however many platforms carry it. Optional
       because the API does not send it yet -- absent means "cannot claim it". */
   corroboration?: { posts: number; authors: number; platforms: number }
+  /** How the posts about this venue actually split (#142). Counts, never an
+      average: 871 of 1653 mentions sit at exactly 1.0, so a mean reads "positive"
+      on nearly every card and discriminates nothing.
+
+      **The buckets are asymmetric on purpose** -- `positive >= 0.6`, `negative
+      <= -0.2`. The scale is crowded at the top so positive needs a high bar to
+      mean anything, while one person saying a place was bad is worth surfacing
+      even when nine disagree. A `negative: 1` is therefore a real complaint and
+      not a rounding artefact, which is why the copy leads with it.
+
+      Optional: the API does not send it until #142 deploys. */
+  sentiment?: { positive: number; mixed: number; negative: number } | null
   /** True when another venue in the corpus reads as the same name. Two rows is the
       correct rendering -- they are different restaurants -- but the reader has to
       be told, or it looks like a duplicate. */

@@ -1,7 +1,8 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiBase, type Chip, type Prefs, type RecommendResponse, recommend, suggestions } from '../api'
-import { AskCompanion, type AskTarget } from '../components/AskCompanion'
+import { AskCompanion } from '../components/AskCompanion'
+import { AskModal, type AskTarget } from '../components/AskModal'
 import { ResultRow } from '../components/ResultRow'
 import { coverageLine, evidenceOf, listBasisLine, sharedBasis } from '../evidence'
 import { count } from '../format'
@@ -139,9 +140,17 @@ export function Discover() {
   const results = data?.results ?? []
   const gap = data?.evidence_gap ?? null
   const gaps = data?.coverage_gaps ?? []
-  // One caveat about the list beats the same sentence on every row.
+  // ONE caveat about the list, and only the caveat the cards cannot carry.
+  //
+  // Every card's subtitle now leads with its own basis, so "Every one of these is a
+  // post naming that dish" restates ten cards in a banner. The semantic case is
+  // different in kind: a whole page of near-misses is a fact about the QUERY rather
+  // than about any row, and #140 makes it the common outcome -- every ingredient
+  // word (`chicken`, `crab`, `noodle`) resolves to no canonical dish and routes
+  // straight into the semantic lane. Ten cards each murmuring "Close in meaning" is
+  // a much weaker warning than one line saying the corpus has no exact match.
   const common = sharedBasis(results)
-  const commonLine = listBasisLine(common)
+  const commonLine = common === 'semantic' ? listBasisLine(common) : null
   const best = results[0]
   const summary = summarise(prefs)
   const hasCraving = (prefs.craving?.length ?? 0) > 0
@@ -286,14 +295,7 @@ export function Discover() {
               {commonLine && <p className="basis list-basis">{commonLine}</p>}
               <ol className="results">
                 {results.map((r, i) => (
-                  <ResultRow
-                    key={r.venue.id}
-                    result={r}
-                    rank={r.rank ?? i + 1}
-                    showBasis={!common}
-                    gaps={gaps}
-                    onAsk={setTarget}
-                  />
+                  <ResultRow key={r.venue.id} result={r} rank={r.rank ?? i + 1} gaps={gaps} onAsk={setTarget} />
                 ))}
               </ol>
             </>
@@ -376,11 +378,15 @@ export function Discover() {
             evidence={best ? evidenceOf(best) : null}
             degraded={data?.degraded ?? false}
             phase={best ? 'picks' : data || gap ? 'empty' : 'idle'}
-            target={target}
-            onClear={() => setTarget(null)}
           />
         </aside>
       </div>
+
+      {/* The ask moved out of the aside and in front of the page. On a phone that
+          aside sits below every result, so tapping Ask scrolled nothing and opened
+          nothing -- the form it targeted was several screens down and the control
+          read as broken. */}
+      {target && <AskModal target={target} onClose={() => setTarget(null)} />}
     </div>
   )
 }
