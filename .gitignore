@@ -90,6 +90,9 @@ graphify-out/.graphify_labels.json.sig
 # Demo video artefacts. The pipeline that makes them is committed; the output is not.
 *.mp4
 *.webm
+# ...except the one the README embeds. GitHub renders a player only for a file it can
+# fetch, and a release-asset URL is not reliable inside a <video> tag.
+!docs/media/makanlah-demo.mp4
 *.wav
 
 # Rendered screenshots. Regenerated on demand by scripts/screenshots.py, and a
