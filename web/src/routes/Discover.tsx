@@ -6,7 +6,7 @@ import { AskModal, type AskTarget } from '../components/AskModal'
 import { ResultRow } from '../components/ResultRow'
 import { coverageLine, evidenceOf, listBasisLine, sharedBasis } from '../evidence'
 import { count, distance } from '../format'
-import { loadPrefs, summarise } from '../prefs'
+import { loadPrefs, rangeLabel, summarise } from '../prefs'
 import { RANGE } from '../taste/options'
 import { cacheResults } from '../venueCache'
 
@@ -182,6 +182,19 @@ export function Discover() {
   const shown = summary
     .filter((r) => useCraving || r.term !== 'Craving')
     .filter((r) => CLIENT_TERMS.has(r.term) || applied.has(r.term))
+    // #172. Geo rides router state and is never persisted, so a returning user has
+    // prefs and no geo -- run() then drops the radius and searches KL-wide while
+    // this line went on claiming "1 km" from `prefs`. The empty state was already
+    // reading `askedRadius` and correctly saying "near you", so one screen carried
+    // both sentences. `askedRadius` is the radius the search ACTUALLY used, and it
+    // is the only one of the two either sentence is entitled to.
+    //
+    // Only once a search has been MADE. `asked` and `askedRadius` are both set
+    // before the await, so they survive the catch and keep describing the request
+    // that actually went out; `data` does not, and gating on it put "1 km" back
+    // beside a failure state -- the same bug one branch over. Before any search
+    // `askedRadius` is 0 and the wizard's answer is still the honest claim.
+    .map((r) => (r.term === 'Within' && asked ? { ...r, value: rangeLabel(askedRadius) } : r))
 
   return (
     <div className="page discover">
