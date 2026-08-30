@@ -106,19 +106,13 @@ export function ResultRow({
                 // The matched dish is a corpus string and may be in any of three
                 // scripts; the counts and the distance are ours and are English.
                 lang={f.lead ? 'und' : undefined}
-                // Only the price carries one. A run of dollar signs is a scale to
-                // anyone who can see it and nothing at all to anyone who cannot,
-                // so the words go to a screen reader the way the chop's do.
+                // Only the price carries one, and it names the SOURCE rather than
+                // repeating the value: the token now reads "Moderate" rather than
+                // "$$", so a screen reader already gets the level from the text and
+                // the title is where "from Google" belongs.
                 title={f.title}
               >
-                {f.title ? (
-                  <>
-                    <span aria-hidden="true">{f.text}</span>
-                    <span className="sr-only">{f.title}</span>
-                  </>
-                ) : (
-                  f.text
-                )}
+                {f.text}
               </span>
             ))}
           </p>

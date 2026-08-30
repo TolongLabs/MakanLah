@@ -299,10 +299,16 @@ describe('the card says what a place costs, where anybody knows', () => {
   // first time in #171, and 28 of 57 sampled results carry one -- priced venues
   // are over-represented in results because a priced venue has more posts, and
   // more posts is what ranks it.
-  it('renders the band as a scale a reader can compare across cards', () => {
-    const tokens = whyRow(result({ venue: { price_band: 2 } }))
-    expect(tokens.find((t) => t.key === 'price')?.text).toBe('$$')
-    expect(whyRow(result({ venue: { price_band: 4 } })).find((t) => t.key === 'price')?.text).toBe('$$$$')
+  it("renders the band in Google's own words, carrying no currency glyph", () => {
+    // NOT `$$`. Peer 3 found a card reading `$$` directly above its own cited
+    // excerpt reading `RM 20` -- two currencies on one card, and the foreign one
+    // ours while the ringgit sat in the evidence. Of 156 excerpts, 26 name a
+    // price and all 26 use RM.
+    expect(whyRow(result({ venue: { price_band: 2 } })).find((t) => t.key === 'price')?.text).toBe('Moderate')
+    expect(whyRow(result({ venue: { price_band: 4 } })).find((t) => t.key === 'price')?.text).toBe('Very expensive')
+    for (const band of [1, 2, 3, 4]) {
+      expect(whyRow(result({ venue: { price_band: band } })).find((t) => t.key === 'price')?.text).not.toMatch(/[$￥€]/)
+    }
   })
 
   it('says NOTHING where no post and no place record priced it', () => {
@@ -321,8 +327,10 @@ describe('the card says what a place costs, where anybody knows', () => {
     }
   })
 
-  it('spells the level out for a reader who cannot see the symbols', () => {
+  it('names where the level came from, since the level itself is now readable', () => {
     const { container } = renderRow(result({ venue: { price_band: 3 } }))
-    expect(container.querySelector('.why-price')?.getAttribute('title')).toMatch(/expensive/i)
+    const price = container.querySelector('.why-price')
+    expect(price?.textContent).toBe('Expensive')
+    expect(price?.getAttribute('title')).toMatch(/google/i)
   })
 })

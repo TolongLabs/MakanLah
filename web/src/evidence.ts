@@ -467,25 +467,34 @@ export function whyRow(result: Result): WhyToken[] {
   return tokens
 }
 
-const PRICE_LEVEL = ['inexpensive', 'moderate', 'expensive', 'very expensive']
+const PRICE_LEVEL = ['Inexpensive', 'Moderate', 'Expensive', 'Very expensive']
 
 /**
- * Google's price level as a scale, or nothing.
+ * Google's price level, in Google's own words, or nothing.
  *
  * Integer 1-4 ONLY. The band arrives on a place record we do not own, and a value
- * outside the scale would otherwise render as a run of symbols nobody can read, or
- * as an empty token with a middot hanging in front of it. Anything else is not a
- * price, and #158 is explicit that a venue with no price evidence says nothing
- * rather than having a band guessed from its area or its cuisine.
+ * outside the scale is not a price. #158 is explicit that a venue with no price
+ * evidence says nothing rather than having a band guessed from its area or cuisine.
  *
- * Symbols rather than the wizard's own words because the two scales do not line
- * up: `BUDGETS` maps cheap to bands 1-2 and mid to 2-3, so band 2 is BOTH, and
- * printing "Mid" on it would be a claim the data does not make.
+ * WORDS, NOT `$$`. The first version of this shipped a dollar scale and Peer 3
+ * found the defect on one screenshot: a card reading `$$` directly above its own
+ * cited excerpt reading `RM 20`. Two currencies on one card, and the foreign one
+ * was OURS while the ringgit sat in the evidence we were pointing at. On a product
+ * whose whole claim is that it shows you what people actually wrote, disagreeing
+ * with your own citation about what money looks like is not a small thing.
+ * Corroborating it: of 156 excerpts, 26 name a price and all 26 use RM, none `$`.
+ *
+ * Repeated `RM` was the obvious repair and does not fit -- `RM RM RM RM` wraps the
+ * metadata line at 390px. Google's adjectives carry no currency glyph at all, so
+ * there is nothing left to contradict, and they sidestep the other trap too: the
+ * wizard's own words cannot be used because `BUDGETS` maps cheap to bands 1-2 and
+ * mid to 2-3, so band 2 is BOTH and printing "Mid" on it claims what the data
+ * does not say. These are Google's labels for Google's number.
  */
 function priceToken(band: number | null | undefined): WhyToken | null {
   if (!Number.isInteger(band) || (band as number) < 1 || (band as number) > 4) return null
   const n = band as number
-  return { key: 'price', text: '$'.repeat(n), title: `Google rates this ${PRICE_LEVEL[n - 1]}` }
+  return { key: 'price', text: PRICE_LEVEL[n - 1] as string, title: 'Price level, from Google' }
 }
 
 function matchToken(match: Result['match']): string | null {
