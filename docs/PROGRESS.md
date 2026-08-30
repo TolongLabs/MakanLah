@@ -75,6 +75,54 @@ check consulting only the changed function agrees with itself.
 
 ---
 
+## 2026-08-29 (Late) — A Stamp That Produced The Failure It Exists To Prevent
+
+**Merged and deployed: #110, #114, #117.** Client `ecbd030`.
+
+**The corroboration stamp counted posts nobody can open.** `add_corroboration` counted every citation,
+so 兴记肉骨茶 rendered "Corroborated by two independent sources" over **four posts of which three are unopenable** — a
+reader clicking through to check would have found one testimony behind a claim of two. **The stamp was producing the
+exact failure it exists to prevent.** Measured across 8 queries and 59 results, **11 overclaimed**; 32 of 55 still carry
+it afterwards.
+
+The client half was the same defect, filed separately as #111: `leadPair` refuses a dead citation and `evidenceOf`
+counted it, so the companion could claim two sources beside a card rendering one. **7 of 48 results across 15 queries.**
+Latent only because Discover reads `results[0]`, and a peer noted correctly that the shield is _ranking order_, not
+structure — 兴记 has been rank 1 on `肉骨茶` in earlier builds.
+
+**Verified by two independent recounts, neither of which re-ran the function under test.** A peer recomputed
+posts/authors/platforms from the raw `citations` arrays with their own liveness set and matched `add_corroboration` on
+**61 of 61 venues**, reduced **if and only if** the row carries a dead citation — 11 of 11 with, 50 of 50 without. The
+web test asserts `evidenceOf` and `leadPair(...).length > 1` **agree** across the committed prod fixture, plus a second
+test that the fixture still contains a row where they used to disagree.
+
+**#98's decidable half shipped as `evidence_gap` (#110).** `roti canai` returned Potato Corner: the lane resolved the
+dish, found exactly Devi's Corner and Kapitan, and both were dropped because their only citations are dead. Now
+`results: []` plus a block naming both venues with `place_id` links. **Names rather than counts**, because the two
+claims are not equally checkable — that a post said something is unverifiable once the post is gone, while the
+restaurant is checkable in ten seconds.
+
+**The companion contradicted the page.** On that gap screen she read _"Answer the four questions and this fills in"_
+directly beneath _"Filtered by your answers: nasi lemak 椰浆饭, On my own, All of KL, Something familiar"_. The
+`curious` mood collapsed "nothing searched yet" into "searched and found nothing". `CompanionPhase` separates them.
+
+### The Sixth Instrument, And It Was Mine
+
+The other five checks owned their definition of success. **This one never consulted its subject at all**:
+`expect(phase, ...)` instead of `expect(phase(), ...)` — a function reference is never equal to `'idle'`, so the
+assertion could not fail against _any_ implementation, and the line reads exactly like an assertion. Found by pinning
+the component to always pass `'idle'` and watching the test stay green. Now in [`AUTONOMY.md`](AUTONOMY.md) via #118.
+
+**Six across three sessions in one day is not carelessness. It is the default failure mode of verification written by
+whoever wrote the fix.** A check is trusted the moment it is green, and nothing except breaking the subject on purpose
+distinguishes green-because-correct from green-because-blind.
+
+**One deployment fact that cost two false readings tonight:** the client auto-deploys on merge, the API does not. A PR
+touching `makanlah/` or `api/` ships **half-live** until `scripts/deploy-api.sh` runs, and both times the symptom was a
+feature that looked broken while every test stayed green. Tracked as #116.
+
+---
+
 ## 2026-08-29 (UAT Rounds Two And Three) — Six Merges, And Five Instruments Caught Measuring Themselves
 
 **Merged and on prod: #94, #95, #97, #99, #101, #103, #104, #106.** Peers shipped #92, #96, #100, #102, #105 alongside.
