@@ -16,7 +16,7 @@ const page = await (
   })
 ).newPage()
 
-for (const name of ['arch', 'market']) {
+for (const name of ['arch', 'market', 'close']) {
   await page.goto(`file://${join(HERE, `${name}.html`)}`, { waitUntil: 'networkidle' })
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(400)

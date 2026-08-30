@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f7f7f4; --ink: #16180f; --ink-soft: #5c5f52; --rule: #d9dad0; --seal: #c3272b;
+    --chrome: "Archivo", system-ui, sans-serif;
+    --testimony: "Newsreader", "Noto Serif SC", Georgia, serif;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px; background: var(--paper); color: var(--ink);
+    font-family: var(--chrome); padding: 108px 120px 210px; display: flex; flex-direction: column;
+  }
+  .eyebrow { font-size: 21px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+  h1 { font-size: 76px; font-weight: 600; letter-spacing: -0.025em; margin-top: 22px; max-width: 1500px; line-height: 1.08; }
+  .body { font-family: var(--testimony); font-size: 33px; color: var(--ink-soft); margin-top: 34px; max-width: 1420px; line-height: 1.55; }
+  .strap { margin-top: auto; border-top: 1px solid var(--rule); padding-top: 44px; display: flex; align-items: baseline; gap: 26px; }
+  .mark { font-size: 46px; font-weight: 600; letter-spacing: -0.02em; }
+  .tag { font-family: var(--testimony); font-size: 30px; color: var(--ink-soft); }
+  .merdeka { margin-left: auto; font-size: 30px; font-weight: 500; color: var(--seal); letter-spacing: 0.02em; }
+  .url { margin-top: 26px; font-size: 22px; color: var(--ink-soft); letter-spacing: 0.05em; }
+</style>
+<body>
+  <div class="eyebrow">Why It Was Built This Way</div>
+  <h1>Kuala Lumpur, and it is a start.</h1>
+  <p class="body">
+    A better Malaysia is not built by an app that sounds confident. It is built by taking people at their
+    word &mdash; in whatever language they wrote it &mdash; and admitting what you do not know.
+  </p>
+  <div class="strap">
+    <div class="mark">MakanLah</div>
+    <div class="tag">Recommendations you can trace.</div>
+    <div class="merdeka">Selamat Hari Merdeka</div>
+  </div>
+  <div class="url">makanlah-b5h.pages.dev</div>
+</body>
