@@ -91,7 +91,11 @@ vid=$(dur "$SRC"); aud=$(dur "$DIR/narration.wav")
 # makes the bars invisible. If the closing line outruns the picture, hold the
 # last frame rather than cutting the sentence off.
 pad=$(awk -v a="$aud" -v v="$vid" 'BEGIN{d=a-v; print (d>0)? d+0.4 : 0}')
-tpad=""
+# The paragraph above was only aspirational: pad was computed and then thrown
+# away by an unconditional tpad="", so the last 2.5s of the closing line played
+# over no picture at all. ffprobe reports the two stream durations separately and
+# never calls that an error, which is why it survived a mux that "worked".
+tpad=$(awk -v p="$pad" 'BEGIN{ if (p>0) printf "tpad=stop_mode=clone:stop_duration=%.3f,", p }')
 # Alignment=2 is bottom-centre in libass. BorderStyle=3 draws a box behind the
 # text rather than an outline, which is the only thing that stays readable over a
 # screenshot whose background we do not control.

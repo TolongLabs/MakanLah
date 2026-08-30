@@ -453,7 +453,7 @@ describe('the filter line names only what actually filtered', () => {
 
   async function line(container: HTMLElement) {
     await screen.findByText(/Filtered by your answers/i)
-    return container.querySelector('.find-prefs')?.textContent ?? ''
+    return container.querySelector('.tooltip-bubble')?.textContent ?? ''
   }
 
   it('names nothing the response did not claim', async () => {
@@ -498,7 +498,7 @@ describe('the distance row reports the radius the search actually used', () => {
     recommend.mockReset().mockResolvedValue(empty)
     const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 1000 } })
     await screen.findByText(/Filtered by your answers/i)
-    const text = container.querySelector('.find-prefs')?.textContent ?? ''
+    const text = container.querySelector('.tooltip-bubble')?.textContent ?? ''
     expect(text).toMatch(/All of KL/)
     expect(text).not.toMatch(/1 km/)
   })
@@ -507,7 +507,7 @@ describe('the distance row reports the radius the search actually used', () => {
     recommend.mockReset().mockResolvedValue(empty)
     const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 3000 }, geo: { lat: 3.04, lng: 101.44 } })
     await screen.findByText(/Filtered by your answers/i)
-    expect(container.querySelector('.find-prefs')?.textContent ?? '').toMatch(/3 km/)
+    expect(container.querySelector('.tooltip-bubble')?.textContent ?? '').toMatch(/3 km/)
   })
 })
 
@@ -521,7 +521,7 @@ describe('the distance row survives a failed search', () => {
     recommend.mockReset().mockRejectedValue(new Error('network'))
     const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 1000 } })
     await screen.findByText(/Filtered by your answers/i)
-    const text = container.querySelector('.find-prefs')?.textContent ?? ''
+    const text = container.querySelector('.tooltip-bubble')?.textContent ?? ''
     expect(text).toMatch(/All of KL/)
     expect(text).not.toMatch(/1 km/)
   })

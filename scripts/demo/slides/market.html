@@ -41,12 +41,24 @@
   <p class="sub">Not a projection and not a roadmap. This is what the corpus holds right now, and each figure is one query away from being checked.</p>
 
   <div class="figs">
-    <div class="fig"><div class="v">1,507</div><div class="k">Posts Read</div>
+    <!-- All four confirmed against the corpus on the fixed build (API 6487f84).
+         4,523 and 814 were read from /health directly; 2,190 is
+         count(distinct author_handle) over source_post, re-counted after the
+         corpus quadrupled rather than carried forward.
+
+         The author figure was pulled from this slide entirely while it still read
+         118, and put back only once there was a real number. A stale figure on a
+         slide headlined "every number here is countable" is worse than one fewer.
+
+         Price coverage, 627 of 823, is a product capability rather than a fact
+         about the corpus's integrity, so it sits in the deck instead. These four
+         are all the same claim: this is real writing by real people. -->
+    <div class="fig"><div class="v">4,523</div><div class="k">Posts Read</div>
       <div class="n">Public, written by people, captured with attribution intact.</div></div>
-    <div class="fig"><div class="v">118</div><div class="k">People Behind Them</div>
+    <div class="fig"><div class="v">2,190</div><div class="k">People Behind Them</div>
       <div class="n">Distinct authors. Two posts by one account is one person saying it twice.</div></div>
-    <div class="fig"><div class="v">247</div><div class="k">Places Named</div>
-      <div class="n">Each with coordinates, so you can walk to it.</div></div>
+    <div class="fig"><div class="v">814</div><div class="k">Places Named</div>
+      <div class="n">Each carrying evidence and coordinates, so you can read it and then walk to it.</div></div>
     <div class="fig attested"><div class="v">0</div><div class="k">Picks We Made Up</div>
       <div class="n">A result without a post behind it is never returned.</div></div>
   </div>
