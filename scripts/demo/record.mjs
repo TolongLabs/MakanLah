@@ -16,8 +16,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const DIR = process.env.DEMO_DIR || join(tmpdir(), 'makanlah-demo')
-const WEB = process.env.DEMO_WEB || 'http://localhost:5188'
-const API = process.env.DEMO_API || 'http://127.0.0.1:8000'
+// Prod by default now. The local default existed because there was no public API
+// (#6) and the client had to be pointed at 127.0.0.1 with `?api=`. Both are
+// deployed, and a launch walkthrough has to show the real corpus rather than
+// whatever a laptop happens to hold. Set DEMO_WEB/DEMO_API for a local run.
+const WEB = process.env.DEMO_WEB || 'https://makanlah-b5h.pages.dev'
+const API = process.env.DEMO_API || 'https://makanlah-api.vercel.app'
 // The craving list is deterministic from the clock, so the dish on offer first
 // depends on the hour the recording runs. At 19:00 that is bak kut teh, whose
 // RedNote posts are dead -- leadPair then correctly refuses to pair a dead post
@@ -69,6 +73,10 @@ page.on('pageerror', (e) => errors.push(String(e).slice(0, 120)))
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text().slice(0, 120)))
 
 let pairs = 0
+// Every surface the walk is supposed to film, counted rather than assumed. The
+// corroboration pair taught this: a beat that silently does not render leaves a
+// video that looks fine and is missing the argument. A zero here is a failed run.
+const filmed = { why: 0, sources: 0, ask: 0, dead: 0 }
 
 try {
   // 1. Landing. The ?api= is how this client is pointed at a backend; it is
@@ -149,19 +157,80 @@ try {
     await beat(page, 4200)
   }
 
-  // 5. A venue page and its citation trail.
-  const firstResult = page.locator('a[href^="/r/"]').first()
-  if (await firstResult.isVisible().catch(() => false)) {
-    await firstResult.click()
-    await page.waitForLoadState('networkidle')
-    await beat(page, 2800)
-    mark('venue')
-    await page.mouse.wheel(0, 600)
+  // 5. Why This Showed. The card answers "why is this here" in its subtitle, and
+  //    everything the row had no room for sits one tap behind this control. It is
+  //    the differentiator compressed into one gesture: a recommender that can be
+  //    asked to justify a pick, on the card, without leaving the page. Filming the
+  //    OPEN state matters -- a closed disclosure is a triangle nobody reads.
+  const why = page.locator('.why-more').first()
+  if (await why.isVisible().catch(() => false)) {
+    await why.scrollIntoViewIfNeeded()
+    await beat(page, 1000)
+    await why.locator('.why-more-toggle').click()
+    // The disclosure animates open; the beat is marked after it has settled so the
+    // narration does not land on a half-open box.
+    await beat(page, 1300)
+    mark('why')
+    filmed.why = 1
+    await beat(page, 4200)
+    await why.locator('.why-more-toggle').click()
+    await beat(page, 700)
+  }
+
+  // 6. All Sources. The whole citation trail for one venue, over the results
+  //    rather than away from them. It is a real /r/:venueId URL that a normal
+  //    click renders as a dialog, so the trail arrives without losing the page
+  //    behind it -- and the dead row is in here, which is what the honesty beat
+  //    below then holds on.
+  const sources = page.locator('.result').first().locator('a.link[href^="/r/"]').first()
+  if (await sources.isVisible().catch(() => false)) {
+    await sources.click()
+    await page.waitForSelector('dialog[open]', { timeout: 10000 }).catch(() => {})
+    await beat(page, 2600)
+    mark('sources')
+    filmed.sources = 1
     await beat(page, 4000)
-    // The closing line is read over this. Scrolling through the rest of the trail
-    // keeps it moving rather than holding a dead frame under the narration.
-    await page.mouse.wheel(0, 500)
-    await beat(page, 3200)
+    await page.mouse.wheel(0, 420)
+    await beat(page, 3400)
+    await page.keyboard.press('Escape')
+    await beat(page, 900)
+  }
+
+  // 7. The copilot, and the strongest frame in the product. This was the
+  //    pipeline's oldest known gap: `/ask` existed as an endpoint with no UI, so
+  //    the moment where she is asked something the corpus cannot answer and says
+  //    so could not be filmed at all. It has a UI now.
+  //
+  //    `/ask/stream` is not deployed and returns 404, which the client treats as
+  //    "not deployed yet" and falls back to the one-shot `/ask`. So this films the
+  //    answer without the tool trace. Verified against prod before filming rather
+  //    than discovered on camera.
+  const ask = page.locator('.result').first().locator('.ask-trigger')
+  if (await ask.isVisible().catch(() => false)) {
+    await ask.click()
+    await page.waitForSelector('dialog[open]', { timeout: 10000 }).catch(() => {})
+    await beat(page, 1600)
+    await page.locator('.ask-input').fill(process.env.DEMO_QUESTION || 'Is this place halal?')
+    await beat(page, 1100)
+    await page.locator('.ask-input').press('Enter')
+    // Wait for the ANSWER rather than a fixed pause. The one-shot route is a model
+    // call and its latency is not ours to predict; a fixed timeout either cuts her
+    // off mid-answer or holds a dead frame after it.
+    await page
+      .waitForFunction(
+        () => /do not cover|does not|no post|posts say/i.test(document.querySelector('dialog[open]')?.innerText || ''),
+        null,
+        {
+          timeout: 40000
+        }
+      )
+      .catch(() => {})
+    await beat(page, 1400)
+    mark('ask')
+    filmed.ask = 1
+    await beat(page, 5200)
+    await page.keyboard.press('Escape')
+    await beat(page, 800)
   }
 
   // 6. The honesty beat. The venue the route lands on may have no dead citation
@@ -176,6 +245,7 @@ try {
     await deadRow.scrollIntoViewIfNeeded()
     await beat(page, 1200)
     mark('dead')
+    filmed.dead = 1
     await beat(page, 6000)
   } else {
     console.log('  ! no dead-citation row on the venue page -- the honesty beat did not film')
@@ -193,6 +263,18 @@ try {
   }
   writeFileSync(join(DIR, 'beats.json'), `${JSON.stringify(beats, null, 2)}\n`)
   console.log(`corroboration pairs on screen: ${pairs}`)
+  // Named surfaces, reported individually. "The video looks fine" is not a check:
+  // a beat that never rendered leaves a shorter film that still plays, and the
+  // narration then reads a line over a picture that does not show it.
+  const missing = Object.entries(filmed)
+    .filter(([, got]) => !got)
+    .map(([name]) => name)
+  console.log(
+    `surfaces filmed: ${Object.entries(filmed)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(' ')}`
+  )
+  if (missing.length) console.log(`  !! NOT FILMED: ${missing.join(', ')} -- do not narrate these beats`)
   console.log(`console errors: ${errors.length}`)
   for (const e of errors.slice(0, 5)) {
     console.log(`  ! ${e}`)

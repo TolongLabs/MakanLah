@@ -41,12 +41,21 @@
   <p class="sub">Not a projection and not a roadmap. This is what the corpus holds right now, and each figure is one query away from being checked.</p>
 
   <div class="figs">
-    <div class="fig"><div class="v">1,507</div><div class="k">Posts Read</div>
+    <!-- 4,523 and 814 were read from /health on prod, not taken from a handoff
+         message. 627 is Peer 1's database count and is the one figure on this
+         slide nobody on camera can check: do not render this deck until it is
+         confirmed against the corpus after the retrieval fix.
+
+         The author count that used to sit here is gone rather than updated. It
+         read 118 and has not been re-measured since the corpus quadrupled, and a
+         stale number on a slide whose headline is "every number here is
+         countable" is worse than three figures. -->
+    <div class="fig"><div class="v">4,523</div><div class="k">Posts Read</div>
       <div class="n">Public, written by people, captured with attribution intact.</div></div>
-    <div class="fig"><div class="v">118</div><div class="k">People Behind Them</div>
-      <div class="n">Distinct authors. Two posts by one account is one person saying it twice.</div></div>
-    <div class="fig"><div class="v">247</div><div class="k">Places Named</div>
-      <div class="n">Each with coordinates, so you can walk to it.</div></div>
+    <div class="fig"><div class="v">814</div><div class="k">Places Named</div>
+      <div class="n">Each carrying evidence and coordinates, so you can read it and then walk to it.</div></div>
+    <div class="fig"><div class="v">627</div><div class="k">Carrying A Price</div>
+      <div class="n">Because deciding where to take a family is a budget question before it is a taste one.</div></div>
     <div class="fig attested"><div class="v">0</div><div class="k">Picks We Made Up</div>
       <div class="n">A result without a post behind it is never returned.</div></div>
   </div>
