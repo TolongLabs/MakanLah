@@ -58,6 +58,12 @@ Now reads `3 posts still open: 1 critical, 2 positive.` **True per the rule and 
 stamp bug again**, and naming the property rather than gesturing at the page is the fix. "Still open" is also the
 vocabulary already on screen, since a dead row reads "This post no longer opens."
 
+**And it generalises, which is the durable part.** `makanlah-fb` named the class: **#87**, **#111**, **#153** and this
+line are one bug four times — a count that is true by its own rule and false as English, which is why unit tests passed
+through all four. The invariant is now in
+[`DESIGN.md`](DESIGN.md#a-count-must-match-what-is-rendered-or-name-what-it-counts): **any rendered count must equal the
+items visible on that surface, or name the property it counts.** They are writing the test for it on resume.
+
 ### The One Live Disagreement: #166
 
 **`main` is at `57ef49e`, which is NOT deployed. Prod is `785992a`.** Do not deploy `57ef49e` before this is settled —

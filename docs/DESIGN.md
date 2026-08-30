@@ -136,6 +136,25 @@ Two posts from **one** platform is not corroboration. It is one source saying it
 `evidenceOf()` in `web/src/evidence.ts` is the single derivation, shared by the row, the venue page and the mascot, so
 the face and the layout can never disagree about what the corpus holds.
 
+### A Count Must Match What Is Rendered, Or Name What It Counts
+
+**Four bugs in this project were one bug.** `#87` stamped "Corroborated by two independent sources" on cards rendering
+one testimony. `#111` counted dead citations toward a number whose whole meaning was that a reader could go and check
+them. `#153` printed "1 post" on a venue where three different people had written, because a Maps URL is not a post
+identity. And the sentiment line read "Of the 3 posts here" beside a card that shows at most two excerpts and a dialog
+that deliberately renders dead ones.
+
+Every one was **true by its own rule and false as English**, which is why unit tests passed through all four.
+
+> **Any count a surface renders must either equal the number of items visible on that surface, or name the property it
+> counts.** `3 posts still open` passes by naming. `Of the 3 posts here` fails, because "here" is a claim about the page
+> and the page shows something else.
+
+The second half is the usable one, because the counts here legitimately differ from what renders: excerpts are capped at
+two per card, citations are trimmed to `per_venue` before they ship, and dead posts are shown but not counted. **The fix
+is never to hide the record to make a number true** — a stamp reading four posts over a page showing one invites exactly
+the doubt the stamp exists to answer. Name the property instead.
+
 The columns are keyed to the **container**, not the viewport. The same pair renders inside a full-width result row and
 inside the landing page's specimen, which is half as wide; a viewport query splits the specimen into two columns too
 narrow to read Chinese in.
