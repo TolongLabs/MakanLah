@@ -64,10 +64,15 @@ ROUTES = [
 # in both themes because the palette is half the design. Not the wizard and not the
 # landing hero -- the README already leads with og.png, and the claim it has to support
 # is that a pick carries the post it came from.
+# Owner asked for the wider set on 2026-08-30, overriding the note above: the README
+# should show the product, not only its one load-bearing claim. /discover still leads.
 README_SHOTS = [
     ('discover-desktop-light', '/discover', 1440, 900, 'light'),
     ('discover-desktop-dark', '/discover', 1440, 900, 'dark'),
     ('discover-phone-light', '/discover', 390, 844, 'light'),
+    ('landing-desktop-light', '/', 1440, 900, 'light'),
+    ('taste-desktop-light', '/taste', 1440, 900, 'light'),
+    ('venue-desktop-light', f'/r/{VENUE_ID}', 1440, 900, 'light'),
 ]
 
 # The sweep's craving is deliberately fuzzy, which is right for testing the "closest in
