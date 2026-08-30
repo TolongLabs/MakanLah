@@ -18,6 +18,13 @@ import { join } from 'node:path'
 const DIR = process.env.DEMO_DIR || join(tmpdir(), 'makanlah-demo')
 const WEB = process.env.DEMO_WEB || 'http://localhost:5188'
 const API = process.env.DEMO_API || 'http://127.0.0.1:8000'
+// The craving list is deterministic from the clock, so the dish on offer first
+// depends on the hour the recording runs. At 19:00 that is bak kut teh, whose
+// RedNote posts are dead -- leadPair then correctly refuses to pair a dead post
+// with a live one and the corroboration frame cannot render. This picks a
+// craving by index instead of filming whichever dish the hour happens to lead
+// with. Unset, the walk is unchanged.
+const CRAVING = process.env.DEMO_CRAVING === undefined ? -1 : Number(process.env.DEMO_CRAVING)
 const OUT = join(DIR, 'capture')
 
 // Prefer a playwright installed into DEMO_DIR, which is how the README sets this
@@ -86,12 +93,13 @@ try {
     // Click the label: it toggles the input and is what a person actually hits.
     const options = page.locator('.taste-steps label.option:visible')
     const n = await options.count()
+    const steered = step === 0 && CRAVING >= 0
     if (n > 0) {
-      await options.nth(0).click()
+      await options.nth(steered ? CRAVING : 0).click()
       await beat(page, 900)
       // A second pick, but never the "Say It In My Own Words" escape hatch,
       // which opens a text field and stalls the flow.
-      if (n > 2) {
+      if (n > 2 && !steered) {
         await options.nth(1).click()
         await beat(page, 900)
       }
