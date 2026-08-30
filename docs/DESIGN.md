@@ -34,6 +34,20 @@ large corner radius on every surface · a coloured rail down the side of a round
 that is not a sequence · three items in a list because three feels balanced · glassmorphism with no reason for depth · a
 dark dashboard with neon chart lines.
 
+**Overridden 2026-08-30, by the owner, for `/discover` and the site footer: cards with a glassmorphism background.** The
+tell above is glassmorphism _with no reason for depth_, and that qualifier is what the override satisfies rather than
+ignores. #141's dotted ground gave the page a real texture, so a frosted card over it reads as a surface sitting above
+the page; the same treatment over flat paper would still be the tell. Two rules keep it honest: the glass stays above
+55% opacity so an excerpt never sits on a moving background, and it degrades to a solid `--paper-raised` under
+`prefers-reduced-transparency` and where `backdrop-filter` is unsupported.
+
+**And the rule it replaces: hairlines instead of cards.** Result rows were separated by a single `--rule` hairline. They
+are cards now. The hairline rule still holds everywhere else.
+
+**Every control and surface is solid or glass, never in between.** A partly-transparent background with nothing
+filtering behind it is what makes a control look unfinished. `scripts/opaque-check.mjs` reads computed styles from a
+real browser across both themes and fails on any element that is neither.
+
 **Numbering is the one to watch here.** A shortlist genuinely is ranked, so numbering results is honest and stays. It
 must never spread to anything unordered.
 

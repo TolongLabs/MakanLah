@@ -150,6 +150,34 @@ try {
   //    the failure that shipped last time.
   const twoUp = page.locator('.evidence-pair').filter({ has: page.locator('.testimony:nth-child(2)') })
   pairs = await twoUp.count()
+
+  // The wizard's craving list is deterministic from the clock, so which dish the
+  // walk arrives on is not ours to choose -- and the corpus no longer corroborates
+  // every dish. Measured on prod after the retrieval fix (6487f84), WITHOUT
+  // geolocation, which is how this walk arrives: `bak kut teh` returns 9 results
+  // with 3 corroborated, `roti canai` 8 with 3, `banana leaf rice` 10 with 2.
+  // `蛋挞` and `dim sum` come back with a SINGLE result without a radius --
+  // corroborated, but one card is a thin frame -- so the fallback has to be a
+  // query that fills the screen and corroborates, not merely one that corroborates.
+  //
+  // So if the craving we landed on cannot show the strongest frame in the product,
+  // search for one that can, rather than filming a walk with its argument missing.
+  // This is a real query returning real results, not a staged one -- but it IS a
+  // chosen one, and the handoff records which, the same way the last cut did.
+  if (pairs === 0) {
+    const fallback = process.env.DEMO_QUERY || 'bak kut teh'
+    console.log(`  no corroboration pair for the wizard's craving -- searching ${fallback}`)
+    await page.locator('#find').fill(fallback)
+    await beat(page, 900)
+    await page.locator('#find').press('Enter')
+    await page.waitForLoadState('networkidle')
+    await beat(page, 3400)
+    mark('research')
+    await page.mouse.wheel(0, 420)
+    await beat(page, 2600)
+    pairs = await twoUp.count()
+  }
+
   if (pairs > 0) {
     await twoUp.first().scrollIntoViewIfNeeded()
     await beat(page, 900)
@@ -213,18 +241,15 @@ try {
     await page.locator('.ask-input').fill(process.env.DEMO_QUESTION || 'Is this place halal?')
     await beat(page, 1100)
     await page.locator('.ask-input').press('Enter')
-    // Wait for the ANSWER rather than a fixed pause. The one-shot route is a model
-    // call and its latency is not ours to predict; a fixed timeout either cuts her
-    // off mid-answer or holds a dead frame after it.
-    await page
-      .waitForFunction(
-        () => /do not cover|does not|no post|posts say/i.test(document.querySelector('dialog[open]')?.innerText || ''),
-        null,
-        {
-          timeout: 40000
-        }
-      )
-      .catch(() => {})
+    // Wait for the answer ELEMENT, not for words. The first version matched a regex
+    // against the dialog's text, which is a check that owns its own definition of
+    // success: when the phrasing did not match it waited the full 40s and swallowed
+    // the timeout, and the capture carried 45 seconds of dead frame while /ask was
+    // in fact answering in under a second. `.chat-answer` is a state the UI exposes
+    // rather than a sentence this file guessed at.
+    await page.waitForSelector('.chat-answer', { timeout: 40000 }).catch(() => {
+      console.log('  ! the copilot did not answer within 40s -- the ask beat is a dead frame')
+    })
     await beat(page, 1400)
     mark('ask')
     filmed.ask = 1

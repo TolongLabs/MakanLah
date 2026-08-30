@@ -27,6 +27,18 @@
      the ink: far enough from the ground to read as deliberate, near enough that a
      1px dot never competes with an excerpt sitting on it. */
   --dot: #dcddd2;
+
+  /* The result card's glass. Owner decision, 2026-08-30, and it overrides the
+     tell DESIGN.md lists -- with the reason for depth that tell asks for: the
+     dotted ground is a real texture, and a translucent card over it reads as a
+     surface ABOVE the page rather than a rectangle drawn on it. Opaque here and
+     the blur would have nothing to do.
+
+     Kept above 55% so testimony never sits on a moving background: the excerpt
+     is the thing being read, and legibility outranks the effect. */
+  --glass: rgb(255 255 255 / 58%);
+  --glass-edge: rgb(255 255 255 / 72%);
+  --glass-blur: 14px;
   --enamel: #0b6b5e;
   --enamel-quiet: #e3efec;
   --warn: #8a5a00;
@@ -134,6 +146,8 @@
     --rule: #2c2e25;
     --rule-strong: #43463a;
     --dot: #262820;
+    --glass: rgb(26 27 22 / 62%);
+    --glass-edge: rgb(255 255 255 / 7%);
     --enamel: #3fa697;
     --enamel-quiet: #15302c;
     --warn: #d9a441;
@@ -165,6 +179,8 @@
   --rule: #2c2e25;
   --rule-strong: #43463a;
   --dot: #262820;
+  --glass: rgb(26 27 22 / 62%);
+  --glass-edge: rgb(255 255 255 / 7%);
   --enamel: #3fa697;
   --enamel-quiet: #15302c;
   --warn: #d9a441;

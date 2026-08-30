@@ -5,23 +5,62 @@
    excerpts sit side by side, each under its own source chip. The layout is the claim.
    Nothing has to assert "two sources agree" because the reader can see it. */
 
+/* Cards, not hairlines. Owner decision, 2026-08-30.
+   DESIGN.md's rule was hairlines-instead-of-cards and its tell list names
+   glassmorphism, so this is a deliberate override and DESIGN.md records it as
+   one. What makes it depth rather than decoration is that there is now something
+   BEHIND the card to see: the #141 dotted ground. A frosted surface over a real
+   texture reads as sitting above the page; the same treatment over flat paper is
+   the tell. */
 .results {
   margin-top: var(--s6);
-  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: var(--s4);
 }
 
 .result {
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
   column-gap: var(--s3);
-  padding-block: var(--s6);
-  border-bottom: 1px solid var(--rule);
+  padding: var(--s5) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.18);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.18);
+  /* A single inner highlight along the top edge, which is what makes a glass
+     surface read as having an edge rather than as a flat translucent panel. No
+     outer glow: the shadow is tinted to the ground per DESIGN.md, never black. */
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    var(--e1);
 }
 
 @media (min-width: 48rem) {
   .result {
     grid-template-columns: 3rem minmax(0, 1fr);
     column-gap: var(--s5);
+    padding: var(--s6) var(--s5);
+  }
+}
+
+/* Transparency is an effect, not a requirement. Where the viewer has asked for
+   less of it, the card goes solid and keeps its edge -- the layout must not
+   depend on the blur. */
+@media (prefers-reduced-transparency: reduce) {
+  .result {
+    background: var(--paper-raised);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Safari and Firefox ship backdrop-filter, but a browser without it would render
+   a 58% white card over the dots with no blur, which reads as a washed-out panel
+   rather than glass. Opaque is the better failure. */
+@supports not (backdrop-filter: blur(1px)) {
+  .result {
+    background: var(--paper-raised);
   }
 }
 
@@ -429,7 +468,11 @@
   padding: var(--s2) var(--s3);
   border: 0;
   border-radius: var(--r-chip);
-  background: transparent;
+  /* Solid, not transparent: a control is a surface. The segmented container still
+     reads as one control because the pills share its radius and sit inside its
+     ground -- the selected one is separated by weight and ink, not by being the
+     only one with a background. */
+  background: var(--paper-raised);
   color: var(--ink-soft);
   cursor: pointer;
   white-space: nowrap;
@@ -446,6 +489,37 @@
   color: var(--ink);
   background: var(--paper-raised);
   box-shadow: var(--e1);
+}
+
+/* The filter count, and the tooltip's trigger. Solid rather than transparent, per
+   the owner's rule that a control is either solid or glass and never in between.
+   `position: relative` is what the bubble positions against. */
+.find-why {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  background: var(--paper-raised);
+  color: var(--ink-faint);
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+.find-why:hover,
+.find-why:focus-visible {
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+/* The caption names up to five wizard answers, two of which can be a dish string
+   in any of three scripts. 16rem wrapped it into a tall narrow column. */
+.find-why .tooltip-bubble {
+  max-width: 22rem;
+  white-space: normal;
+  text-align: left;
 }
 
 .find-prefs {
@@ -596,9 +670,16 @@
   color: var(--ink-faint);
 }
 
+/* The skeleton takes the card's shape, not the old hairline row's. A loading
+   state in a different geometry from the thing it stands in for makes the page
+   jump the moment results land, which is worse than a slower load. */
 .skeleton {
-  border-bottom: 1px solid var(--rule);
-  padding-block: var(--s6);
+  padding: var(--s5) var(--s4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
   column-gap: var(--s3);
@@ -608,6 +689,15 @@
   .skeleton {
     grid-template-columns: 3rem minmax(0, 1fr);
     column-gap: var(--s5);
+    padding: var(--s6) var(--s5);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .skeleton {
+    background: var(--paper-raised);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 
@@ -967,20 +1057,22 @@
 
 /* The control that hands a venue to her. A button rather than a link, because it
    changes what is on this page rather than going anywhere. */
+/* A real button rather than underlined text. It was `background: none` with an
+   underline, which is a link's costume on a control that opens a dialog. */
 .ask-trigger {
   font: inherit;
   font-size: var(--t-sm);
-  padding: 0;
-  border: 0;
-  background: none;
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  background: var(--paper-raised);
   color: var(--seal);
-  text-decoration: underline;
-  text-underline-offset: 3px;
   cursor: pointer;
 }
 
 .ask-trigger:hover {
   color: var(--ink);
+  border-color: var(--rule-strong);
 }
 
 /* Two venues in the corpus share a name and are genuinely different places. Set at
@@ -1008,9 +1100,10 @@
    navigating. */
 .link-button {
   font: inherit;
-  padding: 0;
-  border: 0;
-  background: none;
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-chip);
+  background: var(--paper-raised);
   cursor: pointer;
 }
 

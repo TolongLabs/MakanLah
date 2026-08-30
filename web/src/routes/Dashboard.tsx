@@ -103,12 +103,12 @@ export function Dashboard() {
           </section>
 
           <div className="dash-ctas">
-            <Link className="dash-card" to="/discover">
+            <Link className="dash-card dash-card-find" to="/discover">
               <span className="dash-card-label">Find Somewhere To Eat</span>
               <span className="dash-card-sub">Search the corpus. Every result cites the post behind it.</span>
             </Link>
 
-            <Link className="dash-card" to="/taste">
+            <Link className="dash-card dash-card-taste" to="/taste">
               <span className="dash-card-label">Your Taste</span>
               {/* The wizard is where she lives, and it was unreachable from inside the
                   app -- this is one of the two doors back to it. */}

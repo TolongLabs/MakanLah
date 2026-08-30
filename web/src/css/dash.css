@@ -219,3 +219,108 @@
   color: var(--ink-faint);
   line-height: 1.5;
 }
+
+/* ------------------------------------------------------------------- the motifs */
+
+/* Ink motifs in the corner of the three cards. Generated for this app rather than
+   stock, in the paper-and-ink register the rest of the system uses.
+ 
+   THE TEXT BOUNDARY IS THE POINT. Each motif is decoration and must never be read
+   through: the card reserves space for it with padding, and BOTH the padding and
+   the motif appear at the same breakpoint. Below it the motif is not merely
+   hidden, the reserved space is given back, so a narrow card is a plain card with
+   full-width text rather than a card with a hole where a picture used to be.
+ 
+   The generated art carries a cream ground rather than transparency, so it is
+   blended rather than placed: `multiply` drops that ground into the paper in light
+   mode, and in dark mode the artwork is inverted first so the ink reads as light
+   strokes and `screen` drops the ground again. */
+.dash-hero,
+.dash-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.dash-hero::after,
+.dash-card::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: contain;
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+  /* The generated art has a cream ground and the card is pure white, so multiply
+     left the image's rectangle visible as a soft block edge. This fades it out
+     toward the top-left -- the direction the art was composed to fade in anyway --
+     so what remains reads as a drawing rather than a pasted tile. */
+  mask-image: radial-gradient(125% 125% at 100% 100%, #000 42%, transparent 76%);
+  -webkit-mask-image: radial-gradient(125% 125% at 100% 100%, #000 42%, transparent 76%);
+  /* Off until there is room. See the boundary note above. */
+  display: none;
+}
+
+:root[data-theme="dark"] .dash-hero::after,
+:root[data-theme="dark"] .dash-card::after {
+  mix-blend-mode: screen;
+  filter: invert(1) hue-rotate(180deg);
+  opacity: 0.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .dash-hero::after,
+  :root:not([data-theme="light"]) .dash-card::after {
+    mix-blend-mode: screen;
+    filter: invert(1) hue-rotate(180deg);
+    opacity: 0.5;
+  }
+}
+
+.dash-hero::after {
+  background-image: url("/brand/motif-overview.webp");
+}
+
+.dash-card-find::after {
+  background-image: url("/brand/motif-find.webp");
+}
+
+.dash-card-taste::after {
+  background-image: url("/brand/motif-taste.webp");
+}
+
+/* The hero is full width, so it has room sooner than the two-up CTA cards do. */
+@media (min-width: 52rem) {
+  .dash-hero {
+    /* Wider than the motif, not equal to it: at 19rem the text ran to 495px while
+       the motif box began at 480, measured rather than eyeballed. But the reserve
+       is also a cost -- at 22rem the three figures no longer fit one row and Last
+       Read wrapped. 15.5rem clears a 14rem motif and leaves the row intact. */
+    padding-right: 15.5rem;
+  }
+
+  .dash-hero::after {
+    display: block;
+    width: 14rem;
+    height: 82%;
+  }
+}
+
+/* The CTA cards are two-up from 40rem, so each is half the column and stays too
+   narrow for a motif until well past that. Measured against the longest label,
+   "Find Somewhere To Eat", plus its two-line subtitle. */
+@media (min-width: 68rem) {
+  .dash-card {
+    padding-right: 8.5rem;
+  }
+
+  .dash-card::after {
+    display: block;
+    width: 7.5rem;
+    height: 7.5rem;
+  }
+}
