@@ -102,12 +102,23 @@ export function ResultRow({
             {facts.map((f) => (
               <span
                 key={f.key}
-                className={f.lead ? 'why-lead' : 'why-fact'}
+                className={f.lead ? 'why-lead' : f.key === 'price' ? 'why-fact why-price' : 'why-fact'}
                 // The matched dish is a corpus string and may be in any of three
                 // scripts; the counts and the distance are ours and are English.
                 lang={f.lead ? 'und' : undefined}
+                // Only the price carries one. A run of dollar signs is a scale to
+                // anyone who can see it and nothing at all to anyone who cannot,
+                // so the words go to a screen reader the way the chop's do.
+                title={f.title}
               >
-                {f.text}
+                {f.title ? (
+                  <>
+                    <span aria-hidden="true">{f.text}</span>
+                    <span className="sr-only">{f.title}</span>
+                  </>
+                ) : (
+                  f.text
+                )}
               </span>
             ))}
           </p>

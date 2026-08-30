@@ -42,6 +42,13 @@ export type Venue = {
   lng: number | null
   maps_url: string
   dishes: string[]
+  /** Google's price level, 1-4, serialized to the client for the first time in
+      #171. Null or absent means nobody priced it, and that is a real answer: #158
+      forbids guessing a band from an area or a cuisine, the same rule #126 sets
+      for halal and for the same reason. 28 of 57 sampled results carry one --
+      priced venues are over-represented against the 13% of venues that hold a
+      price, because a priced venue has more posts and more posts is what ranks it. */
+  price_band?: number | null
   /** A short qualifier that tells this venue apart from a same-named sibling, or
       null when the corpus genuinely cannot tell them apart. **Null is a real
       answer here, not a missing one** (#58): the UI must never invent a label to

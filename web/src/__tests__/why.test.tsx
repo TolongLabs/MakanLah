@@ -291,3 +291,38 @@ describe('a citation is identified by its post, not by its address', () => {
     expect(citable(noId)).toHaveLength(2)
   })
 })
+
+describe('the card says what a place costs, where anybody knows', () => {
+  // #158. The tester's second complaint, verbatim: "plus I dunno their price range
+  // too, how do I use this app leh?" Deciding where to take a family is a budget
+  // question before it is a taste one. `price_band` reached the client for the
+  // first time in #171, and 28 of 57 sampled results carry one -- priced venues
+  // are over-represented in results because a priced venue has more posts, and
+  // more posts is what ranks it.
+  it('renders the band as a scale a reader can compare across cards', () => {
+    const tokens = whyRow(result({ venue: { price_band: 2 } }))
+    expect(tokens.find((t) => t.key === 'price')?.text).toBe('$$')
+    expect(whyRow(result({ venue: { price_band: 4 } })).find((t) => t.key === 'price')?.text).toBe('$$$$')
+  })
+
+  it('says NOTHING where no post and no place record priced it', () => {
+    // The honesty constraint in #158, and the same rule as #126 for halal: a venue
+    // with no price evidence must not have a band guessed from its area or cuisine.
+    expect(whyRow(result({ venue: { price_band: null } })).some((t) => t.key === 'price')).toBe(false)
+    expect(whyRow(result({ venue: {} })).some((t) => t.key === 'price')).toBe(false)
+  })
+
+  it('refuses a band outside the scale rather than rendering a run of symbols', () => {
+    // `price_band` is 1-4 in the schema and arrives from a place record we do not
+    // own. A 7 would otherwise render as seven dollar signs, and a 0 as an empty
+    // token with a middot in front of it.
+    for (const bad of [0, 7, -1, 1.5]) {
+      expect(whyRow(result({ venue: { price_band: bad } })).some((t) => t.key === 'price')).toBe(false)
+    }
+  })
+
+  it('spells the level out for a reader who cannot see the symbols', () => {
+    const { container } = renderRow(result({ venue: { price_band: 3 } }))
+    expect(container.querySelector('.why-price')?.getAttribute('title')).toMatch(/expensive/i)
+  })
+})
