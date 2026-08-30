@@ -456,13 +456,61 @@ def match_block(venue_id, *, lexical_set, dish, scores):
     }
 
 
+def distance_gap_for(con, query, lat, lng):
+    """The corpus knows this dish and nothing in range serves it -- so say where.
+
+    Detect with the wide lane, NAME with the strict one. Whether the corpus knows
+    this dish at all is a recall question: `nasi lemak sedap` must reach
+    `nasi lemak`. Which restaurants to put in front of somebody is a precision
+    question, and getting it wrong invents the claim the gap exists to avoid.
+
+    Returns None when the corpus cannot name the dish, which is the honest answer
+    -- there is no nearest anything to report for a dish nobody has written about.
+    """
+    if lat is None or lng is None:
+        return None
+    wide = frozenset(dishes.fold(d) for d in db.dish_vocabulary(con) if dishes.fold(d))
+    _, label = dishes.named_in(query, wide)
+    label = label or dishes.dish_named_inside(query, wide)
+    elsewhere = dishes.gap_terms(label, wide) if label else frozenset()
+    if not elsewhere:
+        return None
+    return {
+        'term': label,
+        'nearest': [
+            {
+                'name': r['name'],
+                'area': r['area'],
+                'distance_m': int(r['distance_m']) if r['distance_m'] is not None else None,
+                'maps_url': maps_url(r),
+                # A venue whose every post is dead still serves the dish -- a
+                # restaurant does not stop cooking because a post 404s, and the
+                # attribution was extracted while they were live. So it is named,
+                # but never as though it were checkable.
+                'live_citations': int(r['live_citations'] or 0),
+                'verifiable': bool(r['live_citations']),
+            }
+            for r in db.nearest_serving(con, sorted(elsewhere), lat, lng)[:GAP_VENUES]
+        ],
+    }
+
+
 def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50, prefs=None):
     s = config.settings()
     with db.connect() as con:
         degraded, _, reasons = db.source_health(con)
         candidate_ids = db.filter_candidates(con, lat=lat, lng=lng, radius_m=radius_m)
         if not candidate_ids:
-            return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
+            # Nothing inside the radius. This early return used to sit ABOVE the gap
+            # logic, so the tighter the radius the more likely the response was a
+            # bare empty list -- exactly when "not here, but 2km that way" is the
+            # most useful thing the corpus can say. `bak kut teh` at 300m returned
+            # nothing at all while the same query wider returned five picks.
+            empty = {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
+            far = distance_gap_for(con, query, lat, lng)
+            if far:
+                empty['distance_gap'] = far
+            return empty
 
         # The lexical lane. It fires only when the WHOLE query names a dish, so
         # a mood query stays on the semantic lane, which is what that lane is for.
@@ -509,37 +557,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         # pasta, tacos and a bakery, ranked, with `coverage_gaps: []` and a
         # corroboration stamp on each (#162). Every citation was real; the ranked
         # ANSWER asserted a relevance no post supported.
-        far = None
-        if not named:
-            wide = frozenset(dishes.fold(d) for d in db.dish_vocabulary(con) if dishes.fold(d))
-            # Detect with the wide lane, NAME with the strict one. Whether the corpus
-            # knows this dish at all is a recall question -- `nasi lemak sedap` must
-            # reach `nasi lemak`. Which restaurants to put in front of somebody is a
-            # precision question, and getting it wrong invents the claim the gap
-            # exists to avoid.
-            _, label = dishes.named_in(query, wide)
-            label = label or dishes.dish_named_inside(query, wide)
-            elsewhere_dish = label
-            elsewhere = dishes.gap_terms(label, wide) if label else frozenset()
-            if elsewhere:
-                far = {
-                    'term': elsewhere_dish,
-                    'nearest': [
-                        {
-                            'name': r['name'],
-                            'area': r['area'],
-                            'distance_m': int(r['distance_m']) if r['distance_m'] is not None else None,
-                            'maps_url': maps_url(r),
-                            # A venue whose every post is dead still serves the dish --
-                            # a restaurant does not stop cooking because a post 404s,
-                            # and the attribution was extracted while they were live.
-                            # So it is named, but never as though it were checkable.
-                            'live_citations': int(r['live_citations'] or 0),
-                            'verifiable': bool(r['live_citations']),
-                        }
-                        for r in db.nearest_serving(con, sorted(elsewhere), lat, lng)[:GAP_VENUES]
-                    ],
-                }
+        far = distance_gap_for(con, query, lat, lng) if not named else None
 
         enriched = db.venues_with_citations(con, ordered)
 
