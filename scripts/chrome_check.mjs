@@ -88,6 +88,11 @@ const read = async (scheme, path = '/') => {
 
 const light = await read('light')
 const dark = await read('dark')
+// The drawer lives on every screen EXCEPT the landing, where the owner had the
+// control removed: that page sells and a menu beside Get Started is a second door
+// out of it. Reading `/` for a drawer therefore measures the wrong page, which is
+// what this check did until the landing changed underneath it.
+const inside = await read('light', '/discover')
 
 // 1. The scrollbar is ours.
 say(
@@ -125,9 +130,10 @@ say(
   `color-scheme follows the theme  light="${light.colorScheme}" dark="${dark.colorScheme}"`
 )
 
-// 4. The drawer exists and is ours.
-say(light.drawer, 'a MakanLah nav drawer is in the DOM')
-say(light.drawerToggle, 'the drawer has a toggle control')
+// 4. The drawer exists and is ours, on the screens that have one.
+say(inside.drawer, 'a MakanLah nav drawer is in the DOM')
+say(inside.drawerToggle, 'the drawer has a toggle control')
+say(!light.drawerToggle, 'the landing carries no menu control, so nothing competes with Get Started')
 
 // 5. No OS tooltips left on interactive controls.
 say(light.nativeTitles === 0, `no native title tooltips on controls  found=${light.nativeTitles}`)

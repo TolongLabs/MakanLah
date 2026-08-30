@@ -22,7 +22,7 @@ export function SignUp() {
     setError(null)
     try {
       saveSession(await signUp(email, password))
-      navigate('/taste')
+      navigate('/dashboard')
     } catch (err) {
       setError(messageFor(err))
     } finally {
@@ -35,7 +35,7 @@ export function SignUp() {
     setError(null)
     try {
       saveSession(await signInAsGuest())
-      navigate('/taste')
+      navigate('/dashboard')
     } catch (err) {
       setError(messageFor(err))
     } finally {

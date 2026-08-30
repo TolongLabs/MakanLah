@@ -15,7 +15,7 @@ export function SignIn() {
     setError(null)
     try {
       saveSession(kind === 'guest' ? await signInAsGuest() : await signIn(email, password))
-      navigate('/taste')
+      navigate('/dashboard')
     } catch (err) {
       // Never dressed as a wrong password when the route simply does not exist yet.
       setError(messageFor(err))

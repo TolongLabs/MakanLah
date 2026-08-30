@@ -67,11 +67,17 @@ const BUDGET_LABEL: Record<NonNullable<Prefs['budget']>, string> = {
 export function summarise(prefs: Prefs): { term: string; value: string }[] {
   const rows: { term: string; value: string }[] = []
   if (prefs.craving.length) rows.push({ term: 'Craving', value: prefs.craving.join(', ') })
-  if (prefs.company) rows.push({ term: 'With', value: COMPANY_LABEL[prefs.company] })
+  // The label tables are the validation. `isPrefs` checks `company`, `mood` and
+  // `budget` are STRINGS and not that they are known ones, so a value that has been
+  // through localStorage -- an older build's vocabulary, a hand-edited key -- maps to
+  // undefined and used to be pushed as a row anyway. It rendered as
+  // "Answered: 肉骨茶, Family, 3 km, ." on the dashboard card, a stray separator with
+  // nothing behind it. An unrecognised answer is not an answer; drop the row.
+  if (prefs.company && COMPANY_LABEL[prefs.company]) rows.push({ term: 'With', value: COMPANY_LABEL[prefs.company] })
   if (prefs.range_m)
     rows.push({ term: 'Within', value: `${(prefs.range_m / 1000).toFixed(prefs.range_m < 1000 ? 1 : 0)} km` })
   else if (prefs.range_m === 0) rows.push({ term: 'Within', value: 'All of KL' })
-  if (prefs.mood) rows.push({ term: 'Mood', value: MOOD_LABEL[prefs.mood] })
-  if (prefs.budget) rows.push({ term: 'Budget', value: BUDGET_LABEL[prefs.budget] })
+  if (prefs.mood && MOOD_LABEL[prefs.mood]) rows.push({ term: 'Mood', value: MOOD_LABEL[prefs.mood] })
+  if (prefs.budget && BUDGET_LABEL[prefs.budget]) rows.push({ term: 'Budget', value: BUDGET_LABEL[prefs.budget] })
   return rows
 }

@@ -34,3 +34,16 @@ export function cachedVenue(id: string): Result | null {
     return null
   }
 }
+
+/** Everything the last search parked, newest search only. Used by /dashboard to
+    show where somebody has just been; empty on a fresh visit, which is honest. */
+export function lastResults(): Result[] {
+  try {
+    const raw = sessionStorage.getItem(KEY)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as Result[]) : []
+  } catch {
+    return []
+  }
+}

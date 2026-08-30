@@ -360,6 +360,15 @@
   gap: var(--s3) var(--s5);
 }
 
+/* Sits on the filter row beside the distance control, because that is where the
+   things that change the SEARCH live -- and redoing your taste changes the search
+   more than any of them. Quiet, not primary: Find is still the action on this
+   screen. */
+.find-taste {
+  white-space: nowrap;
+  text-decoration: none;
+}
+
 .segmented {
   margin: 0;
   min-inline-size: 0;

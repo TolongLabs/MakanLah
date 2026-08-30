@@ -117,8 +117,19 @@ export function NavDrawer({
           </Link>
         </div>
         <nav className="nav-drawer-nav" aria-label="Mobile">
+          {session && (
+            <NavLink className="nav-drawer-link" to="/dashboard" onClick={onClose}>
+              Dashboard
+            </NavLink>
+          )}
           <NavLink className="nav-drawer-link" to="/discover" onClick={onClose}>
             Discover
+          </NavLink>
+          {/* The wizard had exactly one route into it from inside the app: an inline
+              "Change" link inside a sentence that only rendered once you already had
+              answers. The owner could not find it. This is the durable door. */}
+          <NavLink className="nav-drawer-link" to="/taste" onClick={onClose}>
+            Your Taste
           </NavLink>
           {session ? (
             <>

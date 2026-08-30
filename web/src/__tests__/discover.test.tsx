@@ -326,3 +326,39 @@ describe('the page says what the corpus cannot answer', () => {
     expect(screen.queryByText(/We hold no halal information/i)).toBeNull()
   })
 })
+
+/**
+ * The wizard was unreachable from inside the app.
+ *
+ * Its only route from /discover was an inline "Change" link inside a sentence
+ * that rendered only once you already had answers — so somebody arriving without
+ * them, or not reading that paragraph, had no way to the companion at all. The
+ * owner could not find it.
+ */
+describe('the wizard is reachable from the results page', () => {
+  it('offers a route to it even with nothing to summarise', async () => {
+    // Not `range_m: 0` -- that summarises to "All of KL", so the page does have an
+    // answer to recite and the label is correctly the redo one. The empty case is
+    // prefs that exist and say nothing.
+    recommend.mockReset().mockResolvedValue(empty)
+    show({ prefs: { craving: [] } })
+    await waitFor(() => expect(screen.getByRole('link', { name: /Answer Four Questions/i })).toBeTruthy())
+    expect(screen.getByRole('link', { name: /Answer Four Questions/i }).getAttribute('href')).toBe('/taste')
+  })
+
+  it('names it for what it does once there are answers to redo', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    show({ prefs: { craving: ['nasi lemak'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByRole('link', { name: /Redo My Taste/i })).toBeTruthy())
+    expect(screen.getByRole('link', { name: /Redo My Taste/i }).getAttribute('href')).toBe('/taste')
+  })
+
+  it('is a control on the filter row, not a word inside a paragraph', () => {
+    // The reason the old one could not be found. Asserting the ROLE and the class
+    // rather than the text, because "there is a link whose href is /taste" was
+    // true before this change too.
+    recommend.mockReset().mockResolvedValue(empty)
+    const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 0 } })
+    expect(container.querySelector('.find-filters .find-taste')).toBeTruthy()
+  })
+})
