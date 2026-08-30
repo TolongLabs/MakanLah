@@ -64,7 +64,11 @@ export function Dashboard() {
                 </div>
                 {corpus.venues != null && (
                   <div>
-                    <dt>Places Written About</dt>
+                    {/* KL, said plainly. The corpus is 256 Kuala Lumpur venues and
+                        nothing outside it, and this figure sits directly under a
+                        line about what Malaysians wrote -- unlabelled, the pair
+                        reads as national coverage the corpus does not have. */}
+                    <dt>Places In KL</dt>
                     <dd>{corpus.venues.toLocaleString('en-MY')}</dd>
                   </div>
                 )}
