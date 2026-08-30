@@ -86,6 +86,9 @@ try {
   // /health, measured settling at ~1845ms. Hold past that before the beat.
   await beat(page, 2600)
   mark('landing')
+  // #187: line 0 reads for 6549ms and had 1458ms before `compare`. A beat has to outlast the line written over it,
+  // or schedule.py pushes that line and every one after it.
+  await beat(page, 5600)
 
   // The chatbot-versus-real-post comparison IS the pitch's opening argument and
   // it got four seconds in the launch cut. Scroll onto it and stay there.
@@ -110,6 +113,11 @@ try {
   mark('taste')
 
   for (let step = 0; step < 6; step++) {
+    // #187: these were 900/900/700/1100. The taste beat then ran 19.2s against 9.5s
+    // of narration, and lengthening the beats around it turned that slack into 9.7s
+    // of audible dead air mid-wizard. Trimmed to give the beat back to the ones that
+    // were short. The clicks still read as deliberate at 620ms.
+    //
     // Options are <label class="option"> wrapping an sr-only checkbox or radio.
     // Click the label: it toggles the input and is what a person actually hits.
     const options = page.locator('.taste-steps label.option:visible')
@@ -117,20 +125,20 @@ try {
     const steered = step === 0 && CRAVING >= 0
     if (n > 0) {
       await options.nth(steered ? CRAVING : 0).click()
-      await beat(page, 900)
+      await beat(page, 620)
       // A second pick, but never the "Say It In My Own Words" escape hatch,
       // which opens a text field and stalls the flow.
       if (n > 2 && !steered) {
         await options.nth(1).click()
-        await beat(page, 900)
+        await beat(page, 620)
       }
     }
     const next = page.getByRole('button', { name: /Continue|Find Food/ })
     if (!(await next.isVisible().catch(() => false))) break
     const label = (await next.textContent())?.trim()
-    await beat(page, 700)
+    await beat(page, 480)
     await next.click()
-    await beat(page, 1100)
+    await beat(page, 780)
     if (label === 'Find Food') break
   }
 
@@ -139,6 +147,9 @@ try {
   await page.waitForLoadState('networkidle')
   await beat(page, 3200)
   mark('discover')
+  // #187: lines 4+5 run to 13323ms; the gap to `corroboration` was 7184. A beat has to outlast the line written over it,
+  // or schedule.py pushes that line and every one after it.
+  await beat(page, 6200)
   await page.mouse.wheel(0, 500)
   await beat(page, 3000)
   await page.mouse.wheel(0, 500)
@@ -182,6 +193,9 @@ try {
     await twoUp.first().scrollIntoViewIfNeeded()
     await beat(page, 900)
     mark('corroboration')
+    // #187: line 6 reads for 10155ms into a 6750ms gap. A beat has to outlast the line written over it,
+    // or schedule.py pushes that line and every one after it.
+    await beat(page, 3900)
     await beat(page, 4200)
   }
 
@@ -252,6 +266,9 @@ try {
     })
     await beat(page, 1400)
     mark('ask')
+    // #187: lines 9+10 run to 13008ms into a 10861ms gap. A beat has to outlast the line written over it,
+    // or schedule.py pushes that line and every one after it.
+    await beat(page, 2200)
     filmed.ask = 1
     await beat(page, 5200)
     await page.keyboard.press('Escape')
@@ -270,6 +287,9 @@ try {
     await deadRow.scrollIntoViewIfNeeded()
     await beat(page, 1200)
     mark('dead')
+    // #187: line 11 reads for 9259ms into an 8885ms gap. A beat has to outlast the line written over it,
+    // or schedule.py pushes that line and every one after it.
+    await beat(page, 800)
     filmed.dead = 1
     await beat(page, 6000)
   } else {
