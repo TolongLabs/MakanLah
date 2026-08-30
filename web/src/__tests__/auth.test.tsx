@@ -88,16 +88,14 @@ describe('the nav while signed in', () => {
     expect(bar?.textContent).not.toMatch(/Guest, Shared/i)
   })
 
-  it('still discloses the sharing somewhere a person will find it', () => {
-    // The bar label went at the owner's instruction and the sign-in consent copy
-    // went earlier for the same reason. Removing BOTH would leave the product never
-    // telling a guest that another guest can see what they are doing, which is a
-    // fact about somebody else's privacy rather than a piece of chrome. It moved to
-    // the drawer; this asserts it did not simply vanish.
+  it("does not disclose the sharing anywhere, which is the owner's decision", () => {
+    // Asked directly after the topbar label was removed, and answered "no need to
+    // bother". Asserted rather than left silent so the next person reads it as a
+    // decision and not as something that fell out during a refactor: a guest is no
+    // longer told that other guests can see what they are doing.
     saveSession({ token: 't', user: { is_guest: true, shared: true } })
     shell()
-    const drawer = document.querySelector('[data-nav-drawer]')
-    expect(drawer?.textContent).toMatch(/shared with other guests/i)
+    expect(document.body.textContent).not.toMatch(/shared/i)
   })
 
   it('names a real account by its email, in the same place as the guest notice', () => {

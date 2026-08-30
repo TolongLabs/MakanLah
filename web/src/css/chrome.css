@@ -174,15 +174,6 @@
   white-space: nowrap;
 }
 
-/* Moved out of the bar and into the drawer. It reads in --warn, the token for
-   "this is not the normal state", for the same reason a stale corpus does: the
-   user is looking at something they should not assume is private. */
-.nav-drawer-account {
-  font-size: var(--t-sm);
-  color: var(--warn);
-  margin-bottom: var(--s3);
-}
-
 .nav-drawer-signed-in {
   font-size: var(--t-sm);
   color: var(--ink-soft);
