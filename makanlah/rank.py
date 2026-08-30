@@ -13,6 +13,7 @@ import math
 import re
 
 from makanlah import config, db, dishes, models
+from makanlah import prefs as prefs_mod
 from makanlah.text import fold_variants
 
 
@@ -455,7 +456,7 @@ def match_block(venue_id, *, lexical_set, dish, scores):
     }
 
 
-def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50):
+def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50, prefs=None):
     s = config.settings()
     with db.connect() as con:
         degraded, _, reasons = db.source_health(con)
@@ -576,7 +577,21 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     if not candidates:
         return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 
-    picked = models.rerank(query, candidates, limit=limit)
+    # How many of the candidates the corpus can actually cost. `budget` is claimed
+    # only when this is non-zero: with no priced candidate, a budget filter either
+    # empties the list or changes nothing, and naming it either way is false (#158).
+    price_coverage = sum(1 for c in candidates if c.get('price_band'))
+    applied = prefs_mod.applied_names(prefs, price_coverage=price_coverage)
+    # Apply it where it is claimed, and claim it only where it applied. Reporting
+    # `budget` in applied_prefs while never filtering would be #170 again, one
+    # layer further in -- the page would name a filter that still did not run.
+    if 'budget' in applied:
+        kept_by_budget = [c for c in candidates if prefs_mod.within_budget(c, prefs)]
+        if kept_by_budget:
+            candidates = kept_by_budget
+        else:
+            applied = [a for a in applied if a != 'budget']
+    picked = models.rerank(query, candidates, limit=limit, preference=prefs_mod.preference_hint(prefs))
 
     results = []
     for position, (idx, why) in enumerate(picked, start=1):
@@ -600,6 +615,9 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     'sentiment_posts': sum((v.get('sentiment') or {}).values()),
                     'lat': v['lat'],
                     'lng': v['lng'],
+                    # 1..4, or absent. The corpus held 49 priced mentions while the
+                    # client rendered none, because nothing serialized this (#158).
+                    'price_band': v.get('price_band'),
                     'maps_url': maps_url(v),
                     'dishes': v['dishes'][:6],
                 },
@@ -630,6 +648,10 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         # back; they come back with the gap named rather than reading as an
         # answer to a question nobody can answer from these posts.
         'coverage_gaps': gaps,
+        # Which wizard answers actually shaped this response. The page says
+        # "Filtered by your answers" and named all five while three were being
+        # dropped (#170); it may now name only what this list carries.
+        'applied_prefs': applied,
     }
 
 
@@ -663,6 +685,7 @@ def one(venue_id, *, lat=None, lng=None):
             'area': entry['area'],
             'sentiment': entry.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
             'sentiment_posts': sum((entry.get('sentiment') or {}).values()),
+            'price_band': entry.get('price_band'),
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),

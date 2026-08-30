@@ -85,8 +85,26 @@ app.add_middleware(
 )
 
 
+class PrefsModel(BaseModel):
+    """The taste wizard's answers.
+
+    They arrived on every search and had nowhere to land: with no field here,
+    Pydantic dropped the object silently while the page said "Filtered by your
+    answers" and named all five (#170). `craving` and `range_m` were always real
+    -- they are the query string and radius_m -- so the three that follow are the
+    ones that were being thrown away.
+    """
+
+    craving: list[str] | None = None
+    company: str | None = None
+    range_m: int | None = None
+    mood: str | None = None
+    budget: str | None = None
+
+
 class RecommendRequest(BaseModel):
     query: str = Field(min_length=1, max_length=500)
+    prefs: PrefsModel | None = None
     lat: float | None = None
     lng: float | None = None
     radius_m: int | None = Field(default=None, ge=100, le=50000)
@@ -156,7 +174,14 @@ def recommend(req: RecommendRequest, request: Request):
         }
     _charge(request, 2)
     try:
-        out = rank.recommend(req.query, lat=req.lat, lng=req.lng, radius_m=req.radius_m, limit=req.limit)
+        out = rank.recommend(
+            req.query,
+            lat=req.lat,
+            lng=req.lng,
+            radius_m=req.radius_m,
+            limit=req.limit,
+            prefs=req.prefs.model_dump() if req.prefs else None,
+        )
     except CORPUS_UNREACHABLE as e:
         # An empty, honest answer beats a 500 when the corpus is genuinely away.
         # Only for that: catching everything here reported a 5-placeholder/6-parameter

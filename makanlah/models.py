@@ -189,7 +189,7 @@ RERANK_EXCERPT_CHARS = 260
 RERANK_EXCERPTS_PER_VENUE = 2
 
 
-def rerank(query, candidates, limit=10, retries=1):
+def rerank(query, candidates, limit=10, retries=1, preference=''):
     """Returns [(candidate_index, why)]. Never returns a citation: stage 4 attaches those."""
     s = config.settings()
     if not s.rerank_api_key:
@@ -218,7 +218,11 @@ def rerank(query, candidates, limit=10, retries=1):
                 'role': 'user',
                 'content': (
                     f'Request: {query}\n'
-                    f'Write every "why" in {want}. The excerpts below may be in another '
+                    # The wizard's company and mood answers. They shape the ORDER and
+                    # nothing else: a preference cannot conjure evidence, so it must
+                    # never license a pick whose excerpts do not support it (#170).
+                    + (f'{preference} Prefer picks the posts below actually support for that.\n' if preference else '')
+                    + f'Write every "why" in {want}. The excerpts below may be in another '
                     f'language; that does not change the language you answer in.\n'
                     f'Return at most {limit}.\n\n' + '\n'.join(lines)
                 ),

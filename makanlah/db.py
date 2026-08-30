@@ -307,7 +307,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
         return {}
     rows = con.execute(
         """select v.id as venue_id, v.name, v.area, v.city, v.lat, v.lng, v.place_id,
-                  m.excerpt, m.dishes, m.sentiment, m.confidence,
+                  m.excerpt, m.dishes, m.sentiment, m.confidence, m.price_band,
                   p.id as post_id, p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
                   case when p.dead_at is not null then true else null end as dead
            from venue v
@@ -334,6 +334,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 'dishes': [],
                 'citations': [],
                 'sentiment': {'positive': 0, 'mixed': 0, 'negative': 0},
+                'price_band': None,
             },
         )
         for d in r['dishes'] or []:
@@ -363,7 +364,28 @@ def venues_with_citations(con, venue_ids, per_venue=3):
         kept[venue_id] = {c['post_id'] for c in shown if not c.get('dead')}
     for venue_id, counts in tally_sentiment(rows, kept).items():
         out[venue_id]['sentiment'] = counts
+    by_venue = {}
+    for r in rows:
+        by_venue.setdefault(r['venue_id'], []).append({'price_band': r.get('price_band')})
+    for venue_id, ms in by_venue.items():
+        out[venue_id]['price_band'] = price_for_venue(ms)
     return out
+
+
+def price_for_venue(mentions):
+    """The band a venue's posts agree on, or None. Never a guess (#158).
+
+    A null price_band means the writer did not say what it cost, which is not the
+    same as saying it was cheap -- so nulls are dropped rather than averaged in.
+    A tie resolves DOWNWARD: overstating a meal's cost loses a usable suggestion,
+    and the reader can see the excerpts either way.
+    """
+    bands = [m.get('price_band') for m in mentions or []]
+    bands = [b for b in bands if isinstance(b, int) and not isinstance(b, bool) and 1 <= b <= 4]
+    if not bands:
+        return None
+    best = max(sorted(set(bands)), key=lambda b: (bands.count(b), -b))
+    return best
 
 
 def tally_sentiment(rows, kept=None):
