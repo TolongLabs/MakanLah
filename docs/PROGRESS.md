@@ -26,6 +26,85 @@ console before repinning.
 
 ---
 
+## 2026-08-30 (Owner's /discover Batch) — The Answer Was On The Card, Eighth And Grey
+
+**PR #144 is open and awaiting CI.** Items 1, 2, 3 and part of 5 of the owner's `/discover` batch. He asked to
+brainstorm it in this chat directly and chose the card shape and the URL behaviour himself.
+
+**The finding that reframed item 1.** He said nothing on the page told him why any result was there. The answer had been
+on the card since the first build — `basisLine`, "Here because a post names this dish" — as the **eighth line, in the
+same grey as two neighbouring sentences answering different questions**. The data was never missing. An answer formatted
+like a footnote is not an answer, and no data-presence check would ever have caught it.
+
+It is now the subtitle, and it absorbed the metadata row that used to sit there:
+`Names bak kut teh · 3 posts, 2 people · 9.4 km · Cheras`. Three lines became one that says more. The rest went behind a
+per-card `Why This Showed`, which renders only where there is something the row did not already say.
+
+### Measured Before Designing, Across 35 Live Results
+
+| Signal                                 | Live reality                                   |
+| -------------------------------------- | ---------------------------------------------- |
+| `basis: 'dish'` with `similarity: 0.0` | **15 of 35** — 63% of all dish matches         |
+| `corroboration.authors == 0`           | 12 of 35 — Google Maps reviewers are anonymous |
+| `venue.area` absent                    | 19 of 35                                       |
+| `sentiment` on the response            | absent, then shipped mid-session as #142       |
+
+`makanlah-13` flagged the zero-similarity case as "one nuance". It is 63% of dish matches, so **never rendering the
+number** is now measured rather than stylistic. Recorded in `TRD.md`.
+
+### Sentiment Is Wired But Gated, And That Is #111 Again
+
+`sentiment` counts **mention rows**; `corroboration` counts **live posts**. Across ten live `nasi lemak` results **nine
+disagreed**, several by nine to one — Village Park reads 3 posts against 15 sentiment entries. Ungated, a card says "1
+post" in its subtitle and "All 9 posts positive" four lines below. `sentimentLine(sentiment, livePosts)` renders only
+where the totals agree; it lights up on its own once the API filters. **Filed as #143.**
+
+**I had the silent case backwards and the data corrected me.** I first suppressed unanimity as noise, assuming agreement
+was common. 163 of 186 multi-mention venues span more than one bucket — agreement is the 12% case and is the informative
+one. Both now print.
+
+### What Was Refused, And Why
+
+- **Images and a menu (item 4).** 0 of 1507 posts carry media, 0 of 247 venues, no menu field. An empty slot on 100% of
+  cards is worse than no slot. Needs a re-capture; not this batch
+- **A Directions dialog.** Google Maps sets `frame-ancestors` and cannot be embedded, so the dialog could only hold a
+  link to Google Maps. `target="_blank"` already meets the stated requirement
+- **The model-written `why` on a ranked card.** It answered the same question the fact row now answers and only one of
+  the two can be checked against a post. Still renders on `/r/:venueId`
+
+### Above The Fold, Which Item 5 Actually Was
+
+Moving Ask into a dialog removed the reason the companion aside was hoisted above the picks below 64rem. It keeps the
+position — its line is a caveat about the list — but lost the card chrome.
+
+| Width      | Aside height  | First pick top | Above the fold |
+| ---------- | ------------- | -------------- | -------------- |
+| 390 x 844  | 229 → **135** | 799 → **706**  | no → **yes**   |
+| 834 x 1112 | 322 → **236** | 750 → **665**  | yes            |
+
+### The New Check, And Why The Obvious One Would Have Passed
+
+`scripts/discover_why_check.mjs`, in CI. It stubs `/recommend` with shapes copied from production, because the cases
+that matter are the awkward ones and waiting for them to appear in a live query is how a check ends up asserting only
+the happy path. **Its load-bearing assertion is that the answer outweighs the metadata beside it** — every other
+assertion passes on the old card too, because the old card carried the same words.
+
+Five mutations, each reddening its own check and nothing else: leaking `similarity`, burying the negative count,
+restoring the model prose, flattening `.why-lead` to the metadata colour, removing the sentiment unit gate.
+
+### Where To Pick Up
+
+- **#141** — the visual pass the owner asked for: Apple-leaning surface, dotted sketchboard ground. Deliberately
+  deferred so it styles final markup rather than markup about to change
+- **#143** — sentiment filtered to live posts; the client needs no change when it lands
+- **#140** (`makanlah-13`) — `canonical_for_query` resolves only curated dish names, so all 14 common ingredient words
+  route into the semantic lane. A `crab` query returns a chicken rice shop. The subtitle names the weak lane plainly
+  rather than papering over it, but the retrieval fix is backend
+- The header chrome above the results is the remaining fold cost at phone width. Overlaps #141
+- `makanlah-13` was writing a deeper `/discover` UX spec; it had not arrived when this shipped
+
+---
+
 ## 2026-08-30 (Post-Launch State) — What Shipped After The Call, And What Is Deliberately Parked
 
 **MakanLah is launch-ready and prod is healthy.** `degraded: false`, every returned result carries citations, corpus
