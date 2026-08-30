@@ -347,12 +347,18 @@ export function Discover() {
               the posts and deeply misleading about the answer. The client had no way
               to know and correctly did not guess (#82).
 
-              WHAT THIS MAY NOT SAY. `nearest` mixes venues with readable posts and
-              #101 venues whose every citation is dead, and the payload cannot tell
-              them apart. So these are named as places and linked to Maps, and
-              nothing here offers to show what anybody wrote -- for some entries that
-              would be false and there is no way to know which. Same restraint
-              `evidence_gap` already exercises, for a different reason. */}
+              WHAT THIS MAY NOW SAY. `nearest` still mixes venues with readable
+              posts and #101 venues whose every citation is dead, but `verifiable`
+              tells them apart since `85b9220`, so each entry names its own class
+              instead of the surface staying silent about all of them. The counts
+              name a property rather than gesturing at the page, because nothing
+              here RENDERS a post: there is no venue id to deep-link, so "9 posts
+              still open" is the whole claim, and a venue nobody's surviving post
+              describes says so outright.
+
+              An older API sends neither field, and the note then disappears rather
+              than defaulting -- see the type. Silence is the honest fallback here;
+              `false` would be a claim. */}
           {!loading && outOfRange && !failed && (
             <div className="empty empty-centred gap">
               {/* The radius is named only when we actually hold one. `distance_gap`
@@ -383,6 +389,13 @@ export function Discover() {
                       {distance(v.distance_m)}
                       {v.area ? ` · ${v.area}` : ''}
                     </span>
+                    {typeof v.verifiable === 'boolean' && (
+                      <span className="gap-evidence">
+                        {v.verifiable && (v.live_citations ?? 0) > 0
+                          ? `${count(v.live_citations ?? 0, 'post')} still open`
+                          : 'No post still opens'}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

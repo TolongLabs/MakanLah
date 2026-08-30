@@ -113,15 +113,32 @@ export type EvidenceGap = {
     different sentences because the user's next move differs. Here, widening the
     search actually works.
 
-    **`nearest` mixes two evidence classes and the payload cannot tell them apart.**
+    **`nearest` mixes two evidence classes and `verifiable` is what separates them.**
     Some entries have live citations; some are the #101 all-dead-citation venues,
-    suppressed from ranked results but still real restaurants. Until an entry-level
-    flag exists, this surface may name them and may not imply we can show what anyone
-    wrote about them. */
+    suppressed from ranked results but still real restaurants. `85b9220` added the
+    per-entry flag, so the surface can say which is which rather than naming every
+    entry identically and offering evidence for none of them. */
 export type DistanceGap = {
   term: string
   /** At most three, nearest first. Every one genuinely carries the dish. */
-  nearest: { name: string; area: string | null; distance_m: number; maps_url: string }[]
+  nearest: {
+    name: string
+    area: string | null
+    distance_m: number
+    maps_url: string
+    /** Posts that still resolve. Named rather than shown: this surface carries no
+        venue id, so the count is the whole claim it is able to make. */
+    live_citations?: number
+    /** Whether anything survives to be read at all.
+
+        OPTIONAL because an older API does not send it, and the two absent fields
+        must not read as `false`. Undefined means "this build cannot tell", and the
+        surface then claims nothing -- which is exactly what it did before the flag
+        existed. Defaulting a missing flag to false would turn "we do not know" into
+        "nobody wrote about this", which is the one thing the flag was added to stop
+        this surface doing. */
+    verifiable?: boolean
+  }[]
 }
 
 export type RecommendResponse = {

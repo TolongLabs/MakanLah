@@ -574,6 +574,21 @@
   display: inline-flex;
   align-items: baseline;
   gap: var(--s2);
+  /* The entry gained a third token when `verifiable` arrived. Without this an
+     inline-flex row of name + distance + evidence overflows a 390px phone rather
+     than breaking, because nothing inside an inline-flex wraps by default. */
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Which evidence class this entry is in. Quiet on purpose: it qualifies the name
+   above it rather than competing with it, and it carries no colour because the
+   words already draw the distinction. A coloured state dot here would be decoration
+   standing in for a sentence that is doing the job. */
+.gap-evidence {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
 }
 
 .gap-more {
