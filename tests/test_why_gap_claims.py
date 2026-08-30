@@ -51,3 +51,37 @@ def test_mosque_wording_cannot_carry_the_claim_either():
     # exists to prevent, reappearing as supporting reasoning in prose.
     e = entry('Y', 'Lokasi strategik dekat masjid, sesuai untuk keluarga.', [])
     assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] is None
+
+
+# #123: supported topic, overstated degree.
+
+
+def entry_c(name, why, mentions, excerpts):
+    return {
+        'why': why,
+        'venue': {'id': name, 'name': name, 'gap_mentions': mentions},
+        'citations': [{'excerpt': x} for x in excerpts],
+    }
+
+
+def test_friendly_evidence_cannot_licence_a_status_assertion():
+    # Hock Kee Heritage on prod: 清真友好 is one poster's "halal-friendly".
+    e = entry_c(
+        'Hock Kee',
+        'Dinyatakan halal dan mesra Muslim, sesuai untuk keluarga.',
+        ['halal'],
+        ['占美清真寺的姐妹一定要来！这家清真友好，很推荐。'],
+    )
+    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] is None
+
+
+def test_friendly_evidence_still_licences_a_friendly_claim():
+    why = 'Mesra Muslim, sesuai untuk keluarga.'
+    e = entry_c('Hock Kee', why, ['halal'], ['这家清真友好，很推荐。'])
+    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] == why
+
+
+def test_a_real_certification_statement_licences_the_status_claim():
+    why = 'Disahkan halal, sesuai untuk keluarga.'
+    e = entry_c('Z', why, ['halal'], ['This place is halal certified, we checked the cert'])
+    assert withhold_unsupported_gap_claims([e], ['halal'])[0]['why'] == why
