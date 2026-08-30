@@ -92,6 +92,48 @@ assertion passes on the old card too, because the old card carried the same word
 Five mutations, each reddening its own check and nothing else: leaking `similarity`, burying the negative count,
 restoring the model prose, flattening `.why-lead` to the metadata colour, removing the sentiment unit gate.
 
+### The Sentiment Line Was Held Twice, For Two Different Reasons
+
+Worth separating, because the second failure is invisible to the check that caught the first.
+
+**First hold: the units disagreed.** `sentiment` counted mention rows, `corroboration` counted live posts; nine of ten
+`nasi lemak` results disagreed. Fixed by `#145` then `#147` — the first fix was complete by its own measure and
+production still disagreed on 5 of 25. `sentimentLine(sentiment, livePosts)` gates on agreement, and it lit up exactly
+as intended once the units matched: 33/33 agreeing on an independent four-query sample.
+
+**Second hold: the units agreed and the buckets were wrong.** Reading what it rendered, **8 of 10 venues carrying a
+negative bucket contained no negative language at all**. `王美记` bucketed 0 positive / 2 negative on excerpts saying
+"deserves 5 stars" and "definitely worth checking out", and the card said **"2 of 2 posts critical"** about a
+Michelin-listed shop. **A unit-agreement gate cannot see this** — both numbers were right and the classification was
+not.
+
+**My diagnosis was the shallow half.** I said the `-0.2` threshold was too low. `makanlah-13` found the real cause:
+Google Maps has no per-review URL, so ~8 reviews share one, and a "most critical bucket wins" rule turned one 1-star
+review into a verdict on all eight. Fixed in `#151` by averaging within an identity and moving the cut points onto the
+star scale. **Unflag `CLASSIFICATION_TRUSTED` only after verifying against excerpts** — twice now the first fix has been
+incomplete, and twice the second look found the real thing.
+
+**Held in both directions, deliberately.** Rendering only the favourable half biases every card toward good news, which
+is worse than showing neither.
+
+### #153 — The Same Root Cause Is Also Silencing Evidence
+
+`post_url` as identity does something larger than the sentiment bug. **14 of 20 venues ship more citations than distinct
+URLs.** `Upper House` carries three plainly different reviewers on one URL and renders:
+
+```
+Names char siew · 1 post        excerpts shown: 1        corroboration: no stamp
+```
+
+Three consequences, all from one key: the card prints "1 post" when three people wrote; `citable()` dedupes on URL so
+**two thirds of the writing never renders**; and `independentlyBacked` needs `posts >= 2`, so a venue with three
+independent voices is denied the stamp. **That last one is #87 in the mirror** — #87 granted the stamp where it was not
+earned and was treated as a launch blocker.
+
+Every error here is conservative, so it is not dangerous and not a launch blocker. The client cannot fix it alone:
+`citable()` dedupes on URL because with only a URL it cannot tell a duplicate from three reviewers. It needs
+`source_post.id` on each citation.
+
 ### Where To Pick Up
 
 - **#141** — the visual pass the owner asked for: Apple-leaning surface, dotted sketchboard ground. Deliberately
