@@ -1,6 +1,13 @@
-#!/usr/bin/env -S uv run --quiet --with websockets python
+#!/usr/bin/env -S uv run --quiet --with websockets --with pillow python
 """Render every route at desktop, tablet and mobile, in both themes, to
 docs/screenshots/<device>/. The directory is gitignored: it is regenerated on demand.
+
+`--readme` instead writes a small curated set to docs/img/, which IS committed. The
+full sweep is gitignored because a binary set that churns on every visual change does
+not belong in review; three images the public README embeds are a different thing, and
+a README pointing at files nobody can see is worse than no README image. Curated shots
+are viewport-only rather than full-page, and re-encoded to WebP -- a 2x full-page PNG
+of /discover is 4.9 MB, which is not something to put at the top of a landing page.
 
 The mascot is a WebGL canvas and headless software rasterising paints it faint or not
 at all, so treat the mascot region of these images as unverified. It is verified
@@ -52,6 +59,23 @@ ROUTES = [
     ('venue', f'/r/{VENUE_ID}', False),
     ('not-found', '/nowhere', False),
 ]
+
+# What a stranger should see first: the evidence, at the two widths people read it on,
+# in both themes because the palette is half the design. Not the wizard and not the
+# landing hero -- the README already leads with og.png, and the claim it has to support
+# is that a pick carries the post it came from.
+README_SHOTS = [
+    ('discover-desktop-light', '/discover', 1440, 900, 'light'),
+    ('discover-desktop-dark', '/discover', 1440, 900, 'dark'),
+    ('discover-phone-light', '/discover', 390, 844, 'light'),
+]
+
+# The sweep's craving is deliberately fuzzy, which is right for testing the "closest in
+# meaning" fallback and wrong for a README: it leads with the product failing to match.
+# `nasi lemak` returns eight exact matches, and it is the neutral choice for a public
+# front page in a majority-Muslim country -- the chips still offer `pork` and the corpus
+# still carries it, but which dish leads the README is an editorial call, not a claim.
+README_PREFS = json.dumps({'craving': ['nasi lemak'], 'company': 'family', 'range_m': 0, 'mood': 'comfort'})
 
 PREFS = json.dumps({'craving': ['nasi lemak sedap'], 'company': 'family', 'range_m': 0, 'mood': 'comfort'})
 
@@ -131,6 +155,39 @@ async def main() -> int:
         await cmd('Page.navigate', {'url': f'{BASE}/'})
         await asyncio.sleep(2)
         await cmd('Runtime.evaluate', {'expression': f'localStorage.setItem("makanlah.prefs", {json.dumps(PREFS)}); 1'})
+
+        if '--readme' in sys.argv:
+            import io
+
+            from PIL import Image
+
+            await cmd(
+                'Runtime.evaluate',
+                {'expression': f'localStorage.setItem("makanlah.prefs", {json.dumps(README_PREFS)}); 1'},
+            )
+
+            img_dir = os.path.join(ROOT, 'docs', 'img')
+            os.makedirs(img_dir, exist_ok=True)
+            for name, path, width, height, theme in README_SHOTS:
+                await cmd(
+                    'Emulation.setEmulatedMedia', {'features': [{'name': 'prefers-color-scheme', 'value': theme}]}
+                )
+                await cmd(
+                    'Emulation.setDeviceMetricsOverride',
+                    {'width': width, 'height': height, 'deviceScaleFactor': 2, 'mobile': width < 700},
+                )
+                await cmd('Page.navigate', {'url': BASE + path})
+                await asyncio.sleep(12 if path == '/discover' else 5)
+                # Viewport only. A README image is a screenful; captureBeyondViewport
+                # returns the whole scrolled page, which is where the 4.9 MB came from.
+                shot = await cmd('Page.captureScreenshot', {'format': 'png', 'captureBeyondViewport': False})
+                dest = os.path.join(img_dir, f'{name}.webp')
+                Image.open(io.BytesIO(base64.b64decode(shot['data']))).save(dest, 'WEBP', quality=82, method=6)
+                written += 1
+                print(f'{name:<24} {width}x{height} {theme:<5} {os.path.getsize(dest) // 1024:>5} KB')
+            chrome.terminate()
+            print(f'\n{written} curated screenshots in {img_dir}')
+            return 0
 
         for device, width, height in DEVICES:
             os.makedirs(os.path.join(OUT, device), exist_ok=True)
