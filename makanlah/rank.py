@@ -294,7 +294,13 @@ def add_corroboration(entries):
         # driving three ranks is worth saying whether or not it still resolves.
         live = [c for c in cites if c.get('dead') is not True]
         e['venue']['corroboration'] = {
-            'posts': len({c['post_url'] for c in live}),
+            # Identity, not address. Google Maps has no per-review URL, so three
+            # reviewers of Upper House shared one post_url and the count read 1 --
+            # denying the stamp to a venue that had earned it, which is #87 in the
+            # mirror. The card prints "3 posts" and links to the page holding them:
+            # counting voices and pointing at where they live are compatible jobs,
+            # just not one integer doing both (#153).
+            'posts': len({c['post_id'] for c in live}),
             'authors': len({c['author_handle'] for c in live if c.get('author_handle')}),
             'platforms': len({c['platform'] for c in live if c.get('platform')}),
         }
