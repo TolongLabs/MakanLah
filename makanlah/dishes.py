@@ -16,6 +16,7 @@ distinguishes the second.
 """
 
 import difflib
+import re
 import unicodedata
 
 DISH_ALIASES = {
@@ -100,6 +101,13 @@ NEAR = 0.85
 # resolve exactly; it is three-letter fragments that should not be guessed at.
 MIN_NEAR_LEN = 4
 
+# Splits a dish string into words. CJK has no spaces, so a Han query falls to the
+# alias and fold lanes rather than this one, which is what those lanes are for.
+WORDS = re.compile(r'[^\W_]+', re.UNICODE)
+
+# `egg` and `pork` are real ingredients; two-letter fragments are noise.
+MIN_INGREDIENT_LEN = 3
+
 
 def named_in(query, vocabulary):
     """Which stored dish strings a query names: `(folded_keys, label)`.
@@ -114,7 +122,7 @@ def named_in(query, vocabulary):
     actually good at -- grouping `肉骨茶` with `bak kut teh` across languages,
     which no amount of string folding will ever do.
 
-    Three lanes, and the result is their UNION rather than the first that hits:
+    Four lanes, and the result is their UNION rather than the first that hits:
 
     1. **The alias table**, so a query in one language reaches venues tagged in
        another
@@ -122,6 +130,8 @@ def named_in(query, vocabulary):
     3. **A near match**, for the corpus's own spelling -- `cha seiw`, `rosated
        chicken` and `buratta` are all real rows, and so is `noodle` beside
        `noodles`
+    4. **A whole-word ingredient**, so `chicken` finds `roasted chicken`,
+       `crab` finds `roe crab`, but `egg` does NOT find `eggplant`
 
     The union rather than a first-hit is measured, not assumed. Across the whole
     810-key vocabulary there are **29 near-pairs at 0.85, no key has more than two
@@ -156,5 +166,14 @@ def named_in(query, vocabulary):
         found |= set(near)
         if near:
             label = label or near[0]
+
+    # Whole word, not substring: `crab` must reach `roe crab` while `egg` must not
+    # reach `eggplant`. Splitting on non-word characters rather than whitespace so
+    # `fish & seafood` and `chili,rice` both yield their parts.
+    if len(q) >= MIN_INGREDIENT_LEN:
+        hits = {d for d in vocabulary if q in set(WORDS.findall(fold(d)))}
+        found |= hits
+        if hits:
+            label = label or q
 
     return frozenset(found), label
