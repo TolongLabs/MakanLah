@@ -194,9 +194,40 @@ async def resolve(page, name, area=None, city='Kuala Lumpur'):
     return lat, lng, d.get('address') or None, place_id, d.get('name') or name
 
 
+# A search for an unambiguous name lands on the place page; an ambiguous one --
+# which is most short or Chinese-only names -- lands on the results feed instead.
+# `reviews` needs the place page, so on the feed it finds no tab and returns [].
+# That failure was silent and looked exactly like a venue with no reviews:
+# 興记肉骨茶 and VCR both resolved to coordinates and yielded 0, while Village
+# Park, whose name is unambiguous, yielded 5 from the same code.
+OPEN_FIRST_JS = """(() => {
+  if (document.querySelector('button[role="tab"]')) return 'already';
+  const a = document.querySelector('a[href*="/maps/place/"]');
+  if (!a) return 'none';
+  a.click();
+  return 'clicked';
+})()"""
+
+
+async def ensure_place_page(page, settle=6.0):
+    """Open the first result when the tab is on a results feed rather than a place.
+
+    Returns True when a place page is showing. Coordinates were already correct in
+    both cases -- it is the review capture that needs the place open.
+    """
+    state = await page.js(OPEN_FIRST_JS)
+    if state == 'already':
+        return True
+    if state != 'clicked':
+        return False
+    await asyncio.sleep(settle)
+    return bool(await page.js('document.querySelector(\'button[role="tab"]\') ? 1 : 0'))
+
+
 async def reviews(page, limit=8):
     """Read reviews from the place page already open. Returns [] if the tab is
     not on one, which is a normal outcome, not an error."""
+    await ensure_place_page(page)
     opened = await page.js("""(() => {
       const b = [...document.querySelectorAll('button[role="tab"]')]
         .find(x => /^Reviews/i.test(x.getAttribute('aria-label') || ''));
