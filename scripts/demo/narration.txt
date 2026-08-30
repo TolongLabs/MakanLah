@@ -37,15 +37,15 @@ why           |  400 | And you can ask any pick to justify itself. One tap, and 
 sources       |  500 | All Sources opens the whole trail without leaving the page. Everything the corpus holds about one restaurant, and nothing it does not.
 
 ask           |  600 | Ask it something the posts do not answer, and this is what it does.
-ask           | 5200 | It does not guess. It says nobody wrote that down, and it offers you nothing to cite, because there is nothing.
+ask           | 5600 | It does not guess. It says nobody wrote that down, and it offers you nothing to cite, because there is nothing.
 dead          |  400 | Same rule when a post no longer opens. It says so, rather than quietly dropping the evidence and hoping you do not notice.
 
 arch          |  600 | Nothing is fetched while you wait. Posts are captured in the background, extracted into a normalised corpus, and ranked on our own machines.
-arch          | 9000 | No single platform is load-bearing. If one goes dark, the app degrades instead of dying.
+arch          | 11200 | No single platform is load-bearing. If one goes dark, the app degrades instead of dying.
 
 market        |  600 | Today that corpus is four thousand five hundred and twenty three posts, about eight hundred and fourteen places in Kuala Lumpur.
-market        |  9500 | Every single one of them is checkable.
+market        | 10100 | Every single one of them is checkable.
 
 close         |  600 | This is Kuala Lumpur, and it is a start.
-close         | 3600 | A better Malaysia is not built by an app that sounds confident. It is built by taking people at their word, in whatever language they wrote it, and admitting what you do not know.
-close         | 14000 | MakanLah. Recommendations you can trace. Selamat Hari Merdeka.
+close         | 3900 | A better Malaysia is not built by an app that sounds confident. It is built by taking people at their word, in whatever language they wrote it, and admitting what you do not know.
+close         | 16600 | MakanLah. Recommendations you can trace. Selamat Hari Merdeka.

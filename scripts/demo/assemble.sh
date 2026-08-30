@@ -9,9 +9,14 @@
 set -euo pipefail
 DIR="${DEMO_DIR:-/tmp/makanlah-demo}"
 FF="${DEMO_FFMPEG:-$(command -v ffmpeg)}"
-ARCH_S="${DEMO_ARCH_SECONDS:-21}"
-MARKET_S="${DEMO_MARKET_SECONDS:-21}"
-CLOSE_S="${DEMO_CLOSE_SECONDS:-20}"
+# Sized to the narration each slide carries, measured from the rendered wavs rather
+# than picked. arch runs to 18.3s, market to 12.6s, close to 22.5s. market was 21s for
+# 12.6s of speech -- eight seconds of a still frame with nobody talking over it -- and
+# close was 20s for 22.5s, which is why the last line needed a tail pad to have any
+# picture behind it at all.
+ARCH_S="${DEMO_ARCH_SECONDS:-20}"
+MARKET_S="${DEMO_MARKET_SECONDS:-14}"
+CLOSE_S="${DEMO_CLOSE_SECONDS:-24}"
 
 for f in "$DIR/capture.webm" "$DIR/beats.json" "$DIR/slide-arch.png" "$DIR/slide-market.png" "$DIR/slide-close.png"; do
   [ -f "$f" ] || { echo "missing $f" >&2; exit 1; }
