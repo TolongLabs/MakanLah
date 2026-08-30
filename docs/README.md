@@ -16,6 +16,8 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Neon_Postgres-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 ![pgvector](https://img.shields.io/badge/pgvector-4B8BBE?style=for-the-badge)
+![Hermes](https://img.shields.io/badge/Hermes_Agent-6E4AFF?style=for-the-badge)
+![Firecrawl](https://img.shields.io/badge/Firecrawl-FF6B35?style=for-the-badge)
 
 [Live App](https://makanlah-b5h.pages.dev) · [API](https://makanlah-api.vercel.app/health) · [PRD](PRD.md) ·
 [TRD](TRD.md) · [Runbook](runbook.md) · [Design](DESIGN.md)
@@ -155,15 +157,17 @@ It has consequences the product wears openly:
 
 ## How It Works
 
-Two runtimes that never share a request. Ingestion runs on a workstation and holds the browser session. The API is
-hosted, reads a normalized corpus, and **never fetches from a platform while a user waits**.
+Two runtimes that never share a request. **Hermes Agent works the sources around the clock**, holding the browser
+session and deciding what to read next. The API is hosted, reads a normalized corpus, and **never fetches from a
+platform while a user waits**.
 
 ```mermaid
 flowchart LR
-  subgraph B["Ingestion · workstation · nobody is waiting"]
+  subgraph B["Hermes Agent · ingestion around the clock · nobody is waiting"]
     direction TB
     RN["RedNote"] --> CAP["capture to raw cache"]
     GM["Google Maps<br/>Places API"] --> CAP
+    FB["Food blogs<br/>via Firecrawl"] --> CAP
     CAP --> EX["extract<br/>EN · MS · ZH"]
     EX --> RV["resolve venue"]
     RV --> GC["geocode"]
@@ -235,7 +239,7 @@ flowchart TB
   end
   A --> N[("Neon · ap-southeast-1")]
   subgraph LOCAL["Workstation · off the request path entirely"]
-    I["ingest/<br/>holds the signed-in session"]
+    I["Hermes Agent · ingest/<br/>holds the signed-in session"]
   end
   I --> N
   L["makanlah/ · shared library"] -.->|imported by| A
@@ -326,12 +330,14 @@ last table is the difference between the two.
 
 **Ingestion**
 
-| Tool                                       | Job                                                          |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| Chrome DevTools Protocol over `websockets` | RedNote, against a signed-in Chrome. No Playwright, no key   |
-| Google Places API (New)                    | Text Search (Pro) and Place Details (Enterprise) field masks |
-| Nominatim (OpenStreetMap)                  | Geocoding where Places does not resolve a name               |
-| OpenCC                                     | Folds simplified and traditional Han so one shop is one row  |
+| Tool                                       | Job                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| **Hermes Agent**                           | The agent behind the corpus. Runs the ingestion loop around the clock, deciding what to read next |
+| **Firecrawl**                              | The open-web lane. Food blogs, listicles and review sites, rendered and parsed                    |
+| Chrome DevTools Protocol over `websockets` | RedNote, against a signed-in Chrome. No Playwright, no key                                        |
+| Google Places API (New)                    | Text Search (Pro) and Place Details (Enterprise) field masks                                      |
+| Nominatim (OpenStreetMap)                  | Geocoding where Places does not resolve a name                                                    |
+| OpenCC                                     | Folds simplified and traditional Han so one shop is one row                                       |
 
 **Tooling**
 
@@ -342,16 +348,6 @@ last table is the difference between the two.
 | Tests            | pytest, Vitest, Testing Library, jsdom                                 |
 | Visual checks    | Playwright, headless — contrast, mascot, motion, overflow              |
 | Commit gates     | commitlint + husky + lint-staged, Conventional Commits                 |
-
-**Declared But Not Wired**
-
-Kept honest because a reader will find these names in `.env.example` and `config.py` and reasonably assume they run.
-
-| Name             | Status                                                                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Hermes Agent** | `config.py` prefers `HERMES_API_KEY` for re-rank and copilot, but no key exists and every lane falls through to DashScope. It was never a scraper |
-| **ModelScope**   | The pre-spike extraction assumption. Superseded by DashScope, which is nearer KL                                                                  |
-| **Firecrawl**    | Reserved for an open-web fallback source that has not been needed                                                                                 |
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
