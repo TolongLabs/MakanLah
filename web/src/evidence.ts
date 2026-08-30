@@ -411,7 +411,7 @@ export function sentimentPhrase(s: Venue['sentiment'], livePosts: number): strin
 
 /** One fact in a result's why-row. `lead` marks the answer to "why is this here",
     which is typeset apart from the context tokens that follow it. */
-export type WhyToken = { key: string; text: string; lead?: boolean }
+export type WhyToken = { key: string; text: string; lead?: boolean; title?: string }
 
 /**
  * Why this result is on screen, as facts rather than prose.
@@ -455,10 +455,37 @@ export function whyRow(result: Result): WhyToken[] {
   const far = distance(result.distance_m)
   if (far) tokens.push({ key: 'distance', text: far })
 
+  // #158, the tester's second complaint. Ahead of `area` because "is this place
+  // expensive" is a decision and an area name is context -- he was choosing where
+  // to take a family, which is a budget question before it is a taste one.
+  const priced = priceToken(venue.price_band)
+  if (priced) tokens.push(priced)
+
   // Absent on 19 of 35 sampled results, so it is the last token and never load-bearing.
   if (venue.area) tokens.push({ key: 'area', text: venue.area })
 
   return tokens
+}
+
+const PRICE_LEVEL = ['inexpensive', 'moderate', 'expensive', 'very expensive']
+
+/**
+ * Google's price level as a scale, or nothing.
+ *
+ * Integer 1-4 ONLY. The band arrives on a place record we do not own, and a value
+ * outside the scale would otherwise render as a run of symbols nobody can read, or
+ * as an empty token with a middot hanging in front of it. Anything else is not a
+ * price, and #158 is explicit that a venue with no price evidence says nothing
+ * rather than having a band guessed from its area or its cuisine.
+ *
+ * Symbols rather than the wizard's own words because the two scales do not line
+ * up: `BUDGETS` maps cheap to bands 1-2 and mid to 2-3, so band 2 is BOTH, and
+ * printing "Mid" on it would be a claim the data does not make.
+ */
+function priceToken(band: number | null | undefined): WhyToken | null {
+  if (!Number.isInteger(band) || (band as number) < 1 || (band as number) > 4) return null
+  const n = band as number
+  return { key: 'price', text: '$'.repeat(n), title: `Google rates this ${PRICE_LEVEL[n - 1]}` }
 }
 
 function matchToken(match: Result['match']): string | null {
