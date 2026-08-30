@@ -121,10 +121,13 @@ Corroboration is only claimed on evidence that survives.
 row, names no venue and makes no claim — `makanlah/companion.py` drops any line that drifts into one. With no API key
 she still talks, from scripted lines.
 
-**The chip row is one row at every width, by decision.** Desktop fits all six; the phone fits four and hides the rest
-rather than wrapping into a second row that pushes results down. The distance control below it is a 2×2 grid at this
-width — it was an `inline-flex` row until #197, which left a band of empty pill on every phone: 244px at 390, and 284px
-at 430, the worst case.
+**The chip row is one row at every width, by decision** — a second row would push the results down, and the results are
+the point. The distance control below it is a 2×2 grid at this width; it was an `inline-flex` row until #197, which left
+a band of empty pill on every phone: 244px at 390, and 284px at 430, the worst case.
+
+**This frame shows four chips, and that is a bug rather than a fit.** The row hid a wrapped chip and measured the next
+one against the layout the hiding had just created, so `fish` slid into the gap `curry` left and the two dishes ranked
+above it were dropped. Fixed in #199; the frame is replaced once that deploys.
 
 <sub>Chips are ranked by how often the corpus mentions each dish and are time-banded. This was the <b>late night
 supper</b> band, reading <b>soup</b> 728, <b>rice</b> 665, <b>chicken</b> 619, <b>curry</b> 272, <b>BKT</b> 256,
