@@ -351,6 +351,7 @@ export function Discover() {
           <AskCompanion
             evidence={best ? evidenceOf(best) : null}
             degraded={data?.degraded ?? false}
+            phase={best ? 'picks' : data || gap ? 'empty' : 'idle'}
             target={target}
             onClear={() => setTarget(null)}
           />

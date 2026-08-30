@@ -124,6 +124,10 @@ export function listBasisLine(basis: string | undefined): string | null {
 
 export type MascotMood = 'curious' | 'pleased' | 'skeptical' | 'concerned'
 
+/** Where the page is, which the mood alone cannot say: nothing searched yet,
+    searched and empty, or holding picks. */
+export type CompanionPhase = 'idle' | 'empty' | 'picks'
+
 /**
  * Binds the mascot to evidence strength rather than to sentiment, per issue #11.
  * A face that only ever smiles has stopped carrying information, so `degraded`
@@ -137,7 +141,19 @@ export function moodFor(evidence: Evidence | null, degraded = false): MascotMood
   return 'concerned'
 }
 
-export function readingFor(mood: MascotMood): { read: string; note: string } {
+/**
+ * `phase` separates two states the `curious` mood used to collapse.
+ *
+ * "Nothing has been searched yet" and "a search ran and came back with nothing"
+ * are different facts, and reading them as one told a user who had just answered
+ * four onboarding questions to go and answer four onboarding questions -- directly
+ * under a line reciting the answers they had given. Two elements on one screen
+ * contradicting each other, and the companion's was the false one.
+ *
+ * Same family as the empty state that blamed the corpus for a radius (#82): a
+ * surface asserting a reason it had not checked.
+ */
+export function readingFor(mood: MascotMood, phase: CompanionPhase = 'idle'): { read: string; note: string } {
   switch (mood) {
     case 'pleased':
       return { read: 'Two sources', note: 'Two platforms carry this one, written by different people.' }
@@ -146,7 +162,9 @@ export function readingFor(mood: MascotMood): { read: string; note: string } {
     case 'concerned':
       return { read: 'Thin evidence', note: 'A source was unreachable at the last refresh, so this may be incomplete.' }
     default:
-      return { read: 'Listening', note: 'Answer the four questions and this fills in.' }
+      return phase === 'empty'
+        ? { read: 'Nothing to read', note: 'That search came back with nothing I can back up.' }
+        : { read: 'Listening', note: 'Answer the four questions and this fills in.' }
   }
 }
 

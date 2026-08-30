@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Citation } from '../api'
+import { AskCompanion } from '../components/AskCompanion'
 import { Testimony } from '../components/Testimony'
 
 /**
@@ -74,5 +75,32 @@ describe('Testimony for a post that no longer opens', () => {
     const { container } = render(<Testimony citation={citation({ dead: null })} attributed={false} />)
     expect(container.querySelectorAll('a')).toHaveLength(1)
     expect(screen.queryByText(/no longer opens/i)).toBeNull()
+  })
+})
+
+/**
+ * The companion's own copy, which the Discover tests cannot see because they stub
+ * her out. Measured on prod: the evidence-gap screen invited a tap on a pick while
+ * rendering zero pickable cards, directly under a reading telling a user who had
+ * just completed onboarding to complete onboarding.
+ */
+describe('the companion says only what is true of the screen she is on', () => {
+  it('invites a tap only where there is something to tap', () => {
+    const { rerender } = render(
+      <AskCompanion evidence={null} degraded={false} phase="empty" target={null} onClear={() => {}} />
+    )
+    expect(screen.queryByText(/Tap Ask on any pick/i)).toBeNull()
+    rerender(<AskCompanion evidence="single" degraded={false} phase="picks" target={null} onClear={() => {}} />)
+    expect(screen.getByText(/Tap Ask on any pick/i)).toBeTruthy()
+  })
+
+  it('does not tell somebody who has searched to go and answer the questions', () => {
+    render(<AskCompanion evidence={null} degraded={false} phase="empty" target={null} onClear={() => {}} />)
+    expect(screen.queryByText(/Answer the four questions/i)).toBeNull()
+  })
+
+  it('still says it before anything has been searched', () => {
+    render(<AskCompanion evidence={null} degraded={false} phase="idle" target={null} onClear={() => {}} />)
+    expect(screen.getByText(/Answer the four questions/i)).toBeTruthy()
   })
 })

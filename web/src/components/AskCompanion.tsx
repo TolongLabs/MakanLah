@@ -1,7 +1,7 @@
 import { type FormEvent, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { type AskResponse, ask, type Citation } from '../api'
 import { rememberVoice, speaker, synth, voiceEnabled } from '../companion/voice'
-import { type Evidence, type MascotMood, moodFor, readingFor } from '../evidence'
+import { type CompanionPhase, type Evidence, type MascotMood, moodFor, readingFor } from '../evidence'
 import type { Live2DStage } from '../live2d/Live2DStage'
 
 const MascotStage = lazy(() => import('../live2d/MascotStage'))
@@ -34,16 +34,21 @@ export type AskTarget = { id: string; name: string } | null
 export function AskCompanion({
   evidence,
   degraded,
+  phase = 'idle',
   target,
   onClear
 }: {
   evidence: Evidence | null
   degraded: boolean
+  /** Nothing searched yet, searched and empty, or holding picks. The mood cannot
+      carry this: `curious` means both "ask me something" and "I found nothing",
+      and only one of those should tell you to answer the onboarding questions. */
+  phase?: CompanionPhase
   target: AskTarget
   onClear: () => void
 }) {
   const mood: MascotMood = moodFor(evidence, degraded)
-  const reading = readingFor(mood)
+  const reading = readingFor(mood, phase)
 
   const [wide, setWide] = useState(() => window.matchMedia?.(STAGE_AT).matches ?? false)
   const [live, setLive] = useState(false)
@@ -201,7 +206,10 @@ export function AskCompanion({
           </div>
         </form>
       ) : (
-        <p className="ask-hint">Tap Ask on any pick and I will read its posts for you.</p>
+        // Only where there is something to tap. On the evidence-gap screen there
+        // are deliberately zero pickable cards, and inviting a tap on a pick that
+        // is not there is the same false claim as the reading above it.
+        phase === 'picks' && <p className="ask-hint">Tap Ask on any pick and I will read its posts for you.</p>
       )}
 
       {synth() && (
