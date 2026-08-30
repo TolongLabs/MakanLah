@@ -1,4 +1,67 @@
-# Progress — 2026-08-30 · the repo was made publishable, and a merged fix turned out never to have shipped
+# Progress — 2026-08-30 (Overnight) · the voice is the owner's, and the README renders
+
+**`main` is at `22eeb40`.** The demo speaks in the owner's cloned voice, the README renders in full, and the repository
+is one licence answer away from public.
+
+## What Shipped Overnight
+
+| PR   | What                                                                                |
+| ---- | ----------------------------------------------------------------------------------- |
+| #206 | Three hand-authored SVGs replace Mermaid; animated preview replaces a `<video>` tag |
+| #207 | Chatterbox voice backend, behind `DEMO_TTS`. Recovered from an uncommitted worktree |
+| #208 | Chatterbox wrote float WAVs the rest of the pipeline could not read                 |
+| #209 | The 19-line re-narration in the cloned voice                                        |
+
+## Two Renderer Findings, Both Measured With `gh api /markdown`
+
+**GitHub strips `<video>` entirely.** The tag and its fallback `<a>` both come back as `<p dir="auto"></p>`. Inline
+playback only exists for assets uploaded through GitHub's own uploader, which has no public API. The README now uses a
+0.42 MB animated WebP linked to the release asset.
+
+**Mermaid was replaced rather than debugged again.** Three simplification passes did not fix
+`Unable to render rich display`. `docs/img/diagram-*.svg` are hand-authored, referenced by `<img>` because GitHub strips
+inline `<svg>`, and carry an explicit `#f3f6f8` ground so they survive dark mode.
+
+## The Voice
+
+Owner approved the clone from a 7.42s sample. The full cut measures **19 lines, 2 pushed later, 0 overlapping**, 34
+subtitle cards, video 174.28s against audio 173.86s, mean −26.2 dB and peak −2.7 dB.
+
+**One gap at 39.4s runs 7.24s, over the 6s bar.** Checked against the Kokoro cut before calling it a regression: that
+has gaps at the same three points, because they are the spacing between captured beats. Chatterbox reads faster, so an
+existing pause widened by 2.3s. Inherent to the capture.
+
+**Nobody has listened to all 19 lines.** The sample was approved; the full narration has not been heard.
+
+## Three Failures Worth Keeping
+
+**A worker refused and nobody read the log.** The Chatterbox spike never ran — `devin.log` was 262 bytes of
+`Refusing to run in an untrusted workspace`, and the pipeline carried on with Kokoro. `SWARM.md` §7 says do not trust a
+worker's self-report; it does not yet say to read the log when there is no report at all.
+
+**`TASK.md`'s premise was stale in both directions.** It was written for ~1 GB free RAM; peak was 6.9 GB of 15
+available, and the real blocker — a fused attention kernel emitting 180,960 of 180,960 NaN samples — was independent of
+memory. A worker following that guidance would have downgraded to a smaller variant and still produced silence.
+
+**I destroyed 15 minutes of inference.** Converted 19 segments to int16, then re-ran `narrate.sh`, which wipes
+`$DIR/seg` at line 26 before doing anything. Check what a script cleans before pointing it at expensive artifacts.
+
+## Cleanup
+
+Remote branches 12 → 3, local 73 → 6, matched against PR head refs rather than `git branch --merged`, which caught 3 of
+58 because everything here is squash-merged. Issue reconciliation is a comment on #160: #116, #164, #201 and #195
+confirmed still open with fresh evidence; #83 and #78 look fixed and cannot be proven so from static reading.
+
+## The Only Blocker
+
+**[#195](https://github.com/TolongLabs/MakanLah/issues/195), the Live2D licence.** Owner decision. If the answer is no
+it is a history rewrite, and it has to happen before the repository goes public rather than after.
+
+**Web client:** <https://makanlah-b5h.pages.dev> · **API:** <https://makanlah-api.vercel.app>
+
+---
+
+## 2026-08-30 (Earlier) — 2026-08-30 · the repo was made publishable, and a merged fix turned out never to have shipped
 
 **`main` is at `cff13c2`. API `/health` reports `cff13c2b`.** They agree for the first time today, and getting them to
 agree is the whole story of this session's second half.
