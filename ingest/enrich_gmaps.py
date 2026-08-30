@@ -56,7 +56,7 @@ def review_url(venue_name, city='Kuala Lumpur', place_id=None):
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
-def pending_venues(con, limit=None, only_missing=True, offset=0, discovered_only=False):
+def pending_venues(con, limit=None, only_missing=True, offset=0, discovered_only=False, shard=None):
     """Venues that have no Google Maps evidence yet.
 
     'Missing coordinates' was the original predicate and is now the wrong one:
@@ -82,6 +82,12 @@ def pending_venues(con, limit=None, only_missing=True, offset=0, discovered_only
                      select 1 from mention m
                      join source_post p on p.id = m.post_id
                      where m.venue_id = venue.id and p.platform = 'google_maps')"""
+    # Sharded by a hash of the id, not by --offset, because offsets are unstable
+    # here: a venue leaves this set the moment it gains a mention, so two workers
+    # walking offsets would drift into each other's slice as the run progressed.
+    if shard:
+        i, n = shard
+        sql += f' and mod(abs(hashtext(venue.id::text)), {int(n)}) = {int(i)}'
     # Ordered by evidence, so a run cut short covers what matters most -- which also
     # means every `--limit N` run without an offset re-captures the SAME top N. The
     # repair of #15's 1008 truncated posts needs to walk past them, not repeat them.
@@ -170,11 +176,11 @@ def _apply_records(con, records, stats):
     return stats
 
 
-async def run(limit=None, want_reviews=True, only_missing=True, offset=0, discovered_only=False):
+async def run(limit=None, want_reviews=True, only_missing=True, offset=0, discovered_only=False, shard=None):
     if not cdp.alive():
         raise SystemExit('CDP is not up. Run: scripts/chrome-session.sh start')
     with db.connect(direct=True) as con:
-        venues = pending_venues(con, limit, only_missing, offset, discovered_only=discovered_only)
+        venues = pending_venues(con, limit, only_missing, offset, discovered_only=discovered_only, shard=shard)
         print(f'{len(venues)} venues to enrich', flush=True)
         if not venues:
             return {}
@@ -227,13 +233,15 @@ def main():
     ap.add_argument('--all-venues', action='store_true', help='not just the ones missing coordinates')
     ap.add_argument('--offset', type=int, default=0, help='skip the first N, to walk past venues already re-captured')
 
+    ap.add_argument('--shard', help='i/n -- a stable hash slice, so N workers run without overlap')
     ap.add_argument(
         '--discovered-only',
         action='store_true',
         help='only venues Maps itself found, which have no evidence yet (#157)',
     )
     a = ap.parse_args()
-    stats = asyncio.run(run(a.limit, not a.no_reviews, not a.all_venues, a.offset, a.discovered_only))
+    shard = tuple(int(x) for x in a.shard.split('/')) if a.shard else None
+    stats = asyncio.run(run(a.limit, not a.no_reviews, not a.all_venues, a.offset, a.discovered_only, shard))
     print(stats)
 
 
