@@ -62,8 +62,16 @@ export function Discover() {
   const [target, setTarget] = useState<AskTarget>(null)
   // The onboarding craving used to ride along on every later search forever, so the
   // page claimed two different things at once: "Filtered by your answers: nasi lemak
-  // bumbung supper" above "5 picks for something not too heavy". Droppable now, and
-  // dropping it only clears the craving -- the rest of the answers still filter.
+  // bumbung supper" above "5 picks for something not too heavy". Droppable now.
+  //
+  // #170. This comment used to end "the rest of the answers still filter", and that
+  // was false. `prefs` is not a field on `RecommendRequest`, so Pydantic's default
+  // extra='ignore' discards the whole object -- prefs as a bare string, a bare int
+  // or null all return 200, where an out-of-range radius_m returns 422. Only Craving
+  // (folded into the query string) and Within (sent as top-level radius_m) reach
+  // ranking; With, Mood and Budget reach nothing. Which makes Drop The Craving a
+  // no-op on results as well: it re-runs the same term at the same radius, and the
+  // only input that differs is one the server never reads.
   const [useCraving, setUseCraving] = useState(true)
 
   const useCravingRef = useRef(useCraving)
