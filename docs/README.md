@@ -16,6 +16,8 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Neon_Postgres-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 ![pgvector](https://img.shields.io/badge/pgvector-4B8BBE?style=for-the-badge)
+![Hermes](https://img.shields.io/badge/Hermes_Agent-6E4AFF?style=for-the-badge)
+![Firecrawl](https://img.shields.io/badge/Firecrawl-FF6B35?style=for-the-badge)
 
 [Live App](https://makanlah-b5h.pages.dev) · [API](https://makanlah-api.vercel.app/health) · [PRD](PRD.md) ·
 [TRD](TRD.md) · [Runbook](runbook.md) · [Design](DESIGN.md)
@@ -28,9 +30,10 @@
   <summary>Expand</summary>
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#what-it-looks-like">What It Looks Like</a></li>
     <li><a href="#the-one-rule-that-governs-everything">The One Rule That Governs Everything</a></li>
     <li><a href="#how-it-works">How It Works</a></li>
-    <li><a href="#whats-in-the-corpus">What Is In The Corpus</a></li>
+    <li><a href="#what-is-in-the-corpus">What Is In The Corpus</a></li>
     <li><a href="#architecture">Architecture</a></li>
     <li><a href="#tech-stack">Tech Stack</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
@@ -64,6 +67,77 @@ He was right, and fixing him is most of what this repository is a record of.
 
 ---
 
+## What It Looks Like
+
+Seven frames, all shot against production at `2ede89f` on 2026-08-30, 18:01 UTC. Nothing is mocked and nothing is a
+mockup.
+
+<img src="img/landing-desktop-light.webp" alt="MakanLah landing page: Loved By Malaysians. Not invented by a robot." width="100%">
+
+**The three numbers under the hero are read from the corpus, not written into the page.** `4,523` posts read, `814`
+places named, and `0` picks we made up — the last one is the product's whole argument, and it is the only one that has
+to stay at zero.
+
+### The Core Loop
+
+<img src="img/discover-desktop-light.webp" alt="/discover on desktop: search, dish chips, and ranked picks each carrying the post it came from" width="100%">
+
+**Every card carries its evidence.** `NALE` is there because three people wrote about it, and the excerpt under the name
+is one of those posts rather than a generated summary. `Google Maps · Ray Mak · 3 months ago` is the citation.
+
+**The pink card is the product being honest.** _"Only one post backs this. Worth a look, not a promise."_ A pick with
+thin evidence says so, in the place it would otherwise have sounded confident.
+
+<img src="img/discover-desktop-dark.webp" alt="The same view in dark theme, with Wanjo椰浆饭 ranked first" width="100%">
+
+**`Wanjo椰浆饭` is not a rendering accident.** Venue names arrive in whichever script the poster used, and a layout that
+only survives Latin text fails silently here. Mixed script is tested rather than avoided.
+
+### The Evidence, In Full
+
+<img src="img/venue-desktop-light.webp" alt="Venue page for 阿喜, listing every post about it across both platforms" width="100%">
+
+**This page is the one rule made literal.** Every post about `阿喜`, each openable, an English Google Maps review beside
+a Chinese RedNote post — with `This post no longer opens.` printed under the one that died.
+
+**The header and the lede count different things on purpose.** _"3 posts, Google Maps and RedNote"_ is what the corpus
+holds; _"One platform carries this place so far"_ is what a reader can still open, because both RedNote posts are dead.
+Corroboration is only claimed on evidence that survives.
+
+### Onboarding, And Phone
+
+<table>
+<tr>
+<td width="62%" valign="top">
+<img src="img/taste-desktop-light.webp" alt="The taste wizard, step 1 of 4, with the companion asking what you are craving" width="100%">
+</td>
+<td width="38%" valign="top">
+<img src="img/discover-phone-light.webp" alt="/discover at phone width, chips and distance control stacked" width="100%">
+</td>
+</tr>
+</table>
+
+**The companion writes the wizard's lines and is deliberately kept away from the citation trail.** She sees no corpus
+row, names no venue and makes no claim — `makanlah/companion.py` drops any line that drifts into one. With no API key
+she still talks, from scripted lines.
+
+**The chip row is one row at every width, by decision** — a second row would push the results down, and the results are
+the point. The distance control below it is a 2×2 grid at this width; it was an `inline-flex` row until #197, which left
+a band of empty pill on every phone: 244px at 390, and 284px at 430, the worst case.
+
+**This frame shows four chips, and that is a bug rather than a fit.** The row hid a wrapped chip and measured the next
+one against the layout the hiding had just created, so `fish` slid into the gap `curry` left and the two dishes ranked
+above it were dropped. Fixed in #199; the frame is replaced once that deploys.
+
+<sub>Chips are ranked by how often the corpus mentions each dish and are time-banded. This was the <b>late night
+supper</b> band, reading <b>soup</b> 728, <b>rice</b> 665, <b>chicken</b> 619, <b>curry</b> 272, <b>BKT</b> 256,
+<b>fish</b> 246, confirmed against <code>/suggestions</code> in the same minute as the capture. A different hour reads
+differently, so these numbers date the screenshot rather than describe a fixed row.</sub>
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
+
+---
+
 ## The One Rule That Governs Everything
 
 **A recommendation that cannot show you its source is not returned.**
@@ -86,20 +160,38 @@ It has consequences the product wears openly:
 
 ## How It Works
 
-Two runtimes that never share a request. Ingestion runs on a workstation and holds the browser session; the API is
-hosted, reads a normalized corpus, and **never fetches from a platform while a user waits**.
+Two runtimes that never share a request. **Hermes Agent works the sources around the clock**, holding the browser
+session and deciding what to read next. The API is hosted, reads a normalized corpus, and **never fetches from a
+platform while a user waits**.
 
+```mermaid
+flowchart LR
+  subgraph B["Hermes Agent · ingestion around the clock · nobody is waiting"]
+    direction TB
+    RN["RedNote"] --> CAP["capture to raw cache"]
+    GM["Google Maps<br/>Places API"] --> CAP
+    FB["Food blogs<br/>via Firecrawl"] --> CAP
+    CAP --> EX["extract<br/>EN · MS · ZH"]
+    EX --> RV["resolve venue"]
+    RV --> GC["geocode"]
+    GC --> EM["embed"]
+  end
+  EM --> DB[("Neon<br/>Postgres + pgvector")]
+  subgraph R["Request path · Vercel sin1 · a user is waiting"]
+    direction TB
+    Q["query"] --> DF["distance filter"]
+    DF --> PV["pgvector retrieval"]
+    DF --> LX["lexical dish lane"]
+    PV --> RR["LLM re-rank"]
+    LX --> RR
+    RR --> CT["attach citations<br/>from the database"]
+    CT --> OUT["results"]
+  end
+  DB --> DF
 ```
-    RedNote ──┐
-              ├─► capture ─► extract ─► resolve venue ─► geocode ─► embed ──► Neon
- Google Maps ─┘   (batch, workstation)                                          │
-                                                                                │
-                                    ┌───────────────────────────────────────────┘
-                                    ▼
-  query ─► distance filter ─► pgvector retrieval ─┬─► LLM re-rank ─► cite ─► results
-                                                  │
-                              lexical dish lane ──┘   (an exact dish match goes in front)
-```
+
+An exact dish match takes the lexical lane and goes in front of the semantic results. The two lanes exist because
+`roti canai` and _"something not too heavy"_ are different questions, and one retriever answers them both badly.
 
 The re-rank decides order; **citations are attached afterwards, from the database**. A model is never asked to produce a
 URL, because a model asked for a URL produces a plausible one.
@@ -140,12 +232,68 @@ the corpus actually is.
 Three deployables and one shared library. The library exists so the corpus schema, the embedding client and the language
 handling are written once and imported by two processes that otherwise share nothing.
 
+```mermaid
+flowchart TB
+  U["Somebody hungry"] --> W
+  subgraph HOSTED["Hosted"]
+    W["web/ · Cloudflare Pages<br/>static, holds no secret"]
+    A["api/ · FastAPI on Vercel sin1<br/>reads the corpus, never scrapes"]
+    W -->|HTTPS| A
+  end
+  A --> N[("Neon · ap-southeast-1")]
+  subgraph LOCAL["Workstation · off the request path entirely"]
+    I["Hermes Agent · ingest/<br/>holds the signed-in session"]
+  end
+  I --> N
+  L["makanlah/ · shared library"] -.->|imported by| A
+  L -.->|imported by| I
+```
+
 | Piece       | Runs               | Job                                                         |
 | ----------- | ------------------ | ----------------------------------------------------------- |
 | `ingest/`   | Workstation, batch | Holds the signed-in browser session. Never serves a request |
 | `api/`      | Vercel, Singapore  | Reads the corpus. Never scrapes                             |
 | `web/`      | Cloudflare Pages   | Static, installable, holds no secret                        |
 | `makanlah/` | Imported by both   | Schema, ranking, text handling, model clients               |
+
+### The Citation Trail, As Tables
+
+`mention` is the join that makes the product's one rule structural. Both retrieval paths inner-join it, so a venue with
+no post behind it cannot be selected — the guarantee lives in the schema rather than in a code path somebody could
+forget.
+
+```mermaid
+erDiagram
+  source_post ||--o{ mention : "is quoted by"
+  venue ||--o{ mention : "is evidenced by"
+  venue ||--o{ venue_embedding : "is retrieved through"
+  source_post {
+    text platform "rednote or google_maps"
+    text url "the link a reader can open"
+    text_array langs "plural by design, never one column"
+    timestamptz posted_at
+  }
+  mention {
+    text excerpt "verbatim span, enforced by trigger"
+    text_array dishes
+    real sentiment "-1 to 1"
+    smallint price_band "1 to 4, or null"
+  }
+  venue {
+    text name
+    text_array aliases
+    double lat "null until geocoding catches up"
+    double lng
+  }
+  venue_embedding {
+    vector embedding "1024 dimensions"
+    text model
+  }
+```
+
+**`mention.excerpt` is enforced by a database trigger, not by convention.** The spike caught the extractor returning
+excerpts that read correctly and were not in the post, stitched from non-contiguous lines. A fabricated quote behind a
+citation is worse than no citation at all.
 
 **No single source is load-bearing.** That is an uptime commitment, not legal cover: any one platform can go dark
 mid-sprint, and a data layer with one point of failure goes dark with it. Google Maps carries most of the evidence and,
@@ -160,14 +308,49 @@ Deeper detail — API contracts, the corpus schema, ranking stages and the reaso
 
 ## Tech Stack
 
-| Layer           | Choice                         | Why                                                          |
-| --------------- | ------------------------------ | ------------------------------------------------------------ |
-| Corpus          | Neon Postgres + pgvector       | One store for rows, full-text and vectors, in one region     |
-| API             | FastAPI on Vercel (`sin1`)     | Python, so the corpus layer is shared with ingestion         |
-| Client          | Vite + React, Cloudflare Pages | A PWA installs in seconds; an app store is a five-minute tax |
-| Ingestion       | Python, CDP, Google Places API | No key needed for RedNote; Places replaced browser scraping  |
-| Package manager | Bun (JS), uv (Python)          |                                                              |
-| Lint and format | Biome, Prettier, Ruff          | Split by extension so neither can undo the other             |
+Everything below is what the code actually resolves to at runtime, not what the `.env.example` reserves a name for. The
+last table is the difference between the two.
+
+**Runtime And Hosting**
+
+| Layer   | Choice                                   | Why                                                               |
+| ------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| Corpus  | Neon Postgres, `pgvector` + `pg_trgm`    | One store for rows, full-text and vectors, in one region          |
+| API     | FastAPI + Uvicorn on Vercel (`sin1`)     | Python, so the corpus layer is shared with ingestion              |
+| Client  | React 19, React Router 7, Vite 7 → Pages | A PWA installs in seconds; an app store is a five-minute tax      |
+| Mascot  | `pixi.js` 6 + `pixi-live2d-display`      | WebGL canvas, the only heavy dependency in the bundle             |
+| Runtime | Python ≥ 3.11, `psycopg` 3, `pydantic`   | Five third-party packages total; the rest is the standard library |
+
+**Models — Five Lanes, Deliberately Not Shared**
+
+| Lane       | Model                      | Provider                   | Why It Is Its Own Lane                              |
+| ---------- | -------------------------- | -------------------------- | --------------------------------------------------- |
+| Extraction | `qwen-plus-2025-07-28`     | DashScope Intl (Singapore) | Batch. Strong on Chinese, and the corpus is RedNote |
+| Embeddings | `text-embedding-v3`        | DashScope, 1024 dimensions | Genuinely multilingual — a weak one biases silently |
+| Re-rank    | `qwen3.7-flash-2026-07-15` | DashScope                  | Interactive, 96% of request latency, thinking off   |
+| Copilot    | `qwen3.7-flash-2026-07-15` | DashScope                  | A wrong citation is worse than a wrong ordering     |
+| Companion  | `gemini-3.5-flash-lite`    | Google, free tier          | Sees no corpus row, names no venue, makes no claim  |
+
+**Ingestion**
+
+| Tool                                       | Job                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| **Hermes Agent**                           | The agent behind the corpus. Runs the ingestion loop around the clock, deciding what to read next |
+| **Firecrawl**                              | The open-web lane. Food blogs, listicles and review sites, rendered and parsed                    |
+| Chrome DevTools Protocol over `websockets` | RedNote, against a signed-in Chrome. No Playwright, no key                                        |
+| Google Places API (New)                    | Text Search (Pro) and Place Details (Enterprise) field masks                                      |
+| Nominatim (OpenStreetMap)                  | Geocoding where Places does not resolve a name                                                    |
+| OpenCC                                     | Folds simplified and traditional Han so one shop is one row                                       |
+
+**Tooling**
+
+| Job              | Tool                                                                   |
+| ---------------- | ---------------------------------------------------------------------- |
+| Package managers | Bun (JS), uv (Python)                                                  |
+| Lint and format  | Biome, Prettier, Ruff — split by extension so neither undoes the other |
+| Tests            | pytest, Vitest, Testing Library, jsdom                                 |
+| Visual checks    | Playwright, headless — contrast, mascot, motion, overflow              |
+| Commit gates     | commitlint + husky + lint-staged, Conventional Commits                 |
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
@@ -192,7 +375,7 @@ Checks, all of which CI runs:
 ```bash
 bun run lint        # biome + prettier + ruff
 bun run typecheck   # tsc --noEmit, from web/
-uv run pytest -q    # 658 tests, entirely against fixtures
+uv run pytest -q    # 661 tests, entirely against fixtures
 ```
 
 **The test suite never touches a live platform.** That is deliberate: a test that scrapes is a test that fails when
@@ -276,9 +459,29 @@ Built by **TolongLabs**.
 <div align="center">
 <table>
   <tr>
-    <td align="center" width="33%">
-      <a href="https://github.com/AlaskanTuna"><img src="https://github.com/AlaskanTuna.png" width="96" alt="Tuna" /></a><br />
-      <b>Tuna</b><br />
+    <td align="center" width="25%">
+      <a href="https://github.com/AlaskanTuna"><img src="https://github.com/AlaskanTuna.png" width="88" alt="Adam" /></a><br />
+      <b>Adam</b><br />
+      <a href="https://github.com/AlaskanTuna">@AlaskanTuna</a><br />
+      <sub>Fullstack, DevOps, agent and scraping pipeline</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/chaosiris"><img src="https://github.com/chaosiris.png" width="88" alt="LH" /></a><br />
+      <b>LH</b><br />
+      <a href="https://github.com/chaosiris">@chaosiris</a><br />
+      <sub>Backend, agent and scraping pipeline</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/DrxgClanPC"><img src="https://github.com/DrxgClanPC.png" width="88" alt="Jin Siang" /></a><br />
+      <b>Jin Siang</b><br />
+      <a href="https://github.com/DrxgClanPC">@DrxgClanPC</a><br />
+      <sub>Ideation and testing</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/Doraemon-00"><img src="https://github.com/Doraemon-00.png" width="88" alt="Jun Song" /></a><br />
+      <b>Jun Song</b><br />
+      <a href="https://github.com/Doraemon-00">@Doraemon-00</a><br />
+      <sub>Documentation and testing</sub>
     </td>
   </tr>
 </table>
