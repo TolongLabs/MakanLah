@@ -54,7 +54,7 @@ EXPAND_JS = """(() => {
   return buttons.length;
 })()"""
 
-REVIEWS_JS = """JSON.stringify((() => {
+REVIEWS_JS = r"""JSON.stringify((() => {
   const seen = {};
   for (const n of document.querySelectorAll('div[data-review-id]')) {
     const id = n.getAttribute('data-review-id');

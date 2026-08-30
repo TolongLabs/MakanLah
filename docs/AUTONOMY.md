@@ -47,7 +47,7 @@ nobody is at the keyboard.
 | **Ranking**         | **Hybrid** — embedding retrieval to top-50, LLM re-rank to top-10                               | Cheap recall, good precision, and the re-rank pass is where citations get attached. Revisit once a metric exists to compare against                                                                                |
 | **Mobile delivery** | **PWA.** Responsive web, installable, no app store                                              | The product promises a decision in under two minutes; an app store install is a five-minute tax before first use. Revisit only if retention data demands push                                                      |
 | **App framework**   | **Vite + React** SPA for the client, **FastAPI** for the API                                    | Ingestion is already Python, so the corpus layer, embedding client and model clients are written once and shared as libraries by two separate processes. Next.js would mean reimplementing all three in TypeScript |
-| **Hosting**         | Static client on Cloudflare Pages or Vercel; API on Fly.io, Singapore region                    | Both free-tier, both near KL. **Never host from the workstation** — see below                                                                                                                                      |
+| **Hosting**         | Static client on Cloudflare Pages or Vercel; API on Vercel, `sin1` (Singapore)                  | Both free-tier, both near KL. **Never host from the workstation** — see below                                                                                                                                      |
 
 ### The Workstation Is Never Publicly Reachable
 

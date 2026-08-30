@@ -247,16 +247,18 @@ which capabilities are configured, by name and never by value.
 
 ## 11. Troubleshooting
 
-| Symptom                                               | Cause                                                                |
-| ----------------------------------------------------- | -------------------------------------------------------------------- |
-| Migration hangs or errors oddly                       | Using the pooled URL. Migrations need `DATABASE_URL_UNPOOLED`        |
-| A dish query returns 1 result, database has many      | Venues without embeddings. Run 7.4                                   |
-| Every response says "the last refresh did not finish" | A killed ingest run left `ok = null`. Let one finish                 |
-| `/health` reports `commit: null`                      | Deployed without `GIT_COMMIT_SHA`. Use `scripts/deploy-api.sh`       |
-| Places calls return 400 INVALID_ARGUMENT              | A legacy `0x…:0x…` CID being sent as a place ID                      |
-| Maps enrichment returns 0 reviews for everything      | CDP path only. An ambiguous name lands on the results feed           |
-| Static map tile 403s                                  | Referrer restriction. The key only works from its allowed origins    |
-| `bun run lint` differs from CI                        | Ruff first-party inference. `known-first-party` in pyproject pins it |
+| Symptom                                                     | Cause                                                                                                                                         |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migration hangs or errors oddly                             | Using the pooled URL. Migrations need `DATABASE_URL_UNPOOLED`                                                                                 |
+| A dish query returns 1 result, database has many            | Venues without embeddings. Run 7.4                                                                                                            |
+| Every response says "the last refresh did not finish"       | A killed ingest run left `ok = null`. Let one finish                                                                                          |
+| `/health` reports `commit: null`                            | Deployed without `GIT_COMMIT_SHA`. Use `scripts/deploy-api.sh`                                                                                |
+| Places calls return 400 INVALID_ARGUMENT                    | A legacy `0x…:0x…` CID being sent as a place ID                                                                                               |
+| Maps enrichment returns 0 reviews for everything            | CDP path only. An ambiguous name lands on the results feed                                                                                    |
+| Static map tile 403s                                        | Referrer restriction. The key only works from its allowed origins                                                                             |
+| `bun run lint` differs from CI                              | Ruff first-party inference. `known-first-party` in pyproject pins it                                                                          |
+| API dies at import: `could not convert string to float: ''` | An empty `EMBED_TIMEOUT=` in `.env`. `_load` uses `setdefault`, so an empty value SETS it and the code default never applies. Delete the line |
+| `/recommend` returns a bare `{"error": ...}`                | No database. `/health` degrades honestly; that route is thinner                                                                               |
 
 ---
 
@@ -264,7 +266,8 @@ which capabilities are configured, by name and never by value.
 
 **Confirmed, by running it:**
 
-- The full pipeline from an empty database to a serving app
+- The documented path from a clean clone to a serving app, followed literally by someone who had not written it. That
+  check found the runbook broken at section 6 and this list overstated, which is why it now says who confirmed what
 - Places enrichment at roughly one second a venue, review text untruncated
 - Idempotent discovery — a repeated query creates nothing twice
 - `scripts/deploy-api.sh` catching a deploy that serves the previous build
@@ -275,3 +278,5 @@ which capabilities are configured, by name and never by value.
 - Ingestion on macOS or Windows. The Chrome session script is written for Linux
 - Behaviour past the Places free tier, which nothing here has crossed
 - Concurrent ingestion. Three parallel CDP shards killed Chrome; the Places path has not been pushed the same way
+- The full ingestion pipeline end to end from empty. Each stage is confirmed; the whole sequence in one sitting on a
+  fresh database is not
