@@ -187,6 +187,35 @@ thing under it distinguishes green-because-correct from green-because-blind.**
 Six instances across three sessions in a single day says this is not carelessness. It is the default failure mode of
 verification written by the same party that wrote the fix.
 
+#### Twelve, And The Two Kinds Are Not Equally Expensive
+
+The run closed at **twelve instrument failures. Every one was caught by somebody running a control, and none by the
+check itself.** That is the finding, not the tally: green is trusted on sight, so nothing inside the check ever
+questions it.
+
+They split into two kinds, and the cheaper-looking one is the cheaper one:
+
+|                     | What it does                                        | What it costs                                                     |
+| ------------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
+| **False all-clear** | Reports clean while measuring nothing               | Caught eventually — somebody notices the thing is broken          |
+| **False alarm**     | Reports a defect in code that is behaving correctly | **Acted on.** Somebody spends a cycle fixing what was never wrong |
+
+Ten of the twelve were false all-clears. The two that nearly reached a person were both false alarms: an "Ask returns
+nothing" report that was the reader truncating DOM text, and a "320px overflow" that was a closed off-canvas drawer
+parked off-screen. `chrome_check` reading `/discover` before its redirect had rendered is the same shape — **the app was
+right and the check blamed it.**
+
+So when a check reports a defect, the first question is not "how do I fix the code". It is:
+
+> **Does the defect reproduce outside the instrument that found it?** A direct probe, a second tool, a human looking at
+> the screen. If it does not reproduce, the instrument is the finding.
+
+**Fix the class, not the instance.** Three separate probes failed the same way — a geometry assertion that never
+established the element was on screen. A `.option` matched hidden step panels, a right-edge check measured a parked
+drawer, and a clipping check measured `sr-only` nodes. One shared gate retires all three: flag an element only if the
+**document** actually overflows and the element is visible at all. That gate was then mutation-tested by injecting a
+real 1900px element, because **a gate that can only ever say "none" is worse than the false positive it replaced.**
+
 ### Unattended Mode
 
 **Agents may merge, but only onto green CI.** `.claude/hooks/guard-merge.sh` permits `gh pr merge` and denies it unless
