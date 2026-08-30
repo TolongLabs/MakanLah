@@ -18,15 +18,16 @@ not a module boundary.
 | Deployable | Runs                           | Shape                              | Constraint                         |
 | ---------- | ------------------------------ | ---------------------------------- | ---------------------------------- |
 | `ingest/`  | The workstation, on a schedule | Batch, high volume, nobody waiting | Throughput. Never serves a request |
-| `api/`     | Fly.io, Singapore              | Interactive, one user at a time    | Latency. Never scrapes             |
+| `api/`     | Vercel, `sin1` (Singapore)     | Interactive, one user at a time    | Latency. Never scrapes             |
 | `web/`     | Cloudflare Pages or Vercel     | Static SPA                         | First paint. Holds no secret       |
 
 ```
 workstation                          hosted
 ───────────                          ──────
-ingest/  ──scrape──▶ platforms
-         ──geocode─▶ Nominatim
-         ──extract─▶ ModelScope
+ingest/  ──capture─▶ RedNote (CDP, signed-in Chrome)
+         ──fetch───▶ Google Places API (key, no browser)
+         ──geocode─▶ Places, Nominatim as fallback
+         ──extract─▶ DashScope (Qwen)
          ──write────────────────────▶ Neon
                                        ▲
 browser ──▶ web/ (static) ──▶ api/ ────┘
@@ -534,14 +535,58 @@ discover → fetch → store raw → extract → resolve venue → geocode → e
 Each stage is **resumable and idempotent**, keyed on `(platform, platform_post_id)`. A stage that fails records the
 failure and continues the batch — never aborts it ([`AUTONOMY.md`](AUTONOMY.md#standing-operational-defaults)).
 
-| Stage             | Notes                                                                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Fetch**         | CDP against the signed-in Chrome for RedNote and for Google Maps. Firecrawl stays for open-web fallbacks                                                      |
-| **Store raw**     | Before extraction, always. A schema change must never require re-scraping                                                                                     |
-| **Extract**       | One prompt handling all three languages. Never a per-language path                                                                                            |
-| **Resolve venue** | Match on `name_normalized` and proximity. Ambiguity creates a new venue — merging is safe later, a wrong merge is not                                         |
-| **Geocode**       | **Google Maps over CDP**, which needs no key. Nominatim is the fallback, one request per second with a contact address in the User-Agent per its usage policy |
-| **Merge**         | Venues sharing a Google `place_id` are merged. Nothing else is accepted as evidence                                                                           |
+| Stage             | Notes                                                                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Fetch**         | CDP against the signed-in Chrome for RedNote. **Google Maps is the Places API now, not a browser** — see below. Firecrawl stays for open-web fallbacks                                                 |
+| **Store raw**     | Before extraction, always. A schema change must never require re-scraping                                                                                                                              |
+| **Extract**       | One prompt handling all three languages. Never a per-language path                                                                                                                                     |
+| **Resolve venue** | Match on `name_normalized` and proximity. Ambiguity creates a new venue — merging is safe later, a wrong merge is not                                                                                  |
+| **Geocode**       | **Google Places API**, which resolves far more of this corpus than OpenStreetMap does. Nominatim is the fallback, one request per second with a contact address in the User-Agent per its usage policy |
+| **Merge**         | Venues sharing a Google `place_id` are merged. Nothing else is accepted as evidence                                                                                                                    |
+
+### Google Maps Moved From A Browser To The API
+
+The CDP path proved the corpus and was the wrong tool once a key existed. Measured on the same venues:
+
+|              | CDP over Chrome                             | Places API          |
+| ------------ | ------------------------------------------- | ------------------- |
+| Per venue    | ~25s                                        | **~1s**             |
+| Review text  | 1,008 of 1,388 cut off at Google's "… More" | **whole**           |
+| Price        | parsed from prose, 3% of mentions           | `priceRange` in MYR |
+| Failure mode | Chrome died and the loop kept going         | an HTTP status      |
+
+**`place_id` has two incompatible shapes in this corpus and only one is a place ID.** The CDP path stored the
+`!1s0x…:0x…` pair lifted out of a Maps URL, which is a CID. Handing it to the Places API returns 400, and handing it to
+a Maps deep link cannot be checked from outside — Google serves its SPA shell with HTTP 200 for a valid id and an
+invalid one alike. `places_api.is_api_place_id` refuses anything `0x`-prefixed; `rank.usable_place_id` applies the same
+rule to both outgoing links, falling back to a name-and-area search.
+
+**Field masks decide the billing SKU.** `reviews`, `priceLevel`, `priceRange` and `rating` put a Place Details call in
+the Enterprise tier (1,000 free calls a month); a search asking only for id, name and location stays Pro (5,000). One
+unneeded field on a search mask cuts the discovery allowance fivefold.
+
+**Nothing from Places is cached beyond `place_id`.** Their policy exempts place IDs from the caching restriction and
+nothing else, which is why venue photos are absent from the product: the photo `name` is explicitly non-cacheable and
+re-hosting the bytes is storing Places content. The Maps Static API is a separate matter — the client embeds a tile by
+URL, Google serves it with its own logo baked in, and nothing is stored.
+
+### Price Has Two Provenances And They Are Not Interchangeable
+
+`mention.price_band` is 1–4 either way, but where it came from changes what may be said about it.
+
+| Source                            | Rows  | Citable                                  |
+| --------------------------------- | ----- | ---------------------------------------- |
+| Parsed from a post's own words    | ~443  | **Yes** — cites that post                |
+| Google `priceRange` for the venue | 2,402 | **No** — a third party's figure, uncited |
+
+`copilot.price_facts` keeps them apart and prefers the post-derived one. Conflating them would let the copilot say "a
+reviewer said RM20" about a figure no reviewer wrote, which is a fabricated citation on a product whose one promise is
+that every claim traces to a post.
+
+A figure in a post is also not automatically a price: of 315 posts a parser reads a figure from, 240 state an explicit
+RM range and 17 carry a per-person marker. The other 58 are a bare figure in prose and stay null — one reads "on the
+pricey side (a mangorange drink costs around RM12)" and parsed to the cheapest band on a venue the writer had just
+called expensive.
 
 ### Two Sources, Neither Load-Bearing
 

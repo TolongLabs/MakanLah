@@ -1,7 +1,15 @@
 # Live2D Model Drop-In
 
-The taste wizard's mascot renders the **LiveroiD_A-Y01** Live2D model. The model binaries are **gitignored and not in
-this repository**: they are a BOOTH download covered by the Live2D proprietary licence.
+The taste wizard's mascot renders the **LiveroiD_A-Y01** Live2D model.
+
+**The binaries ARE in this repository.** `liveroid/` carries a 1.5 MB `.moc3`, a 2.6 MB texture and the expression set,
+tracked since #70. This file previously said the opposite, which was true until 2026-08-29 and wrong afterwards: CI has
+no other source for the model, so with them ignored the deploy job shipped the text fallback every time.
+
+They are a BOOTH download covered by the **Live2D proprietary licence**, and that matters more now than it did. The
+decision to commit them was taken about a private repository. Committing a licensed binary where only the team can see
+it and redistributing it in a public, forkable repository with permanent history are different licence questions, and
+only the first one has been answered.
 
 **The app runs without them.** `Mascot.tsx` keeps its text reading on screen until the model actually mounts and keeps
 it permanently if the load fails, so nothing on the results path depends on this directory.
