@@ -28,9 +28,10 @@
   <summary>Expand</summary>
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#what-it-looks-like">What It Looks Like</a></li>
     <li><a href="#the-one-rule-that-governs-everything">The One Rule That Governs Everything</a></li>
     <li><a href="#how-it-works">How It Works</a></li>
-    <li><a href="#whats-in-the-corpus">What Is In The Corpus</a></li>
+    <li><a href="#what-is-in-the-corpus">What Is In The Corpus</a></li>
     <li><a href="#architecture">Architecture</a></li>
     <li><a href="#tech-stack">Tech Stack</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
@@ -63,6 +64,37 @@ He was right, and fixing him is most of what this repository is a record of.
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
+
+## What It Looks Like
+
+<img src="img/discover-desktop-light.webp" alt="MakanLah /discover on desktop: a search field, a row of dish chips, and ranked picks each showing the post it came from" width="100%">
+
+**Every card carries its evidence.** `NALE` is there because three people wrote about it, and the excerpt under the name
+is one of those posts rather than a generated summary. `Google Maps · Ray Mak · 3 months ago` is the citation.
+`Why This Showed`, `Ask About This` and `All Sources` all open the trail rather than describing it.
+
+**The pink card is the product being honest.** _"Only one post backs this. Worth a look, not a promise."_ A pick with
+thin evidence says so, in the same place it would have said something confident.
+
+<img src="img/discover-desktop-dark.webp" alt="The same view in dark theme, with Wanjo椰浆饭 ranked first" width="100%">
+
+**`Wanjo椰浆饭` is not a rendering accident.** The corpus is English, Malay and Chinese, often inside one sentence, and
+venue names arrive in whichever script the poster used. A layout that only survives Latin text fails silently here — so
+mixed script is tested rather than avoided.
+
+<img src="img/discover-phone-light.webp" alt="The same page at phone width, chips and distance control stacked" width="46%">
+
+**The chip row is one row at every width, by decision.** Desktop fits all six; the phone fits four and hides the rest
+rather than wrapping into a second row that pushes the results down. The distance control below it is a 2x2 grid at this
+width — it was an `inline-flex` row until #197, which left a band of empty pill on every phone width — 244px at 390, and
+284px at 430, the worst case.
+
+<sub>All three shot against production at <code>2ede89f</code>, 2026-08-30 17:52 UTC. Chips are ranked by how often the
+corpus mentions each dish and are time-banded — this was the <b>late night supper</b> band, reading <b>soup</b> 728,
+<b>rice</b> 665, <b>chicken</b> 619, <b>curry</b> 272, <b>BKT</b> 256, <b>fish</b> 246. A different hour reads
+differently, so these numbers date the screenshot rather than describe a fixed row.</sub>
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ## The One Rule That Governs Everything
 
