@@ -80,7 +80,10 @@ def speak_chatterbox(text, out):
     if not torch.isfinite(wav).all():
         print('chatterbox produced non-finite audio; refusing to write silence', file=sys.stderr)
         return 1
-    torchaudio.save(out, wav, model.sr)
+    # int16, matching what Kokoro writes. torchaudio defaults to float32, and the
+    # rest of the pipeline reads wavs with Python's `wave` module, which raises
+    # `unknown format: 3` on IEEE float and takes the whole narration run with it.
+    torchaudio.save(out, wav, model.sr, encoding='PCM_S', bits_per_sample=16)
     return 0
 
 
