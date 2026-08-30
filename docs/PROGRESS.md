@@ -179,6 +179,52 @@ Every error here is conservative, so it is not dangerous and not a launch blocke
 `citable()` dedupes on URL because with only a URL it cannot tell a duplicate from three reviewers. It needs
 `source_post.id` on each citation.
 
+### The Owner's Second Batch — A Copilot, A Brief, And One Correction Taken
+
+**The copilot is a copilot.** `Ask About This` opens a chat with the character live inside it, multi-turn, tool calls
+streaming in expanded and collapsing to `2 steps before answering` once she replies — still openable, because a trail
+you cannot reopen is not a trail. **The trace is the evidence claim made watchable**: `copilot.py` has always enforced
+that she answers from stored excerpts or declines, and until now the user was only told she looked.
+
+**One stage, moved, never two.** The aside unmounts her while the dialog is open. Two Live2D stages is two WebGL
+contexts for one character and on some drivers the second silently kills the first — page renders, aside goes black,
+nothing logged. `scripts/copilot_check.mjs` counts canvases across the handoff and was mutation-tested by letting the
+aside keep its stage.
+
+**`POST /ask` is the live path today.** `askStream` parses SSE and NDJSON with one reader; `NoStream` falls back. The
+transport is agreed with `makanlah-13`, who is sequencing it behind **#157** — every venue enters through RedNote's ~20
+keywords, so Google Maps supplies 84% of the evidence and cannot introduce a single restaurant. A copilot over 256
+venues still cannot answer "where should my family eat tonight", and that is the right call.
+
+**The map was built wrong and the objection was right.** First version fetched OSM tiles client-side. It worked. OSM's
+tile policy is explicit about bulk use by applications and a tile request per viewer is a rate limit on infrastructure
+we do not own — I had weighed it against our own corpus rule and missed that the binding constraint was somebody else's
+terms. Now renders a stored image, nothing until one exists. `docs/DESIGN.md` gains the map as a documented fourth
+exception to the no-images-near-evidence rule.
+
+**#153 closed on both sides.** `post_url` is not an identity: Maps has no per-review URL and ~8 reviews share one. Upper
+House shipped three reviewers, rendered **one**, and was denied a stamp it had earned — #87 in the mirror. `citable()`
+now keys on `post_id`; the card reads "3 posts" and the dialog renders three testimonies. The shared URL was also
+producing three identical React keys, unreachable only because the dedupe was hiding it.
+
+**The stamp still does not fire there, deliberately.** Three anonymous same-platform reviews clear `posts >= 2` but not
+`authors >= 2 || platforms >= 2`. They are almost certainly three people; the data does not say so, and inferring it is
+how #87 happened.
+
+### Two Instrument Failures Worth Carrying, Both Recorded In AUTONOMY.md
+
+**A guard can be the defect.** Detecting UAT's `Undisclosed Location` took a regex plus `len(name) < 3`. Its only hit
+was **`鱼你`** — a real restaurant with a normal two-character Chinese name. That filter would have shipped and deleted
+only Chinese venues.
+
+**A sweep that picks its own scope agrees with itself.** "38 venues, zero unusable, cannot reproduce" was true and
+worthless: every query ran from one origin and the venue sat in a different walking-distance pool. `makanlah-fb`
+reproduced it in one call by varying what the sweep held fixed.
+
+**A conflicted PR gets no CI at all, silently.** `main` moved four times underneath #144; GitHub cannot build a merge
+ref for a conflicted PR, so two pushes ran nothing — no red check, no queued run. A watcher reported "success" for a
+stale commit because it matched the newest _existing_ run rather than the run for HEAD.
+
 ### Where To Pick Up
 
 - **#141** — the visual pass the owner asked for: Apple-leaning surface, dotted sketchboard ground. Deliberately

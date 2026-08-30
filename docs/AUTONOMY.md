@@ -244,6 +244,25 @@ drawer, and a clipping check measured `sr-only` nodes. One shared gate retires a
 **document** actually overflows and the element is visible at all. That gate was then mutation-tested by injecting a
 real 1900px element, because **a gate that can only ever say "none" is worse than the false positive it replaced.**
 
+**A guard can be the defect.** Both rules above ask whether an instrument is lying about a defect. A third case is
+narrower and worse: an instrument that is right about the defect and whose obvious fix creates a new one.
+
+UAT reported a venue named `Undisclosed Location` on `/discover` — a pick with no usable name. Writing the detector to
+find it took a regex over placeholder words plus `len(name) < 3`. The detector's only hit was **`鱼你`, a real
+restaurant with an entirely normal two-character Chinese name.** A short-name filter is the guard anybody would reach
+for, it would have shipped, and it would have deleted Chinese venues while leaving every English one intact — silently,
+and invisibly to a test pass written in English.
+
+> **Before shipping a guard, ask what legitimate input it excludes, in every language the corpus holds.** `AGENTS.md`
+> makes language mix a correctness requirement rather than a polish item, and this is why: the failure looks like
+> working software.
+
+**And a sweep that chooses its own scope agrees with itself.** The same report was answered with "38 venues, zero
+unusable, cannot reproduce". True, and worthless: every query ran from one origin, the venue was in a different
+walking-distance pool, and the sweep never touched it. **Distance-filtered results are location-specific, so an origin
+is a variable and one origin is a sample of one.** The peer who filed it reproduced it in a single call by varying the
+thing the sweep had held fixed.
+
 ### Unattended Mode
 
 **Agents may merge, but only onto green CI.** `.claude/hooks/guard-merge.sh` permits `gh pr merge` and denies it unless
