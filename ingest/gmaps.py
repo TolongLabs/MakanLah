@@ -20,6 +20,7 @@ import json
 import re
 import urllib.parse
 
+from ingest import cdp
 from ingest.cdp import Session
 
 PAUSE = 2.0
@@ -298,4 +299,12 @@ async def enrich(venues, want_reviews=True, tab_every=6, on_record=None):
                     await asyncio.sleep(PAUSE)
         except Exception as e:
             print(f'  tab batch failed: {str(e)[:90]}', flush=True)
+            # A dead browser is not a failed batch, it is the end of the run. Without
+            # this the loop walks every remaining batch against a socket that is gone:
+            # measured at 28 identical 'Connection refused' lines after Chrome died
+            # 18 venues into a 183-venue shard, which reads in the log exactly like
+            # work being attempted.
+            if not cdp.alive():
+                print('  CDP is gone -- stopping rather than retrying a dead browser', flush=True)
+                break
     return out
