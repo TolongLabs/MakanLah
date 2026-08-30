@@ -212,7 +212,7 @@ def venue_evidence(con, venue_id, limit=40):
     planner happened to return first.
     """
     rows = con.execute(
-        """select m.excerpt, m.dishes, m.sentiment, m.confidence,
+        """select m.excerpt, m.dishes, m.sentiment, m.confidence, m.price_band, m.extractor_model,
                   p.id as post_id, p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
                   case when p.dead_at is not null then true else null end as dead
            from mention m join source_post p on p.id = m.post_id
