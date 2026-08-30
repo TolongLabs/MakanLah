@@ -49,9 +49,35 @@ def _key(dish: str) -> str:
     return unicodedata.normalize('NFKC', dish).casefold().strip()
 
 
+# Terms that name pork in so many words. NOT a dietary filter and NOT a halal
+# safeguard -- the `soup` chip, which stays, returns three bak kut teh houses in
+# its top six with `pork` on the cards. What this changes is that the app does
+# not OFFER pork before the user has said anything; what it cannot change is that
+# a user may still meet it. Claiming otherwise would overclaim exactly where
+# rank.py says overclaiming is unforgivable.
+#
+# Deliberately a spelling list, not a cuisine one. `bak kut teh`, `char siew` and
+# `siu yuk` all stay offerable: excluding them would be the hand-written
+# non-halal list this refuses to build -- three such heuristics over food terms
+# failed in a single day on 2026-08-28 -- and it would take the most iconic dish
+# in this corpus away from the audience it belongs to.
+#
+# Search, ranking and every dish tag are untouched. This is the default pool only.
+DEFAULT_POOL_EXCLUDED = frozenset({'pork', 'babi', '猪肉', '豬肉'})
+
+
+def offerable(dish) -> bool:
+    """Whether this dish may appear in the six unprompted chips."""
+    if not isinstance(dish, str):
+        return False
+    return bool(dish.strip()) and _key(dish) not in DEFAULT_POOL_EXCLUDED
+
+
 def _candidates(con) -> list[dict]:
     seen: dict[str, dict] = {}
     for row in db.popular_dishes(con, CANDIDATES * 2):
+        if not offerable(row['dish']):
+            continue
         k = _key(row['dish'])
         keep = seen.get(k)
         # Keep the spelling with the most posts behind it, not the first seen.
