@@ -373,17 +373,24 @@ def sentiment_bucket(score):
     positive, 3 is mixed, 1 and 2 are critical. Naming a 4-star review "mixed" to
     manufacture spread would be inventing a reservation the reviewer did not have.
 
-    The old boundary was -0.2, which caught mild qualification -- an odd drink, a
-    plain room, a price called steep -- and the card turned that into a verdict
-    about a real business (#149). 王美记 rendered "2 of 2 posts critical" over
-    excerpts that contained no complaint at all.
+    The negative cut is -0.4 rather than -0.5, and the two platforms decide it
+    separately. Maps scores are quantised to {-1, -0.5, 0, 0.5, 1}, so any cut in
+    (-0.5, 0) treats Maps identically -- 1-2 stars critical, 3 mixed. RedNote is
+    scored continuously by the extraction model and is the only thing the exact
+    value moves.
+
+    -0.4 is where its negative population actually separates, read by hand across
+    all 14 negative RedNote mentions: at -0.4 and below sit 避雷 (avoid), 别去
+    (don't go) and 强烈不推荐; at -0.3 and above sit 可吃可不吃 (take it or leave
+    it) and 确实好吃，但要排40分钟. -0.5 filed 王美记's "不推荐" twice and "性价比
+    很低" as mixed (#155); -0.2 filed a queue complaint as critical (#149).
     """
     if score is None:
         return None
     s = float(score)
     if s >= 0.5:
         return 'positive'
-    if s <= -0.5:
+    if s <= -0.4:
         return 'negative'
     return 'mixed'
 
