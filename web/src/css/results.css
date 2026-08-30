@@ -363,10 +363,24 @@
 /* Sits on the filter row beside the distance control, because that is where the
    things that change the SEARCH live -- and redoing your taste changes the search
    more than any of them. Quiet, not primary: Find is still the action on this
-   screen. */
+   screen.
+
+   SIZED TO THE SEGMENTED CONTROL BESIDE IT, because two controls sharing a row read
+   as a set whether or not they are one. Measured before: this was 50px tall with a
+   10px radius and 16px text against the pill's 42px, 999px and 13px -- three
+   mismatches at once, on the row a reader scans in a single pass.
+
+   Height, radius and type match. Border and ground deliberately do NOT: the pill is
+   a set of options with one selected, this is an action, and making them identical
+   would dress a button as a selected tab. Same geometry, different affordance. */
 .find-taste {
   white-space: nowrap;
   text-decoration: none;
+  min-height: 42px;
+  padding-block: 0;
+  padding-inline: var(--s4);
+  font-size: var(--t-sm);
+  border-radius: var(--r-chip);
 }
 
 .segmented {

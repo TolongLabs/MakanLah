@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { distance } from '../format'
+import { citable } from '../evidence'
+import { count, dishLine, distance, platformName } from '../format'
 import { useVenue } from '../routes/Venue'
+import { MapPreview } from './MapPreview'
 import { Modal } from './Modal'
 import { VenueTrail } from './VenueTrail'
 
@@ -13,6 +15,11 @@ import { VenueTrail } from './VenueTrail'
  * `/discover` quietly takes that away. With the route driving it, the browser back
  * button closes the dialog, a refresh gives the full page, and the link a reader
  * copies still points at the evidence.
+ *
+ * **The head is a briefing, not a repeat of the card.** It carries what the reader
+ * needs to act — where it is, how far, what it serves, how much writing stands
+ * behind it — and then gets out of the way. Everything below it is the writing
+ * itself, which is what the dialog is for and what gets the room.
  *
  * Rendered only when `location.state.backgroundLocation` is set, which a normal
  * click on All Sources supplies and a cold load does not — so the same href is an
@@ -53,6 +60,23 @@ export function SourcesModal() {
 
   const { venue } = state.result
   const dist = distance(state.result.distance_m)
+  const dishes = dishLine(venue.dishes, 6)
+  // COUNTED FROM THE CITATIONS ON SCREEN, not from `venue.corroboration`.
+  //
+  // `add_corroboration` runs in `recommend()` and not in the direct venue lookup, so
+  // the field is absent here -- and because this loads cache-first then overwrites
+  // with the API's answer, reading it would show a number briefly and then lose it.
+  // Counting what the trail below actually renders cannot drift from the trail, and
+  // it is the same derivation `/r/:venueId` already uses.
+  const cited = citable(state.result.citations)
+  const platforms = [...new Set(cited.map((x) => x.platform))]
+  const facts = [
+    venue.area ? { k: 'Where', v: venue.area, lang: true } : null,
+    dist ? { k: 'Distance', v: dist } : null,
+    cited.length > 0
+      ? { k: 'Evidence', v: `${count(cited.length, 'post')} · ${platforms.map(platformName).join(', ')}` }
+      : null
+  ].filter((f) => f != null)
 
   return (
     <Modal
@@ -63,18 +87,37 @@ export function SourcesModal() {
         </span>
       }
     >
-      {(venue.area || dist) && (
-        <p className="meta-line">
-          {venue.area && <span>{venue.area}</span>}
-          {dist && <span>{dist}</span>}
-        </p>
-      )}
+      <div className="brief">
+        <MapPreview src={venue.map_image_url} name={venue.name} href={venue.maps_url} />
+
+        <div className="brief-facts">
+          {/* Half the corpus has no area and a query without geolocation has no
+              distance, so an empty list is a real outcome and renders as nothing
+              rather than as an empty rule. */}
+          {facts.length > 0 && (
+            <dl className="brief-list">
+              {facts.map((f) => (
+                <div key={f.k}>
+                  <dt>{f.k}</dt>
+                  <dd lang={f.lang ? 'und' : undefined}>{f.v}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {dishes && (
+            <p className="brief-dishes">
+              <span className="brief-label">Serves</span> <span lang="und">{dishes}</span>
+            </p>
+          )}
+
+          <a className="btn btn-quiet brief-go" href={venue.maps_url} target="_blank" rel="noreferrer noopener">
+            Directions
+          </a>
+        </div>
+      </div>
+
       <VenueTrail result={state.result} />
-      <p className="result-actions modal-actions">
-        <a className="link" href={venue.maps_url} target="_blank" rel="noreferrer noopener">
-          Directions
-        </a>
-      </p>
     </Modal>
   )
 }

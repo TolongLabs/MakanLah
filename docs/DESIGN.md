@@ -161,11 +161,23 @@ fabricated. No image may sit inside, beside, or above a cited result.
 
 Three exceptions, and the reasoning is the same in each: none of them can be mistaken for evidence.
 
-| Asset                      | Where                              | Why It Is Allowed                                                                                 |
-| -------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **The mark**               | Icon, favicon, share card          | A quotation mark in `--enamel` on `--paper`. It depicts nothing and claims nothing                |
-| **The closing photograph** | Landing page, final section only   | Atmosphere in a section that names no venue. No signage, no faces, no identifiable place, no dish |
-| **The mascot**             | `/taste`, and the `/discover` rail | A rendered character, not a photograph. It reports evidence strength and is dismissible           |
+| Asset                      | Where                              | Why It Is Allowed                                                                                    |
+| -------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **The mark**               | Icon, favicon, share card          | A quotation mark in `--enamel` on `--paper`. It depicts nothing and claims nothing                   |
+| **The closing photograph** | Landing page, final section only   | Atmosphere in a section that names no venue. No signage, no faces, no identifiable place, no dish    |
+| **The mascot**             | `/taste`, and the `/discover` rail | A rendered character, not a photograph. It reports evidence strength and is dismissible              |
+| **The map**                | The All Sources dialog, once       | Depicts a location, not an opinion. Makes no claim about the food, which is all the citations attest |
+
+**The map is a fourth exception and the reasoning is the same as the other three: it cannot be mistaken for evidence.**
+It shows where a place is, not whether the food is good, and whether the food is good is the only thing the citations
+are evidence _of_. **The product already stakes more on those coordinates than the map does** — every card prints a
+distance from the same geocode and the whole list is ordered by it, so if the pin is wrong the distance was already
+wrong. The map makes an existing claim visible rather than adding a new one.
+
+**It is served from our side, never fetched from a tile server by the browser.** The image is pulled once per venue at
+ingestion and stored. Rendering OSM rasters client-side was built, worked, and was reverted: OSM's tile usage policy is
+explicit about bulk use by applications, and a tile request per viewer per venue is a rate limit on infrastructure we
+neither own nor pay for. Attribution travels with the image wherever it is served from.
 
 **The mark is a quotation mark, not a bowl.** Every food app is a bowl. The differentiator here is that somebody was
 quoted, so the mark is the quote. It resolves at 16px and uses exactly two colours, `#0B6B5E` and `#F7F7F4`, with no

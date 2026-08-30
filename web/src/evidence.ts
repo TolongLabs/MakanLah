@@ -20,8 +20,19 @@ export type Evidence = 'corroborated' | 'single' | 'none'
 export function citable(citations: Citation[]): Citation[] {
   const seen = new Set<string>()
   return citations.filter((c) => {
-    if (!c.post_url || seen.has(c.post_url)) return false
-    seen.add(c.post_url)
+    if (!c.post_url) return false
+    // IDENTITY, NOT ADDRESS (#153). Keyed on the URL, this collapsed three different
+    // Google Maps reviewers into one testimony, because Maps has no per-review URL
+    // and ~8 reviews share the venue page. Upper House shipped three plainly
+    // different reviews, rendered one, and was denied the corroboration stamp --
+    // #87 in the mirror.
+    //
+    // The dedupe itself is still right and still necessary: the corpus can carry one
+    // post twice for a venue, and showing it twice inflates the number nobody should
+    // be able to inflate by accident. Only the key was wrong.
+    const key = c.post_id ?? c.post_url
+    if (seen.has(key)) return false
+    seen.add(key)
     return true
   })
 }
@@ -64,7 +75,13 @@ export function evidenceOf(result: Result): Evidence {
     `dead` is tri-state and the distinction matters: `true` is measured dead, `null`
     or absent is never checked. Unchecked counts as live, because collapsing unknown
     into dead deletes real evidence -- the 兴记肉骨茶 citation was exactly that case
-    and re-probing resolved it live. */
+    and re-probing resolved it live.
+
+    **Still one per platform, even now that `citable` counts identities (#153).** A
+    card has room for two excerpts and the second is chosen for being a different
+    platform, because two platforms is the claim a single source going dark cannot
+    fake. Three Maps reviews are three posts and the counts now say so, but the card
+    shows one of them and the All Sources dialog shows all three. */
 export function leadPair(citations: Citation[]): Citation[] {
   const cited = citable(citations)
   const withText = cited.filter((c) => c.excerpt?.trim())
@@ -347,16 +364,23 @@ export function sentimentPhrase(s: Venue['sentiment'], livePosts: number): strin
   // Different units, so the breakdown is not about the posts this card can show.
   if (total !== livePosts) return null
 
+  // "Of the N posts here" rather than a bare "N posts", because citations are
+  // trimmed to `per_venue` before they ship: this describes the posts we are citing,
+  // not the venue's whole record. A venue whose only critical review missed the trim
+  // shows none, so an unscoped "All 3 posts positive" would claim more than we know.
+  const scope = `Of the ${count(total, 'post')} here:`
   if (s.negative > 0) {
     const rest: string[] = []
     if (s.positive > 0) rest.push(`${s.positive} positive`)
     if (s.mixed > 0) rest.push(`${s.mixed} mixed`)
-    const tail = rest.length > 0 ? `, ${rest.join(', ')}` : ''
-    return `${s.negative} of ${count(total, 'post')} critical${tail}.`
+    // Negative leads. `makanlah` buckets asymmetrically so a critical reading is
+    // somebody with a real complaint, and burying it under a positive majority is
+    // the one thing this line must not do.
+    return `${scope} ${s.negative} critical${rest.length > 0 ? `, ${rest.join(', ')}` : ''}.`
   }
-  if (s.mixed === 0) return `All ${count(total, 'post')} positive.`
-  if (s.positive === 0) return `All ${count(total, 'post')} mixed.`
-  return `${s.positive} of ${count(total, 'post')} positive, ${s.mixed} mixed.`
+  if (s.mixed === 0) return `${scope} all positive.`
+  if (s.positive === 0) return `${scope} all mixed.`
+  return `${scope} ${s.positive} positive, ${s.mixed} mixed.`
 }
 
 /** One fact in a result's why-row. `lead` marks the answer to "why is this here",

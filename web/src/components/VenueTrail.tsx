@@ -10,6 +10,12 @@ import { Testimony } from './Testimony'
  * trail from the same code. They are the same evidence and they must not be able to
  * disagree — two renderings of the citation trail is two chances for one of them to
  * quietly drop a post, and the trail is the product.
+ *
+ * **Keyed on `post_id`, not on platform-plus-URL (#153).** Three Google Maps reviews
+ * share one URL because Maps has no per-review address, so the old key produced
+ * three identical React keys on three different reviews — a collision that only
+ * stopped being reachable-in-practice when the API started sending distinct
+ * identities and the dedupe stopped hiding it.
  */
 export function VenueTrail({ result }: { result: Result }) {
   const cited = citable(result.citations)
@@ -23,7 +29,7 @@ export function VenueTrail({ result }: { result: Result }) {
       </p>
       <ul className="trail-list">
         {cited.map((c) => (
-          <li className="trail-item" key={`${c.platform}:${c.post_url}`}>
+          <li className="trail-item" key={c.post_id ?? `${c.platform}:${c.post_url}`}>
             <div className="trail-source">
               <span>{platformName(c.platform)}</span>
               {c.posted_at && <span className="meta-line">{c.posted_at}</span>}

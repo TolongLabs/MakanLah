@@ -157,3 +157,137 @@
     gap: var(--s4);
   }
 }
+
+/* ------------------------------------------------------------------- the brief */
+
+/* What a reader needs to act, above the writing they came to read. Map beside the
+   facts where there is room, stacked below the title where there is not. */
+.brief {
+  display: grid;
+  gap: var(--s4);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 34rem) {
+  .brief {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s5);
+    align-items: start;
+  }
+}
+
+.brief-facts {
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+  min-width: 0;
+}
+
+/* Label above value, wrapping. Half the corpus has no area and a query with no
+   geolocation has no distance, so this has to look deliberate with one entry as
+   well as three. */
+.brief-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+}
+
+.brief-list dt,
+.brief-label {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+.brief-list dd {
+  margin-top: 2px;
+  font-size: var(--t-ms);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.brief-dishes {
+  font-size: var(--t-ms);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.brief-go {
+  justify-self: start;
+  min-height: 38px;
+  padding-block: 0;
+  font-size: var(--t-sm);
+}
+
+/* The same lines the card's disclosure carries. Set quietly: they qualify the trail
+   below rather than competing with it. */
+.brief-notes {
+  margin-top: var(--s4);
+  display: grid;
+  gap: var(--s1);
+  list-style: none;
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+  max-width: 54ch;
+}
+
+/* ------------------------------------------------------------------ the mapshot */
+
+.mapshot {
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  background: var(--paper-sunk);
+}
+
+.mapshot-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.mapshot-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* OSM raster is a light-mode asset. Inverting it produces the well-known ugly
+   negative map, so this only takes the glare off a bright rectangle in a dark
+   dialog. */
+:root:not([data-theme="light"]) .mapshot-img {
+  filter: brightness(0.78) saturate(0.85);
+}
+
+.mapshot-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--seal);
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 1px 4px rgb(22 24 15 / 45%);
+}
+
+.mapshot-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  background: rgb(255 255 255 / 78%);
+  border-top-left-radius: var(--r-input);
+}
+
+.mapshot-credit a {
+  color: inherit;
+}

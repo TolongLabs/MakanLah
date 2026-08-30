@@ -1,5 +1,15 @@
 export type Citation = {
   post_url: string
+  /** The post's own identity (#153). **Not the same thing as `post_url`**, and the
+      gap is not an edge case: Google Maps has no per-review URL, so `review_url()`
+      returns the venue's page and about eight reviews share one address. Measured:
+      1388 Maps mentions across 178 distinct URLs. Deduping on the URL therefore
+      collapsed three different people into one testimony and denied the venue a
+      corroboration stamp it had earned.
+
+      Optional because a client build can outrun the API; `citable()` falls back to
+      the URL, which is the old behaviour and errs toward showing less. */
+  post_id?: string | null
   /** Other venues in the SAME response backed by this same post (#87). A listicle
       backing ranks 1, 2 and 3 is one voice, and the reader cannot see that without
       being told. Optional: the API does not send it yet. */
@@ -58,6 +68,12 @@ export type Venue = {
 
       Optional: the API does not send it until #142 deploys. */
   sentiment?: { positive: number; mixed: number; negative: number } | null
+  /** A small static map of the venue, fetched ONCE at ingestion and served from our
+      side. Not rendered from coordinates in the browser: OSM's tile usage policy is
+      explicit about bulk use by applications, and a tile request per viewer per
+      venue is a rate limit on infrastructure we do not own. Absent until the
+      ingestion pass has run, and absent forever for a venue with no geocode. */
+  map_image_url?: string | null
   /** True when another venue in the corpus reads as the same name. Two rows is the
       correct rendering -- they are different restaurants -- but the reader has to
       be told, or it looks like a duplicate. */

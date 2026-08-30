@@ -133,7 +133,7 @@ export function ResultRow({
 
         <div className={pair.length > 1 ? 'evidence evidence-pair' : 'evidence'}>
           {pair.map((c) => (
-            <Testimony key={`${c.platform}:${c.post_url}`} citation={c} href={citationHref(c, venue)} />
+            <Testimony key={c.post_id ?? `${c.platform}:${c.post_url}`} citation={c} href={citationHref(c, venue)} />
           ))}
         </div>
 

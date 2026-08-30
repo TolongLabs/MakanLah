@@ -3,7 +3,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { Result } from '../api'
 import { ResultRow } from '../components/ResultRow'
-import { sentimentLine, sentimentPhrase, whyDetail, whyRow } from '../evidence'
+import { VenueTrail } from '../components/VenueTrail'
+import { citable, sentimentLine, sentimentPhrase, whyDetail, whyRow } from '../evidence'
 import { citation, result } from './fixtures/result'
 
 function renderRow(r: Result) {
@@ -132,9 +133,9 @@ describe('sentiment is counts, never an average', () => {
     // rounded down. Burying it under a positive majority is the one thing this line
     // must not do.
     expect(sentimentPhrase({ positive: 3, mixed: 2, negative: 4 }, 9)).toBe(
-      '4 of 9 posts critical, 3 positive, 2 mixed.'
+      'Of the 9 posts here: 4 critical, 3 positive, 2 mixed.'
     )
-    expect(sentimentPhrase({ positive: 9, mixed: 0, negative: 1 }, 10)).toMatch(/^1 of 10 posts critical/)
+    expect(sentimentPhrase({ positive: 9, mixed: 0, negative: 1 }, 10)).toMatch(/^Of the 10 posts here: 1 critical/)
   })
 
   it('prints unanimity, because unanimity turned out to be the rare case', () => {
@@ -142,12 +143,21 @@ describe('sentiment is counts, never an average', () => {
     // everywhere discriminates nothing. Measured, that reasoning was backwards: 163
     // of 186 multi-mention venues span more than one bucket, so agreement is the
     // 12% case and is the informative one.
-    expect(sentimentPhrase({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('All 4 posts positive.')
-    expect(sentimentPhrase({ positive: 0, mixed: 3, negative: 0 }, 3)).toBe('All 3 posts mixed.')
+    expect(sentimentPhrase({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('Of the 4 posts here: all positive.')
+    expect(sentimentPhrase({ positive: 0, mixed: 3, negative: 0 }, 3)).toBe('Of the 3 posts here: all mixed.')
+  })
+
+  it('scopes itself to the posts actually cited', () => {
+    // Citations are trimmed to `per_venue` before they ship, so the breakdown
+    // describes the posts on screen and not the venue's whole record. A venue whose
+    // only critical review missed the trim shows none, and an unscoped "All 3 posts
+    // positive" would claim more than we know.
+    expect(sentimentPhrase({ positive: 3, mixed: 0, negative: 0 }, 3)).toMatch(/^Of the 3 posts here:/)
+    expect(sentimentPhrase({ positive: 3, mixed: 0, negative: 0 }, 3)).not.toMatch(/^All /)
   })
 
   it('splits a mixed reading without an average', () => {
-    expect(sentimentPhrase({ positive: 3, mixed: 1, negative: 0 }, 4)).toBe('3 of 4 posts positive, 1 mixed.')
+    expect(sentimentPhrase({ positive: 3, mixed: 1, negative: 0 }, 4)).toBe('Of the 4 posts here: 3 positive, 1 mixed.')
   })
 
   it('REFUSES to print when the counts are not about the same posts', () => {
@@ -207,5 +217,66 @@ describe('a row with two platforms still pairs its evidence', () => {
       })
     )
     expect(container.querySelectorAll('.excerpt')).toHaveLength(2)
+  })
+})
+
+describe('a citation is identified by its post, not by its address', () => {
+  // #153. Google Maps has no per-review URL, so `review_url()` returns the venue's
+  // page and ~8 reviews share it: 1388 Maps mentions across 178 distinct URLs.
+  // Keyed on the URL, Upper House shipped three plainly different reviewers,
+  // rendered ONE, and was denied the corroboration stamp it had earned.
+  const upperHouse = [
+    citation({
+      post_id: 'p1',
+      post_url: 'https://maps.example/upper',
+      platform: 'google_maps',
+      author_handle: null,
+      excerpt: 'Really love the refined Malaysian flavours here.'
+    }),
+    citation({
+      post_id: 'p2',
+      post_url: 'https://maps.example/upper',
+      platform: 'google_maps',
+      author_handle: null,
+      excerpt: 'We came across the restaurant by chance.'
+    }),
+    citation({
+      post_id: 'p3',
+      post_url: 'https://maps.example/upper',
+      platform: 'google_maps',
+      author_handle: null,
+      excerpt: 'Very pleasant, you could see the Merdeka 118.'
+    })
+  ]
+
+  it('keeps three reviewers that happen to share one URL', () => {
+    expect(citable(upperHouse)).toHaveLength(3)
+  })
+
+  it('renders all three in the trail rather than collapsing them', () => {
+    const { container } = render(<VenueTrail result={result({ citations: upperHouse })} />)
+    expect(container.querySelectorAll('.trail-item')).toHaveLength(3)
+    const text = container.textContent ?? ''
+    expect(text).toContain('refined Malaysian flavours')
+    expect(text).toContain('by chance')
+    expect(text).toContain('Merdeka 118')
+  })
+
+  it('still collapses the SAME post seen more than once', () => {
+    // The dedupe is still necessary and still right. Showing one post twice inflates
+    // the number nobody should be able to inflate by accident.
+    const twice = [citation({ post_id: 'p1' }), citation({ post_id: 'p1' }), citation({ post_id: 'p1' })]
+    expect(citable(twice)).toHaveLength(1)
+  })
+
+  it('falls back to the URL when the API has not sent an identity yet', () => {
+    // A client build can outrun the API. The fallback is the old behaviour, which
+    // errs toward showing less rather than duplicating a post.
+    const noId = [
+      citation({ post_url: 'https://a' }),
+      citation({ post_url: 'https://a' }),
+      citation({ post_url: 'https://b' })
+    ]
+    expect(citable(noId)).toHaveLength(2)
   })
 })
