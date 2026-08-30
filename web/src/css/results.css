@@ -402,6 +402,15 @@
     background var(--dur-fast) var(--ease);
 }
 
+/* `el.hidden = true` is how the one-row fit removes a chip, and the UA sheet's
+   [hidden] { display: none } loses to the author `display: inline-flex` above it.
+   Without this the attribute was set on every overflowing chip and every one of
+   them kept rendering, so the rail wrapped at any width below 1024px while
+   reading as fixed at desktop, where the chips fit unaided. */
+.chip-button[hidden] {
+  display: none;
+}
+
 .chip-button:hover:not(:disabled) {
   border-color: var(--seal);
   background: var(--seal-quiet);

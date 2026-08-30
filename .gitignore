@@ -90,3 +90,8 @@ docs/screenshots/
 # token; .env* is already covered above and is repeated here only because the
 # CLI appends it unconditionally.
 .vercel
+
+# Local working notes. Untracked but not ignored, a scratch dir turns `bun run
+# lint` red through the `**/*.md` glob while CI stays green on its clean
+# checkout -- a gate that fails only on the machine doing the work.
+scratchpad/
