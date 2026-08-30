@@ -26,6 +26,83 @@ console before repinning.
 
 ---
 
+## 2026-08-30 — Resumed. #144 Unblocked, #141 Built, The Gap Surface Reads Its Flag
+
+**Three peers came back from the restart with no role between them.** The handoff table in `docs/dev1-resume.md` names
+`makanlah-13` / `makanlah-8d` / `makanlah-fb`; the live sessions are `makanlah-f3`, `makanlah-92` and `makanlah-73`.
+**Session names do not survive a restart, so a handoff must not use one as an address.** `scratchpad/UAT-ROUND2.md` did
+not survive either: scratchpads are session-scoped and all three were empty. Roles were re-taken by agreement, not
+recovered. Peer 2 is frontend and holds the tree.
+
+### #144's Three Answers: Two Of Them Changed Nothing
+
+Answered by Peer 1 under [`AUTONOMY.md`](AUTONOMY.md), the owner having delegated. **One-tap disclosure and no model
+blurb on the card were already the built state**, verified in the rendered DOM at 390px rather than from source: the
+disclosure is a `<details>` with no `open`, and the blurb renders only on `/r/:venueId`. **A question can be answered by
+looking at what shipped**, and two of the three were.
+
+**The third was not a yes/no at all.** #141 is unimplemented work, deferred until this branch's structural rework
+landed. Built at the answered density.
+
+| Setting | Value                               | Checked Against                |
+| ------- | ----------------------------------- | ------------------------------ |
+| Lattice | 24px pitch, ~1px dot                | Composited pixels, not the CSS |
+| Light   | `#dcddd2` on `#f7f7f4`, **1.28:1**  | Gutter sample, 84 dots         |
+| Dark    | `#262820` on `#12130f`, **1.25:1**  | Same lattice, same count       |
+| Script  | 兴记肉骨茶 + a full Chinese excerpt | Not Latin placeholder          |
+
+**The two themes land within 0.03 of each other**, which is what "survives both themes" had to mean to be checkable.
+Drawn as a gradient rather than the mask `.ground` uses, because a gradient reads `var(--dot)` and a data URI cannot.
+
+### The Gap Surface Now Names Each Entry's Evidence Class
+
+The park note's first item. `85b9220` shipped `verifiable` and `live_citations` per entry and the client never read
+them. Each entry now says **"9 posts still open"** or **"No post still opens"** instead of all of them reading alike.
+
+**Both fields are optional and the note disappears when they are absent.** An older API sends neither, and a missing
+flag read as `false` turns "we cannot tell" into "nobody wrote about this" — inventing the exact claim the flag was
+added to prevent. **Silence is the honest fallback; `false` is a claim.**
+
+### #170: Three Of Five Advertised Filters Reach Nothing
+
+Found by Peer 3, confirmed here by controls rather than by reading source.
+
+| Body                                                    | HTTP |
+| ------------------------------------------------------- | ---- |
+| `prefs` as a bare string, a bare integer, or `null`     | 200  |
+| `radius_m: 999999` and `radius_m: 50`, a declared field | 422  |
+
+**A declared field rejects a bad value; `prefs` accepts every shape**, which is what an undeclared field looks like. Two
+additions to the issue: **`budget` and `cuisine` are dead request fields** — declared at `api/main.py:93-94` and read
+nowhere, since `:159` passes only `query, lat, lng, radius_m, limit` — and **Drop The Craving cannot change the
+results**, because it re-runs the same term at the same radius with the only differing input inside the discarded
+object. The false comment that hid this is corrected; the product half is untaken.
+
+**A same-query A/B does not measure this and nearly said the opposite.** Two sequential calls differing only in the
+craving returned different result counts, which reads as evidence `prefs` works. An identical payload sent twice also
+varies across time and matches within a burst, so `/recommend` is time-sensitive and the A/B was measuring the clock.
+**The 200-vs-422 table is the decisive test.** Same shape as a check agreeing with itself: the control is what turned a
+plausible finding into a real one.
+
+### Notes For The Next Session
+
+- **`gh` cannot read check-runs with this token** (`gh pr checks`, `gh api .../check-runs` both 403). `guard-merge.sh`
+  falls back to `gh run list`, so merging still works. Use `gh run list --branch <ref>` to read CI
+- **`distance_gap` fires on 54% of dense-anchor requests, and its `verifiable: true` class is the majority.** Peer 3
+  measured 14 of 26 requests firing across 3 anchors x 10 dishes, **36 entries, 25 true against 11 false**, with live
+  counts up to 13. **Do not sample this surface from a far-flung anchor.** Peer 2 scanned 16 dishes from Penang, JB and
+  Kuantan, found one trigger, and concluded the true class was unobserved. It was the sample: where nothing in range
+  serves the dish AND the wide lane knows nothing either, nothing can fire. The product scenario is the dense anchor,
+  someone standing in KL on a tight radius, and there it fires constantly
+- **A narrower case is still real:** `bak kut teh` at `radius_m=300` from KL centre returns `results: []` with no gap of
+  either kind, where radius 0 returns 5 picks. It degrades honestly to "Nothing for X within 0.3 km of you", so it is a
+  quality gap rather than a lie. Peer 1 has it, behind #170
+- **`readingFor()`'s five labels stay sentence case.** `One source`, `Two sources`, `Thin evidence`, `Nothing to read`,
+  `Listening`. TitleCase arguably applies; five labels that read as a deliberate set are a set, and converting them one
+  at a time is how a consistent thing becomes inconsistent
+
+---
+
 ## 2026-08-30 — PAUSED For A Workstation Restart
 
 **`main` is deployable. Deploy it on resume and tell both peers the sha** — Peer 3 asked to be pinged with whichever
@@ -162,6 +239,171 @@ exists to remove. **Not merged.**
 **The Devin Chatterbox spike never ran.** It refused with `Refusing to run in an untrusted workspace` despite the
 workspace being added to `trusted_workspaces.json`. No voice clone exists. The eight Kokoro previews in
 `makanlah-video/handoff/` are the only voice samples available.
+
+## 2026-08-30 (Owner's /discover Batch) — The Answer Was On The Card, Eighth And Grey
+
+**PR #144 is open and awaiting CI.** Items 1, 2, 3 and part of 5 of the owner's `/discover` batch. He asked to
+brainstorm it in this chat directly and chose the card shape and the URL behaviour himself.
+
+**The finding that reframed item 1.** He said nothing on the page told him why any result was there. The answer had been
+on the card since the first build — `basisLine`, "Here because a post names this dish" — as the **eighth line, in the
+same grey as two neighbouring sentences answering different questions**. The data was never missing. An answer formatted
+like a footnote is not an answer, and no data-presence check would ever have caught it.
+
+It is now the subtitle, and it absorbed the metadata row that used to sit there:
+`Names bak kut teh · 3 posts, 2 people · 9.4 km · Cheras`. Three lines became one that says more. The rest went behind a
+per-card `Why This Showed`, which renders only where there is something the row did not already say.
+
+### Measured Before Designing, Across 35 Live Results
+
+| Signal                                 | Live reality                                   |
+| -------------------------------------- | ---------------------------------------------- |
+| `basis: 'dish'` with `similarity: 0.0` | **15 of 35** — 63% of all dish matches         |
+| `corroboration.authors == 0`           | 12 of 35 — Google Maps reviewers are anonymous |
+| `venue.area` absent                    | 19 of 35                                       |
+| `sentiment` on the response            | absent, then shipped mid-session as #142       |
+
+`makanlah-13` flagged the zero-similarity case as "one nuance". It is 63% of dish matches, so **never rendering the
+number** is now measured rather than stylistic. Recorded in `TRD.md`.
+
+### Sentiment Is Wired But Gated, And That Is #111 Again
+
+`sentiment` counts **mention rows**; `corroboration` counts **live posts**. Across ten live `nasi lemak` results **nine
+disagreed**, several by nine to one — Village Park reads 3 posts against 15 sentiment entries. Ungated, a card says "1
+post" in its subtitle and "All 9 posts positive" four lines below. `sentimentLine(sentiment, livePosts)` renders only
+where the totals agree; it lights up on its own once the API filters. **Filed as #143.**
+
+**I had the silent case backwards and the data corrected me.** I first suppressed unanimity as noise, assuming agreement
+was common. 163 of 186 multi-mention venues span more than one bucket — agreement is the 12% case and is the informative
+one. Both now print.
+
+### What Was Refused, And Why
+
+- **Images and a menu (item 4).** 0 of 1507 posts carry media, 0 of 247 venues, no menu field. An empty slot on 100% of
+  cards is worse than no slot. Needs a re-capture; not this batch
+- **A Directions dialog.** Google Maps sets `frame-ancestors` and cannot be embedded, so the dialog could only hold a
+  link to Google Maps. `target="_blank"` already meets the stated requirement
+- **The model-written `why` on a ranked card.** It answered the same question the fact row now answers and only one of
+  the two can be checked against a post. Still renders on `/r/:venueId`
+
+### Above The Fold, Which Item 5 Actually Was
+
+Moving Ask into a dialog removed the reason the companion aside was hoisted above the picks below 64rem. It keeps the
+position — its line is a caveat about the list — but lost the card chrome.
+
+| Width      | Aside height  | First pick top | Above the fold |
+| ---------- | ------------- | -------------- | -------------- |
+| 390 x 844  | 229 → **135** | 799 → **706**  | no → **yes**   |
+| 834 x 1112 | 322 → **236** | 750 → **665**  | yes            |
+
+### The New Check, And Why The Obvious One Would Have Passed
+
+`scripts/discover_why_check.mjs`, in CI. It stubs `/recommend` with shapes copied from production, because the cases
+that matter are the awkward ones and waiting for them to appear in a live query is how a check ends up asserting only
+the happy path. **Its load-bearing assertion is that the answer outweighs the metadata beside it** — every other
+assertion passes on the old card too, because the old card carried the same words.
+
+Five mutations, each reddening its own check and nothing else: leaking `similarity`, burying the negative count,
+restoring the model prose, flattening `.why-lead` to the metadata colour, removing the sentiment unit gate.
+
+### The Sentiment Line Was Held Twice, For Two Different Reasons
+
+Worth separating, because the second failure is invisible to the check that caught the first.
+
+**First hold: the units disagreed.** `sentiment` counted mention rows, `corroboration` counted live posts; nine of ten
+`nasi lemak` results disagreed. Fixed by `#145` then `#147` — the first fix was complete by its own measure and
+production still disagreed on 5 of 25. `sentimentLine(sentiment, livePosts)` gates on agreement, and it lit up exactly
+as intended once the units matched: 33/33 agreeing on an independent four-query sample.
+
+**Second hold: the units agreed and the buckets were wrong.** Reading what it rendered, **8 of 10 venues carrying a
+negative bucket contained no negative language at all**. `王美记` bucketed 0 positive / 2 negative on excerpts saying
+"deserves 5 stars" and "definitely worth checking out", and the card said **"2 of 2 posts critical"** about a
+Michelin-listed shop. **A unit-agreement gate cannot see this** — both numbers were right and the classification was
+not.
+
+**My diagnosis was the shallow half.** I said the `-0.2` threshold was too low. `makanlah-13` found the real cause:
+Google Maps has no per-review URL, so ~8 reviews share one, and a "most critical bucket wins" rule turned one 1-star
+review into a verdict on all eight. Fixed in `#151` by averaging within an identity and moving the cut points onto the
+star scale. **Unflag `CLASSIFICATION_TRUSTED` only after verifying against excerpts** — twice now the first fix has been
+incomplete, and twice the second look found the real thing.
+
+**Held in both directions, deliberately.** Rendering only the favourable half biases every card toward good news, which
+is worse than showing neither.
+
+### #153 — The Same Root Cause Is Also Silencing Evidence
+
+`post_url` as identity does something larger than the sentiment bug. **14 of 20 venues ship more citations than distinct
+URLs.** `Upper House` carries three plainly different reviewers on one URL and renders:
+
+```
+Names char siew · 1 post        excerpts shown: 1        corroboration: no stamp
+```
+
+Three consequences, all from one key: the card prints "1 post" when three people wrote; `citable()` dedupes on URL so
+**two thirds of the writing never renders**; and `independentlyBacked` needs `posts >= 2`, so a venue with three
+independent voices is denied the stamp. **That last one is #87 in the mirror** — #87 granted the stamp where it was not
+earned and was treated as a launch blocker.
+
+Every error here is conservative, so it is not dangerous and not a launch blocker. The client cannot fix it alone:
+`citable()` dedupes on URL because with only a URL it cannot tell a duplicate from three reviewers. It needs
+`source_post.id` on each citation.
+
+### The Owner's Second Batch — A Copilot, A Brief, And One Correction Taken
+
+**The copilot is a copilot.** `Ask About This` opens a chat with the character live inside it, multi-turn, tool calls
+streaming in expanded and collapsing to `2 steps before answering` once she replies — still openable, because a trail
+you cannot reopen is not a trail. **The trace is the evidence claim made watchable**: `copilot.py` has always enforced
+that she answers from stored excerpts or declines, and until now the user was only told she looked.
+
+**One stage, moved, never two.** The aside unmounts her while the dialog is open. Two Live2D stages is two WebGL
+contexts for one character and on some drivers the second silently kills the first — page renders, aside goes black,
+nothing logged. `scripts/copilot_check.mjs` counts canvases across the handoff and was mutation-tested by letting the
+aside keep its stage.
+
+**`POST /ask` is the live path today.** `askStream` parses SSE and NDJSON with one reader; `NoStream` falls back. The
+transport is agreed with `makanlah-13`, who is sequencing it behind **#157** — every venue enters through RedNote's ~20
+keywords, so Google Maps supplies 84% of the evidence and cannot introduce a single restaurant. A copilot over 256
+venues still cannot answer "where should my family eat tonight", and that is the right call.
+
+**The map was built wrong and the objection was right.** First version fetched OSM tiles client-side. It worked. OSM's
+tile policy is explicit about bulk use by applications and a tile request per viewer is a rate limit on infrastructure
+we do not own — I had weighed it against our own corpus rule and missed that the binding constraint was somebody else's
+terms. Now renders a stored image, nothing until one exists. `docs/DESIGN.md` gains the map as a documented fourth
+exception to the no-images-near-evidence rule.
+
+**#153 closed on both sides.** `post_url` is not an identity: Maps has no per-review URL and ~8 reviews share one. Upper
+House shipped three reviewers, rendered **one**, and was denied a stamp it had earned — #87 in the mirror. `citable()`
+now keys on `post_id`; the card reads "3 posts" and the dialog renders three testimonies. The shared URL was also
+producing three identical React keys, unreachable only because the dedupe was hiding it.
+
+**The stamp still does not fire there, deliberately.** Three anonymous same-platform reviews clear `posts >= 2` but not
+`authors >= 2 || platforms >= 2`. They are almost certainly three people; the data does not say so, and inferring it is
+how #87 happened.
+
+### Two Instrument Failures Worth Carrying, Both Recorded In AUTONOMY.md
+
+**A guard can be the defect.** Detecting UAT's `Undisclosed Location` took a regex plus `len(name) < 3`. Its only hit
+was **`鱼你`** — a real restaurant with a normal two-character Chinese name. That filter would have shipped and deleted
+only Chinese venues.
+
+**A sweep that picks its own scope agrees with itself.** "38 venues, zero unusable, cannot reproduce" was true and
+worthless: every query ran from one origin and the venue sat in a different walking-distance pool. `makanlah-fb`
+reproduced it in one call by varying what the sweep held fixed.
+
+**A conflicted PR gets no CI at all, silently.** `main` moved four times underneath #144; GitHub cannot build a merge
+ref for a conflicted PR, so two pushes ran nothing — no red check, no queued run. A watcher reported "success" for a
+stale commit because it matched the newest _existing_ run rather than the run for HEAD.
+
+### Where To Pick Up
+
+- **#141** — the visual pass the owner asked for: Apple-leaning surface, dotted sketchboard ground. Deliberately
+  deferred so it styles final markup rather than markup about to change
+- **#143** — sentiment filtered to live posts; the client needs no change when it lands
+- **#140** (`makanlah-13`) — `canonical_for_query` resolves only curated dish names, so all 14 common ingredient words
+  route into the semantic lane. A `crab` query returns a chicken rice shop. The subtitle names the weak lane plainly
+  rather than papering over it, but the retrieval fix is backend
+- The header chrome above the results is the remaining fold cost at phone width. Overlaps #141
+- `makanlah-13` was writing a deeper `/discover` UX spec; it had not arrived when this shipped
 
 ---
 

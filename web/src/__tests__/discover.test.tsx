@@ -362,3 +362,128 @@ describe('the wizard is reachable from the results page', () => {
     expect(container.querySelector('.find-filters .find-taste')).toBeTruthy()
   })
 })
+
+describe('the gap surface tells the two evidence classes apart', () => {
+  // #144's park note: `85b9220` added the per-entry flag and the client did not
+  // read it, so every entry was named identically and none offered evidence. Both
+  // classes are real -- `roti canai` on prod returns Devi's Corner at
+  // `live_citations: 0`, and the flag is what separates "nobody's surviving post
+  // describes this" from "we have posts and this is simply too far".
+  const twoClasses = {
+    results: [],
+    degraded: false,
+    sources_used: [],
+    distance_gap: {
+      term: 'roti canai',
+      nearest: [
+        {
+          name: 'Nasi Lemak Bumbung',
+          area: 'Cheras',
+          distance_m: 4200,
+          maps_url: 'https://maps.example/1',
+          live_citations: 9,
+          verifiable: true
+        },
+        {
+          name: 'Devi’s Corner',
+          area: '印度区',
+          distance_m: 1914,
+          maps_url: 'https://maps.example/2',
+          live_citations: 0,
+          verifiable: false
+        }
+      ]
+    }
+  }
+
+  function rowFor(name: string | RegExp) {
+    return screen.getByText(name).closest('li')
+  }
+
+  it('counts the posts that still open where any of them do', async () => {
+    recommend.mockReset().mockResolvedValue(twoClasses)
+    show({ prefs: { craving: ['roti canai'], range_m: 800 }, geo: { lat: 3.139, lng: 101.6869 } })
+    await screen.findByText(/Nasi Lemak Bumbung/i)
+    expect(rowFor(/Nasi Lemak Bumbung/i)?.textContent).toMatch(/9 posts still open/i)
+  })
+
+  it('says nothing survives rather than implying evidence it cannot show', async () => {
+    recommend.mockReset().mockResolvedValue(twoClasses)
+    show({ prefs: { craving: ['roti canai'], range_m: 800 }, geo: { lat: 3.139, lng: 101.6869 } })
+    await screen.findByText(/Devi’s Corner/i)
+    const row = rowFor(/Devi’s Corner/i)?.textContent ?? ''
+    expect(row).toMatch(/no post still opens/i)
+    // The specific failure this replaces: a zero rendered as a count.
+    expect(row).not.toMatch(/\b0 posts?\b/)
+  })
+
+  it('never prints a bare zero when the flag and the count disagree', async () => {
+    // Defensive on the ONE combination the payload should never carry. `verifiable`
+    // is the flag the copy branches on, so a true flag with no live post must not
+    // produce "0 posts still open" -- the count names a property, and the property
+    // has to be true of what is rendered.
+    recommend.mockReset().mockResolvedValue({
+      ...twoClasses,
+      distance_gap: {
+        term: 'roti canai',
+        nearest: [
+          {
+            name: 'Contradiction Corner',
+            area: null,
+            distance_m: 900,
+            maps_url: 'https://maps.example/3',
+            live_citations: 0,
+            verifiable: true
+          }
+        ]
+      }
+    })
+    show({ prefs: { craving: ['roti canai'], range_m: 800 }, geo: { lat: 3.139, lng: 101.6869 } })
+    await screen.findByText(/Contradiction Corner/i)
+    expect(rowFor(/Contradiction Corner/i)?.textContent).not.toMatch(/\b0 posts?\b/)
+  })
+})
+
+describe('the filter line names only what actually filtered', () => {
+  // #170. The line said "Filtered by your answers" and listed all five while the
+  // API was silently discarding three of them -- `prefs` was not a field on
+  // `RecommendRequest`, so Pydantic dropped the object. #171 wires them and returns
+  // `applied_prefs`, naming only what shaped that response.
+  const answered = { craving: ['bak kut teh'], company: 'family', range_m: 0, mood: 'comfort', budget: 'mid' }
+
+  async function line(container: HTMLElement) {
+    await screen.findByText(/Filtered by your answers/i)
+    return container.querySelector('.find-prefs')?.textContent ?? ''
+  }
+
+  it('names nothing the response did not claim', async () => {
+    // An API that predates #171 sends no `applied_prefs` at all, and on that build
+    // the three genuinely did nothing. Absent and empty mean the same thing here.
+    recommend.mockReset().mockResolvedValue(empty)
+    const { container } = show({ prefs: answered })
+    const text = await line(container)
+    expect(text).toMatch(/bak kut teh/)
+    expect(text).toMatch(/All of KL/)
+    expect(text).not.toMatch(/Family|Something familiar|Mid/)
+  })
+
+  it('names the ones the response says applied, and no others', async () => {
+    recommend.mockReset().mockResolvedValue({ ...empty, applied_prefs: ['company', 'mood'] })
+    const { container } = show({ prefs: answered })
+    const text = await line(container)
+    expect(text).toMatch(/Family/)
+    expect(text).toMatch(/Something familiar/)
+    // Budget dropped out because the corpus had no priced candidate for this query.
+    expect(text).not.toMatch(/Mid/)
+  })
+
+  it('still names craving and distance, which are not in applied_prefs by design', async () => {
+    // They are already the query string and radius_m. The API excludes them so one
+    // filter is not counted twice, so the client keeps owning those two.
+    recommend.mockReset().mockResolvedValue({ ...empty, applied_prefs: [] })
+    const { container } = show({ prefs: answered })
+    const text = await line(container)
+    expect(text).toMatch(/bak kut teh/)
+    expect(text).toMatch(/All of KL/)
+  })
+})

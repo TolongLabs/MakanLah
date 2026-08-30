@@ -1,13 +1,24 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiBase, type Chip, type Prefs, type RecommendResponse, recommend, suggestions } from '../api'
-import { AskCompanion, type AskTarget } from '../components/AskCompanion'
+import { AskCompanion } from '../components/AskCompanion'
+import { AskModal, type AskTarget } from '../components/AskModal'
 import { ResultRow } from '../components/ResultRow'
 import { coverageLine, evidenceOf, listBasisLine, sharedBasis } from '../evidence'
-import { count } from '../format'
+import { count, distance } from '../format'
 import { loadPrefs, summarise } from '../prefs'
 import { RANGE } from '../taste/options'
 import { cacheResults } from '../venueCache'
+
+/** `applied_prefs` keys to the rows `summarise()` produces. #170: the page named
+    all five answers while the API discarded three of them, so the three that can
+    only be confirmed by the response are named only when it confirms them. */
+const APPLIED_TERM: Record<string, string> = { company: 'With', mood: 'Mood', budget: 'Budget' }
+
+/** The two the client owns. The API excludes them from `applied_prefs` on purpose:
+    they ARE the query string and `radius_m`, so naming them there would count one
+    filter twice. */
+const CLIENT_TERMS = new Set(['Craving', 'Within'])
 
 type Geo = { lat: number; lng: number } | null
 type Handoff = { prefs?: Prefs; geo?: Geo; geoRefused?: boolean }
@@ -61,8 +72,16 @@ export function Discover() {
   const [target, setTarget] = useState<AskTarget>(null)
   // The onboarding craving used to ride along on every later search forever, so the
   // page claimed two different things at once: "Filtered by your answers: nasi lemak
-  // bumbung supper" above "5 picks for something not too heavy". Droppable now, and
-  // dropping it only clears the craving -- the rest of the answers still filter.
+  // bumbung supper" above "5 picks for something not too heavy". Droppable now.
+  //
+  // #170. This comment used to end "the rest of the answers still filter", and that
+  // was false. `prefs` is not a field on `RecommendRequest`, so Pydantic's default
+  // extra='ignore' discards the whole object -- prefs as a bare string, a bare int
+  // or null all return 200, where an out-of-range radius_m returns 422. Only Craving
+  // (folded into the query string) and Within (sent as top-level radius_m) reach
+  // ranking; With, Mood and Budget reach nothing. Which makes Drop The Craving a
+  // no-op on results as well: it re-runs the same term at the same radius, and the
+  // only input that differs is one the server never reads.
   const [useCraving, setUseCraving] = useState(true)
 
   const useCravingRef = useRef(useCraving)
@@ -139,15 +158,30 @@ export function Discover() {
   const results = data?.results ?? []
   const gap = data?.evidence_gap ?? null
   const gaps = data?.coverage_gaps ?? []
-  // One caveat about the list beats the same sentence on every row.
+  const outOfRange = data?.distance_gap ?? null
+  // ONE caveat about the list, and only the caveat the cards cannot carry.
+  //
+  // Every card's subtitle now leads with its own basis, so "Every one of these is a
+  // post naming that dish" restates ten cards in a banner. The semantic case is
+  // different in kind: a whole page of near-misses is a fact about the QUERY rather
+  // than about any row, and #140 makes it the common outcome -- every ingredient
+  // word (`chicken`, `crab`, `noodle`) resolves to no canonical dish and routes
+  // straight into the semantic lane. Ten cards each murmuring "Close in meaning" is
+  // a much weaker warning than one line saying the corpus has no exact match.
   const common = sharedBasis(results)
-  const commonLine = listBasisLine(common)
+  const commonLine = common === 'semantic' ? listBasisLine(common) : null
   const best = results[0]
   const summary = summarise(prefs)
   const hasCraving = (prefs.craving?.length ?? 0) > 0
   // Once the craving is dropped it stops being advertised as well as stops being
   // sent. Claiming a filter that is no longer applied is the same bug in reverse.
-  const shown = useCraving ? summary : summary.filter((r) => r.term !== 'Craving')
+  // Named only where the response confirms it filtered. An older API sends no
+  // `applied_prefs` and on that build the three did nothing, so absent and empty
+  // land in the same place -- which is the honest one either way.
+  const applied = new Set((data?.applied_prefs ?? []).map((k) => APPLIED_TERM[k]).filter(Boolean))
+  const shown = summary
+    .filter((r) => useCraving || r.term !== 'Craving')
+    .filter((r) => CLIENT_TERMS.has(r.term) || applied.has(r.term))
 
   return (
     <div className="page discover">
@@ -210,7 +244,7 @@ export function Discover() {
           <Link className="btn btn-quiet find-taste" to="/taste">
             {summary.length > 0 ? 'Redo My Taste' : 'Answer Four Questions'}
           </Link>
-          {summary.length > 0 && (
+          {shown.length > 0 && (
             <p className="find-prefs">
               Filtered by your answers: {shown.map((r) => r.value).join(', ')}.{' '}
               {hasCraving && useCraving && (
@@ -286,14 +320,7 @@ export function Discover() {
               {commonLine && <p className="basis list-basis">{commonLine}</p>}
               <ol className="results">
                 {results.map((r, i) => (
-                  <ResultRow
-                    key={r.venue.id}
-                    result={r}
-                    rank={r.rank ?? i + 1}
-                    showBasis={!common}
-                    gaps={gaps}
-                    onAsk={setTarget}
-                  />
+                  <ResultRow key={r.venue.id} result={r} rank={r.rank ?? i + 1} gaps={gaps} onAsk={setTarget} />
                 ))}
               </ol>
             </>
@@ -336,7 +363,82 @@ export function Discover() {
             </div>
           )}
 
-          {!loading && data && results.length === 0 && !failed && !gap && (
+          {/* THE CORPUS HAS THE DISH AND NOTHING IN RANGE SERVES IT.
+              Before this signal existed the API returned semantically-close venues
+              with `coverage_gaps: []`, so a `nasi lemak` search at walking distance
+              came back as pasta and tacos presented as Rank 1, 2, 3 -- some of them
+              stamped "Corroborated by two independent sources", which was true about
+              the posts and deeply misleading about the answer. The client had no way
+              to know and correctly did not guess (#82).
+
+              WHAT THIS MAY NOW SAY. `nearest` still mixes venues with readable
+              posts and #101 venues whose every citation is dead, but `verifiable`
+              tells them apart since `85b9220`, so each entry names its own class
+              instead of the surface staying silent about all of them. The counts
+              name a property rather than gesturing at the page, because nothing
+              here RENDERS a post: there is no venue id to deep-link, so "9 posts
+              still open" is the whole claim, and a venue nobody's surviving post
+              describes says so outright.
+
+              An older API sends neither field, and the note then disappears rather
+              than defaulting -- see the type. Silence is the honest fallback here;
+              `false` would be a claim. */}
+          {!loading && outOfRange && !failed && (
+            <div className="empty empty-centred gap">
+              {/* The radius is named only when we actually hold one. `distance_gap`
+                  can only arrive from a request that carried lat, lng and a radius,
+                  so in practice `askedRadius` is set -- but a copy line that divides
+                  by a number it has not checked prints "Nothing within 0.0 km of
+                  you", which reads as a bug and is one. */}
+              <p className="gap-lede">
+                {askedRadius > 0 ? (
+                  <>Nothing within {(askedRadius / 1000).toFixed(askedRadius < 1000 ? 1 : 0)} km of you serves </>
+                ) : (
+                  <>Nothing near you serves </>
+                )}
+                <strong lang="und">{outOfRange.term}</strong>.
+              </p>
+              <p>
+                {outOfRange.nearest.length === 1
+                  ? 'The nearest one that does:'
+                  : `The nearest ${outOfRange.nearest.length} that do:`}
+              </p>
+              <ul className="gap-venues">
+                {outOfRange.nearest.map((v) => (
+                  <li key={v.maps_url}>
+                    <a className="link" href={v.maps_url} target="_blank" rel="noreferrer noopener">
+                      <span lang="und">{v.name}</span>
+                    </a>
+                    <span className="posted">
+                      {distance(v.distance_m)}
+                      {v.area ? ` · ${v.area}` : ''}
+                    </span>
+                    {typeof v.verifiable === 'boolean' && (
+                      <span className="gap-evidence">
+                        {v.verifiable && (v.live_citations ?? 0) > 0
+                          ? `${count(v.live_citations ?? 0, 'post')} still open`
+                          : 'No post still opens'}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setRadius(0)
+                    void run(asked, 0)
+                  }}
+                >
+                  Search All Of KL
+                </button>
+              </p>
+            </div>
+          )}
+
+          {!loading && data && results.length === 0 && !failed && !gap && !outOfRange && (
             <div className="empty empty-centred">
               {askedRadius > 0 ? (
                 <>
@@ -376,11 +478,16 @@ export function Discover() {
             evidence={best ? evidenceOf(best) : null}
             degraded={data?.degraded ?? false}
             phase={best ? 'picks' : data || gap ? 'empty' : 'idle'}
-            target={target}
-            onClear={() => setTarget(null)}
+            paused={target != null}
           />
         </aside>
       </div>
+
+      {/* The ask moved out of the aside and in front of the page. On a phone that
+          aside sits below every result, so tapping Ask scrolled nothing and opened
+          nothing -- the form it targeted was several screens down and the control
+          read as broken. */}
+      {target && <AskModal target={target} onClose={() => setTarget(null)} />}
     </div>
   )
 }

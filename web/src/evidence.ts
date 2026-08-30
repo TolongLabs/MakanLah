@@ -1,4 +1,5 @@
-import type { Citation, Result } from './api'
+import type { Citation, Result, Venue } from './api'
+import { count, dishLine, distance } from './format'
 
 /**
  * How much evidence stands behind a pick. This is the one derivation shared by the
@@ -19,8 +20,19 @@ export type Evidence = 'corroborated' | 'single' | 'none'
 export function citable(citations: Citation[]): Citation[] {
   const seen = new Set<string>()
   return citations.filter((c) => {
-    if (!c.post_url || seen.has(c.post_url)) return false
-    seen.add(c.post_url)
+    if (!c.post_url) return false
+    // IDENTITY, NOT ADDRESS (#153). Keyed on the URL, this collapsed three different
+    // Google Maps reviewers into one testimony, because Maps has no per-review URL
+    // and ~8 reviews share the venue page. Upper House shipped three plainly
+    // different reviews, rendered one, and was denied the corroboration stamp --
+    // #87 in the mirror.
+    //
+    // The dedupe itself is still right and still necessary: the corpus can carry one
+    // post twice for a venue, and showing it twice inflates the number nobody should
+    // be able to inflate by accident. Only the key was wrong.
+    const key = c.post_id ?? c.post_url
+    if (seen.has(key)) return false
+    seen.add(key)
     return true
   })
 }
@@ -63,7 +75,13 @@ export function evidenceOf(result: Result): Evidence {
     `dead` is tri-state and the distinction matters: `true` is measured dead, `null`
     or absent is never checked. Unchecked counts as live, because collapsing unknown
     into dead deletes real evidence -- the 兴记肉骨茶 citation was exactly that case
-    and re-probing resolved it live. */
+    and re-probing resolved it live.
+
+    **Still one per platform, even now that `citable` counts identities (#153).** A
+    card has room for two excerpts and the second is chosen for being a different
+    platform, because two platforms is the claim a single source going dark cannot
+    fake. Three Maps reviews are three posts and the counts now say so, but the card
+    shows one of them and the All Sources dialog shows all three. */
 export function leadPair(citations: Citation[]): Citation[] {
   const cited = citable(citations)
   const withText = cited.filter((c) => c.excerpt?.trim())
@@ -86,11 +104,15 @@ export function leadPair(citations: Citation[]): Citation[] {
 export function basisLine(basis: string | undefined): string | null {
   switch (basis) {
     case 'dish':
-      return 'Here because a post names this dish.'
+      return 'A post about this place names that dish outright, which is the strongest signal the corpus carries.'
     case 'text':
-      return 'Here because those words appear in a post.'
+      return 'Your words appear in the writing about this place, though no dish was tagged.'
     case 'semantic':
-      return 'Here because it is close in meaning. No exact match on your words.'
+      // Deliberately blunt, and #140 is why: `canonical_for_query` resolves only
+      // curated dish names, so every ingredient word -- chicken, crab, noodle --
+      // routes here by construction. A reader looking at a Hainanese chicken rice
+      // shop under a `crab` query deserves to be told this is the weak lane.
+      return 'No post here uses your words. This one is only near them in meaning, which is a weaker reason than a named dish.'
     default:
       return null
   }
@@ -259,4 +281,243 @@ export function mentionLine(gap: string): string {
     default:
       return `Somebody writing about this one mentions ${gap}.`
   }
+}
+
+/**
+ * How the posts about one venue actually split, as counts.
+ *
+ * **`livePosts` is not optional and the reason is measured.** `sentiment` counts
+ * MENTION rows, and a mention is not a post: across ten live `nasi lemak` results,
+ * nine disagreed with the card's own post count, several by nine to one. Village
+ * Park reads three openable posts and fifteen sentiment entries. Printed naively
+ * this card would say "1 post" in its subtitle and "All 9 posts positive" four lines
+ * below it — self-contradicting, and inflating the evidence behind a pick in exactly
+ * the way #111 did when dead citations were counted toward corroboration.
+ *
+ * So the line renders only when the two counts describe the same set. That is a real
+ * invariant rather than a workaround: a sentiment breakdown the reader cannot trace
+ * to posts they can open is the unverifiable assertion this product exists not to
+ * make. It lights up on its own once the API filters mentions to live posts (#143).
+ *
+ * **Negative leads wherever it appears.** `makanlah` buckets at `positive >= 0.6`
+ * and `negative <= -0.2`, deliberately asymmetric, so a single negative is somebody
+ * with a real complaint rather than a mild review rounded down. Burying that under a
+ * positive majority is the one thing this line must not do.
+ *
+ * **Unanimity prints, and the reason is not the one first written here.** The
+ * original justification was that agreement is rare — 163 of 186 multi-mention
+ * venues span more than one bucket, so unanimity looked like the 12% case. **That
+ * statistic is about the wrong population.** It counts every mention a venue has;
+ * this line counts the cited, live, trimmed posts, which is typically two or three.
+ * Measured at render time across seven queries: **36 of 44 rendered lines read "all
+ * positive"** — 82%, not 12%.
+ *
+ * So it prints for a different reason: **silence would be ambiguous.** A line that
+ * appeared only on disagreement would make its own absence mean three unrelated
+ * things at once — every post agreed, or there is only one post, or the counts do
+ * not describe the same set — and would turn its presence into a warning label. It
+ * also sits inside a disclosure the reader chose to open, where "nobody among these
+ * posts complained" answers the question they opened it to ask.
+ *
+ * Silent on a single mention: with one post the excerpt directly below IS the
+ * sentiment, and labelling it restates what the reader is already looking at.
+ */
+
+/**
+ * **On, after being held twice for two different reasons and released by a peer
+ * refuting my own last objection.**
+ *
+ * The line needed three things to be true, and each was false in turn.
+ *
+ * 1. **The counts had to describe the same posts.** `sentiment` tallied mention rows
+ *    while `corroboration` counted live posts; nine of ten live results disagreed,
+ *    Village Park by 15 to 3. Fixed by #145 then #147 — the first fix was complete
+ *    by its own measure and production still disagreed on 5 of 25.
+ * 2. **The buckets had to be right.** With the units fixed, eight of ten venues
+ *    carrying a negative bucket contained no negative language at all: 王美记 read
+ *    `0 positive / 2 negative` on excerpts saying "deserves 5 stars". The cause was
+ *    not the threshold I blamed — one Maps URL covers ~8 reviews, and a
+ *    most-critical-wins rule turned a single 1-star review into a verdict on all
+ *    eight. Fixed by #151 and #154.
+ * 3. **The negative bucket had to still fire.** #151 over-corrected to zero criticals
+ *    in 86 entries, which would have meant shipping only favourable readings.
+ *    #156 moved the cut to −0.4, fitted to RedNote's own population.
+ *
+ * **The last objection was mine and it was wrong.** I held on `1919餐馆`, which reads
+ * `2 positive / 0 negative` beside a post saying 「实际巨踩雷…体验感差到爆，别去！」 —
+ * *a massive dud, don't go*. I diagnosed a misscored mention. `makanlah-fb` checked
+ * and the post is `dead: true`: correctly excluded from both counts, because a post
+ * nobody can open is not evidence (#111). Nothing was misread. The copy is scoped to
+ * the cited posts and is true about them.
+ *
+ * **What is still not proven, and cannot be.** "No confirmed misclassification" is
+ * not "no misclassification" — both of the instruments that went looking are
+ * negation-blind, and mine flagged 「不会踩雷」 (*won't* hit a dud) while the peer's
+ * flagged 「無雷」 (flawless) and 「不踩雷」. That is a limit on every classifier and
+ * cannot be a permanent bar on shipping one. It is a reason to keep reading, not a
+ * reason to stay dark.
+ */
+const CLASSIFICATION_TRUSTED = true
+export function sentimentLine(s: Venue['sentiment'], livePosts: number): string | null {
+  return CLASSIFICATION_TRUSTED ? sentimentPhrase(s, livePosts) : null
+}
+
+/**
+ * The wording, separated from the decision to show it.
+ *
+ * Kept exported and under test while the line is held. Copy that is switched off and
+ * untested rots quietly, and the whole point of a one-line flag is that flipping it
+ * ships something already known to be correct.
+ */
+export function sentimentPhrase(s: Venue['sentiment'], livePosts: number): string | null {
+  if (!s) return null
+  const total = s.positive + s.mixed + s.negative
+  if (total < 2) return null
+  // Different units, so the breakdown is not about the posts this card can show.
+  if (total !== livePosts) return null
+
+  // "STILL OPEN", not "here", and the word is doing real work.
+  //
+  // This counts posts a reader can open: `add_corroboration` drops dead citations
+  // under #111, and the tally agrees with it. But the surfaces around it show more
+  // than it counts. `VenueTrail` deliberately renders dead posts — they are the
+  // record somebody checks a stamp against — and `leadPair` shows at most two
+  // excerpts however many are counted. So "here" was false in two directions at
+  // once: a dialog listing three entries beside a line counting two, and a card
+  // showing two excerpts beside a line counting three.
+  //
+  // True per the rule and false as English is exactly the shape of the corroboration
+  // stamp bug, and naming the property instead of gesturing at the page fixes it.
+  // "Still open" is also the vocabulary already on screen: a dead row reads "This
+  // post no longer opens."
+  //
+  // It stays scoped rather than absolute for the original reason too — citations are
+  // trimmed to `per_venue` before they ship, so this is never the venue's whole
+  // record.
+  const scope = `${count(total, 'post')} still open`
+  if (s.negative > 0) {
+    const rest: string[] = []
+    if (s.positive > 0) rest.push(`${s.positive} positive`)
+    if (s.mixed > 0) rest.push(`${s.mixed} mixed`)
+    // Negative leads. `makanlah` buckets asymmetrically so a critical reading is
+    // somebody with a real complaint, and burying it under a positive majority is
+    // the one thing this line must not do.
+    return `${scope}: ${s.negative} critical${rest.length > 0 ? `, ${rest.join(', ')}` : ''}.`
+  }
+  if (s.mixed === 0) return `${scope}, all positive.`
+  if (s.positive === 0) return `${scope}, all mixed.`
+  return `${scope}: ${s.positive} positive, ${s.mixed} mixed.`
+}
+
+/** One fact in a result's why-row. `lead` marks the answer to "why is this here",
+    which is typeset apart from the context tokens that follow it. */
+export type WhyToken = { key: string; text: string; lead?: boolean }
+
+/**
+ * Why this result is on screen, as facts rather than prose.
+ *
+ * The information was always here. `basisLine` has said "Here because a post names
+ * this dish" since the first version — as the EIGHTH line of the card, in the same
+ * grey as two neighbouring sentences that answer different questions. The owner read
+ * his own results page and reported that nothing said why anything was there. He was
+ * right about the experience and the data was never the problem: an answer formatted
+ * like a footnote is not an answer.
+ *
+ * So it moves to the subtitle, absorbs the metadata line that used to sit there, and
+ * gains the corroboration counts. One row replaces three and says more than all of
+ * them did.
+ *
+ * NO SIMILARITY NUMBER, EVER, and this is now measured rather than assumed.
+ * `api.ts` has always said `similarity` is never rendered (issue #7). Sampling 35
+ * live results across five queries: **15 of them carry `basis: 'dish'` with
+ * `similarity: 0.0`** — 63% of every dish match in the sample. 興记肉骨茶 is the
+ * clearest case, a strong lexical hit the vector lane simply never saw. Printed as a
+ * percentage that is "0% match" on one of the best answers the corpus has.
+ */
+export function whyRow(result: Result): WhyToken[] {
+  const tokens: WhyToken[] = []
+  const { venue, match } = result
+
+  const matched = matchToken(match)
+  if (matched) tokens.push({ key: 'match', text: matched, lead: true })
+
+  // Live citations only — `add_corroboration` already excludes the dead ones, which
+  // is why this can be trusted next to a stamp that makes the same claim.
+  const c = venue.corroboration
+  if (c && c.posts > 0) {
+    // The people clause only where it MEANS something. "1 post, 1 person" says the
+    // same thing twice, and 12 of the 35 sampled results carry `authors: 0` because
+    // Google Maps reviewers are anonymous — no card ever prints "0 people".
+    const people = c.authors >= 2 ? `, ${count(c.authors, 'person', 'people')}` : ''
+    tokens.push({ key: 'evidence', text: `${count(c.posts, 'post')}${people}` })
+  }
+
+  const far = distance(result.distance_m)
+  if (far) tokens.push({ key: 'distance', text: far })
+
+  // Absent on 19 of 35 sampled results, so it is the last token and never load-bearing.
+  if (venue.area) tokens.push({ key: 'area', text: venue.area })
+
+  return tokens
+}
+
+function matchToken(match: Result['match']): string | null {
+  switch (match?.basis) {
+    case 'dish':
+      // `match.dish` is null on every semantic result and populated on dish ones, so
+      // the fallback is a guard rather than a case that fires.
+      return match.dish ? `Names ${match.dish}` : 'Names the dish'
+    case 'text':
+      return 'Your exact words'
+    case 'semantic':
+      return 'Close in meaning'
+    default:
+      return null
+  }
+}
+
+/**
+ * Everything the fact row had no room for, behind a per-card disclosure.
+ *
+ * "More informative AND briefer at once" is a contradiction taken literally, and
+ * progressive disclosure is the only honest way to serve both halves: four lines by
+ * default, the rest one tap away. What it must never be is a control that opens onto
+ * nothing, so this returns an empty list where the row already said everything, and
+ * the card renders no disclosure at all.
+ */
+export function whyDetail(result: Result, sharedWith = 0): string[] {
+  const lines: string[] = []
+  const { venue, match } = result
+
+  const basis = basisLine(match?.basis)
+  if (basis) lines.push(basis)
+
+  // Only where it ADDS to the row. The row already carries the post count, and the
+  // people count whenever there are two or more, so a line repeating both back is
+  // the same buried-restatement this whole rework exists to remove. More than one
+  // platform is the one fact the row has no room for.
+  const c = venue.corroboration
+  if (c && c.posts > 0 && c.platforms > 1) {
+    const who = c.authors > 0 ? ` by ${count(c.authors, 'person', 'people')}` : ''
+    lines.push(`${count(c.posts, 'post')}${who}, across ${count(c.platforms, 'platform')}.`)
+  }
+
+  const feeling = sentimentLine(venue.sentiment, venue.corroboration?.posts ?? 0)
+  if (feeling) lines.push(feeling)
+
+  // The matched dish is already the lead token, so repeating it here is noise. Folded
+  // rather than translated: the corpus holds 肉骨茶 and the query said bak kut teh,
+  // and both are what people actually wrote.
+  const named = match?.dish?.trim().toLowerCase()
+  const others = venue.dishes.filter((d) => d.trim().toLowerCase() !== named)
+  const also = dishLine(others, 5)
+  if (also) lines.push(`Also serves: ${also}`)
+
+  if (sharedWith > 0) {
+    lines.push(
+      `One of these posts also backs ${sharedWith === 1 ? 'another pick' : `${sharedWith} other picks`} in this list.`
+    )
+  }
+
+  return lines
 }

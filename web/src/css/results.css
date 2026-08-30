@@ -240,6 +240,34 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s6);
   padding-block: var(--s5) var(--s8);
+  /* The ground below paints at z-index -1, which is only predictable inside a
+     stacking context this element owns. Same reason .ground isolates in base.css. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* #141's sketchboard ground, sparse on purpose.
+
+   A 24px grid with a ~1px dot is far enough apart that no excerpt ever sits ON
+   texture -- DESIGN.md requires the ground never compete with the evidence, and
+   density is the setting that decides whether it does. Denser reads as a screen,
+   not a sketchboard, and puts a dot inside the counter of every Han glyph.
+
+   Drawn with a gradient rather than the mask the Shippou ground uses, because a
+   gradient reads var(--dot) directly where a data URI cannot. Same constraint that
+   comment in base.css names, solved the cheaper way when the motif is a dot.
+
+   `fixed` rather than `absolute`: .page is width-capped and the ground is the
+   PAGE's, so an absolute inset would band the dots into a 76rem column and stop
+   them wherever the results happen to end. */
+.discover::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at center, var(--dot) 0.9px, transparent 1.6px);
+  background-size: 24px 24px;
 }
 
 @media (min-width: 60rem) {
@@ -363,10 +391,24 @@
 /* Sits on the filter row beside the distance control, because that is where the
    things that change the SEARCH live -- and redoing your taste changes the search
    more than any of them. Quiet, not primary: Find is still the action on this
-   screen. */
+   screen.
+
+   SIZED TO THE SEGMENTED CONTROL BESIDE IT, because two controls sharing a row read
+   as a set whether or not they are one. Measured before: this was 50px tall with a
+   10px radius and 16px text against the pill's 42px, 999px and 13px -- three
+   mismatches at once, on the row a reader scans in a single pass.
+
+   Height, radius and type match. Border and ground deliberately do NOT: the pill is
+   a set of options with one selected, this is an action, and making them identical
+   would dress a button as a selected tab. Same geometry, different affordance. */
 .find-taste {
   white-space: nowrap;
   text-decoration: none;
+  min-height: 42px;
+  padding-block: 0;
+  padding-inline: var(--s4);
+  font-size: var(--t-sm);
+  border-radius: var(--r-chip);
 }
 
 .segmented {
@@ -433,27 +475,6 @@
     position: sticky;
     top: calc(72px + var(--s5));
   }
-}
-
-@media (max-width: 63.99rem) {
-  .discover-body {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .discover-aside {
-    order: -1;
-  }
-
-  .ask-companion {
-    padding: var(--s4);
-  }
-}
-
-.rail-heading {
-  font-size: var(--t-sm);
-  font-weight: 600;
-  margin-bottom: var(--s3);
 }
 
 .search {
@@ -553,6 +574,21 @@
   display: inline-flex;
   align-items: baseline;
   gap: var(--s2);
+  /* The entry gained a third token when `verifiable` arrived. Without this an
+     inline-flex row of name + distance + evidence overflows a 390px phone rather
+     than breaking, because nothing inside an inline-flex wraps by default. */
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Which evidence class this entry is in. Quiet on purpose: it qualifies the name
+   above it rather than competing with it, and it carries no colour because the
+   words already draw the distinction. A coloured state dot here would be decoration
+   standing in for a sentence that is doing the job. */
+.gap-evidence {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
 }
 
 .gap-more {
@@ -976,4 +1012,147 @@
   border: 0;
   background: none;
   cursor: pointer;
+}
+
+/* ------------------------------------------------- why this result is on screen */
+
+/* The answer to the owner's question, as the card's subtitle rather than as its
+   eighth line. It replaces the old `.meta-line` on a result and absorbs what that
+   line carried, so the card gained information and lost two rows at the same time.
+
+   Tokens separated by a rendered middot rather than by punctuation in the string:
+   the separator then belongs to the layout, wraps with it, and never strands a
+   dangling "·" at the end of a line when the last fact is absent. Half the sampled
+   results have no area and a third have no author, so absent facts are the normal
+   case and the row has to look deliberate with two tokens as well as with four. */
+.why-row {
+  margin-top: var(--s2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s2);
+  font-size: var(--t-ms);
+  color: var(--ink-faint);
+}
+
+.why-row > * + *::before {
+  content: "·";
+  margin-right: var(--s2);
+  color: var(--rule-strong);
+}
+
+/* The lead token is the answer; everything after it is context. Set at full ink
+   against faint metadata, which is the entire hierarchy fix in one declaration --
+   the old card set the basis line in the same grey as the two sentences around it,
+   and that is why it read as a footnote. */
+.why-lead {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------- the detail disclosure */
+
+/* Native <details>, so it is keyboard operable, findable by in-page search when
+   open, and has no state to get out of step with the DOM. It renders at all only
+   when `whyDetail` returned something the row did not already say. */
+.why-more {
+  margin-top: var(--s3);
+  font-size: var(--t-sm);
+}
+
+.why-more-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 24px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+}
+
+.why-more-toggle::-webkit-details-marker {
+  display: none;
+}
+
+/* Our own marker, because the platform ones differ per browser and one of them is a
+   filled triangle heavy enough to out-weigh the venue name beside it. */
+.why-more-toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentcolor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.why-more-toggle:hover {
+  color: var(--ink);
+}
+
+.why-more[open] .why-more-toggle::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-more-toggle::before {
+    transition: none;
+  }
+}
+
+.why-more-body {
+  margin-top: var(--s2);
+  padding-left: var(--s4);
+  display: grid;
+  gap: var(--s1);
+  color: var(--ink-faint);
+  max-width: 54ch;
+}
+
+/* She still comes before the picks below the desktop breakpoint, because what she
+   says is a caveat about the list -- "only one post backs this" -- and a caveat
+   after the thing it qualifies has already been read is not a caveat.
+
+   WHAT SHE IS NOT, ANY MORE, IS A CARD. The hoisted panel cost 229px at 390 and put
+   the first pick at y=799 in an 844px viewport -- below the fold, on the page whose
+   entire promise is a decision in two minutes. Most of that was chrome around one
+   sentence: panel padding, a border, a shadow, and a hint telling the reader to tap
+   a control they could not yet see.
+
+   The hint goes because it is now wrong here rather than merely redundant. It says
+   "tap Ask on any pick", and above the fold there is no pick to tap. Every card
+   carries its own Ask, and Ask now opens in front of the page rather than in this
+   panel -- which is also what freed her from having to be reachable up here at all. */
+@media (max-width: 63.99rem) {
+  .discover-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .discover-aside {
+    order: -1;
+  }
+
+  .ask-companion {
+    gap: var(--s2);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .ask-hint {
+    display: none;
+  }
+
+  .ask-bubble {
+    padding: var(--s3) var(--s4);
+  }
+}
+
+.rail-heading {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  margin-bottom: var(--s3);
 }
