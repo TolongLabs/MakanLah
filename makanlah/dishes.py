@@ -262,3 +262,53 @@ def dish_named_inside(query, vocabulary):
         if any(words[i : i + n] == parts for i in range(len(words) - n + 1)):
             return key
     return None
+
+
+# Any Han glyph. A vocabulary entry containing one is matched as a substring; a
+# purely Latin one is matched on word boundaries.
+_HAN = re.compile(r'[一-鿿]')
+
+
+def dishes_in_text(text, vocabulary):
+    """Every dish from `vocabulary` that this text names. Sorted and deduped.
+
+    `named_in` reads a whole query and `dish_named_inside` reads a short one; a
+    review is neither, so both were the wrong tool. Maps reviews were stored with
+    `dishes=[]`, which left 84% of the corpus's evidence invisible to the lexical
+    lane -- `roti canai` returned nothing city-wide while two RedNote venues
+    carried the tag and dozens of enriched Indian restaurants had reviews naming
+    it.
+
+    The rule is the one that survived three failures in a day: **whole-word for
+    Latin, substring for Han.** `ckt` inside `mocktail` invented a dish and
+    `踩雷` inside `不踩雷` inverted a judgement, but 肉骨茶 inside 中药肉骨茶 is
+    genuinely the same dish, and Chinese does not delimit words for a \\b to find.
+    """
+    if not isinstance(text, str) or not text or not vocabulary:
+        return []
+    folded = fold(text)
+    words = set(WORDS.findall(folded))
+    # One tag per dish, not per spelling. The corpus stores `Nasi Lemak`,
+    # `nasi lemak`, `Fried Chicken`, `Fried chicken` and `fried chicken` as
+    # separate strings because different posts spelled them differently, and
+    # writing every variant onto one review makes a venue look like it serves
+    # three dishes where the reviewer named one. Measured at 166 of 773 rows.
+    # The survivor is chosen by sorted order so two runs agree.
+    out = {}
+    for entry in vocabulary:
+        key = fold(entry)
+        if not key:
+            continue
+        if _HAN.search(key):
+            if key in folded:
+                out[key] = min(out.get(key, entry), entry)
+            continue
+        parts = WORDS.findall(key)
+        if not parts:
+            continue
+        if len(parts) == 1:
+            if parts[0] in words:
+                out[key] = min(out.get(key, entry), entry)
+        elif re.search(r'(?<!\w)' + r'\W+'.join(re.escape(p) for p in parts) + r'(?!\w)', folded):
+            out[key] = min(out.get(key, entry), entry)
+    return sorted(out.values())
