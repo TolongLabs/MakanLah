@@ -6,7 +6,7 @@
     "prepare": "husky",
     "lint": "biome check . && prettier --check \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest check . && uv tool run ruff@latest format --check .",
     "format": "biome format --write . && prettier --write \"**/*.{md,markdown,yaml,yml}\" && uv tool run ruff@latest format .",
-    "typecheck": "if [ -d web/src ]; then tsc --noEmit -p web/tsconfig.json; else echo 'no web/src/ yet, nothing to typecheck'; fi",
+    "typecheck": "cd web && { [ -d node_modules ] || bun install --frozen-lockfile; } && ./node_modules/.bin/tsc --noEmit",
     "test": "bash tests/test_merge_guard.sh && uv run --group dev python -m pytest tests/ -q",
     "test:all": "bun run test && cd web && bun install && bun run test"
   },
