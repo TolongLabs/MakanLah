@@ -304,48 +304,60 @@ export function mentionLine(gap: string): string {
  * with a real complaint rather than a mild review rounded down. Burying that under a
  * positive majority is the one thing this line must not do.
  *
- * **Unanimity prints too**, and that reversed an earlier call. The first draft stayed
- * silent when every post agreed, reasoning that a label reading "positive" everywhere
- * discriminates nothing. Measured, the reasoning was backwards: 163 of 186
- * multi-mention venues span more than one bucket, so agreement is the 12% case and is
- * the informative one.
+ * **Unanimity prints, and the reason is not the one first written here.** The
+ * original justification was that agreement is rare — 163 of 186 multi-mention
+ * venues span more than one bucket, so unanimity looked like the 12% case. **That
+ * statistic is about the wrong population.** It counts every mention a venue has;
+ * this line counts the cited, live, trimmed posts, which is typically two or three.
+ * Measured at render time across seven queries: **36 of 44 rendered lines read "all
+ * positive"** — 82%, not 12%.
+ *
+ * So it prints for a different reason: **silence would be ambiguous.** A line that
+ * appeared only on disagreement would make its own absence mean three unrelated
+ * things at once — every post agreed, or there is only one post, or the counts do
+ * not describe the same set — and would turn its presence into a warning label. It
+ * also sits inside a disclosure the reader chose to open, where "nobody among these
+ * posts complained" answers the question they opened it to ask.
  *
  * Silent on a single mention: with one post the excerpt directly below IS the
  * sentiment, and labelling it restates what the reader is already looking at.
  */
 
 /**
- * **Off, and this is the second thing that had to be true before the line could
- * ship.** The first was that the counts describe the same posts, which #147 fixed —
- * production now reads 33/33 agreeing on an independent query sample, and the gate
- * below correctly lit up. The second is that the BUCKETS ARE RIGHT, and they are
- * not.
+ * **On, after being held twice for two different reasons and released by a peer
+ * refuting my own last objection.**
  *
- * Measured across four queries, of the ten venues carrying a negative bucket,
- * **eight contain no negative language whatsoever** while carrying positive
- * language. Confirmed by eye rather than only by keyword, which matters because a
- * crude instrument can manufacture its own finding:
+ * The line needed three things to be true, and each was false in turn.
  *
- * - `王美记 Restoran Wong Mei Kee` buckets **0 positive, 2 negative**. Its excerpts
- *   say "Siew Yok 烧肉 deserves 5 stars with thick meat and crispy surface" and
- *   "definitely worth checking out".
- * - `山海 Shan hai udon` buckets one negative off a review whose only complaint is
- *   that a yuzu drink "taste quite weird", beside "Very delicious" and "Love their
- *   tempura".
- * - Three separate bak kut teh shops bucket 0 positive / 1 negative on excerpts
- *   carrying only praise.
+ * 1. **The counts had to describe the same posts.** `sentiment` tallied mention rows
+ *    while `corroboration` counted live posts; nine of ten live results disagreed,
+ *    Village Park by 15 to 3. Fixed by #145 then #147 — the first fix was complete
+ *    by its own measure and production still disagreed on 5 of 25.
+ * 2. **The buckets had to be right.** With the units fixed, eight of ten venues
+ *    carrying a negative bucket contained no negative language at all: 王美记 read
+ *    `0 positive / 2 negative` on excerpts saying "deserves 5 stars". The cause was
+ *    not the threshold I blamed — one Maps URL covers ~8 reviews, and a
+ *    most-critical-wins rule turned a single 1-star review into a verdict on all
+ *    eight. Fixed by #151 and #154.
+ * 3. **The negative bucket had to still fire.** #151 over-corrected to zero criticals
+ *    in 86 entries, which would have meant shipping only favourable readings.
+ *    #156 moved the cut to −0.4, fitted to RedNote's own population.
  *
- * `negative <= -0.2` is catching mild qualification, and this module then renders it
- * as "critical" — a verdict about a real restaurant that the posts do not support.
- * That is the exact failure this product exists not to commit.
+ * **The last objection was mine and it was wrong.** I held on `1919餐馆`, which reads
+ * `2 positive / 0 negative` beside a post saying 「实际巨踩雷…体验感差到爆，别去！」 —
+ * *a massive dud, don't go*. I diagnosed a misscored mention. `makanlah-fb` checked
+ * and the post is `dead: true`: correctly excluded from both counts, because a post
+ * nobody can open is not evidence (#111). Nothing was misread. The copy is scoped to
+ * the cited posts and is true about them.
  *
- * **Rendering only the positive half is NOT the fix and would be worse**: suppressing
- * unfavourable readings while printing favourable ones biases every card toward good
- * news. Either the split is trustworthy and both halves show, or neither does.
- *
- * One line to flip once the threshold is right. Tracked as #149.
+ * **What is still not proven, and cannot be.** "No confirmed misclassification" is
+ * not "no misclassification" — both of the instruments that went looking are
+ * negation-blind, and mine flagged 「不会踩雷」 (*won't* hit a dud) while the peer's
+ * flagged 「無雷」 (flawless) and 「不踩雷」. That is a limit on every classifier and
+ * cannot be a permanent bar on shipping one. It is a reason to keep reading, not a
+ * reason to stay dark.
  */
-const CLASSIFICATION_TRUSTED = false
+const CLASSIFICATION_TRUSTED = true
 export function sentimentLine(s: Venue['sentiment'], livePosts: number): string | null {
   return CLASSIFICATION_TRUSTED ? sentimentPhrase(s, livePosts) : null
 }

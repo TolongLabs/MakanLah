@@ -111,18 +111,23 @@ describe('the disclosure only opens onto something', () => {
   })
 })
 
-describe('sentiment is held until the buckets can be trusted', () => {
-  it('renders nothing at all, in either direction', () => {
-    // Measured across four queries: of ten venues carrying a negative bucket, EIGHT
-    // contain no negative language whatsoever. 王美记 buckets 0 positive / 2 negative
-    // on excerpts saying "deserves 5 stars" and "definitely worth checking out", and
-    // this module would render that as "2 of 2 posts critical" -- a verdict about a
-    // real restaurant the posts do not support.
-    //
-    // Both directions, deliberately. Showing only the favourable half would bias
-    // every card toward good news, which is worse than showing neither. #149.
-    expect(sentimentLine({ positive: 4, mixed: 0, negative: 0 }, 4)).toBeNull()
-    expect(sentimentLine({ positive: 1, mixed: 1, negative: 2 }, 4)).toBeNull()
+describe('sentiment renders, in both directions', () => {
+  it('prints a favourable and an unfavourable reading alike', () => {
+    // Held twice before this shipped: once because the counts described different
+    // sets (#143), once because eight of ten negative buckets contained no negative
+    // language (#149) and then because the fix over-corrected to zero criticals
+    // (#155). Both directions or neither -- rendering only the favourable half
+    // biases every card toward good news, which is worse than showing nothing.
+    expect(sentimentLine({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('Of the 4 posts here: all positive.')
+    expect(sentimentLine({ positive: 2, mixed: 0, negative: 1 }, 3)).toBe(
+      'Of the 3 posts here: 1 critical, 2 positive.'
+    )
+  })
+
+  it('still refuses when the counts are not about the same posts', () => {
+    // The gate that survived the flip. `sentiment` and `corroboration` agreeing is
+    // what makes "of the N posts here" a true statement about the posts on screen.
+    expect(sentimentLine({ positive: 9, mixed: 0, negative: 0 }, 1)).toBeNull()
   })
 })
 

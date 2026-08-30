@@ -191,20 +191,22 @@ note(!list.includes('Michelin Bib Gourmand'), 'no model-written prose on a ranke
 await page.locator('.why-more-toggle').first().click()
 await page.waitForTimeout(150)
 const firstDetail = await page.locator('.result').first().locator('.why-more-body').innerText()
-// Held entirely (#149): `negative <= -0.2` catches mild qualification, and eight of
-// ten venues carrying a negative bucket contain no negative language at all. Both
-// directions stay dark -- showing only the favourable half biases every card.
-note(!/positive|critical|mixed/i.test(firstDetail), 'no sentiment verdict while the buckets are untrusted')
+// Card one reads 6 sentiment against 2 posts. The unit gate survived the flip and
+// this is what it guards: a breakdown whose total disagrees with the post count is
+// not about the posts on screen, so it does not render (#143).
+note(!/positive|critical|mixed/i.test(firstDetail), 'no sentiment where its count disagrees with the post count')
 note(firstDetail.trim().length > 0, `the disclosure opens onto real content (${firstDetail.trim().length} chars)`)
 note(!/close in meaning/i.test(firstDetail), 'the disclosure does not restate the subtitle above it')
 
 await page.locator('.result').nth(2).locator('.why-more-toggle').click()
 await page.waitForTimeout(150)
 const thirdDetail = await page.locator('.result').nth(2).locator('.why-more-body').innerText()
-// This fixture's counts DO agree (3 vs 3), so it would render but for the hold. It is
-// the case that proves the hold is doing the work rather than the unit gate.
-note(!/critical|positive|mixed/i.test(thirdDetail), 'held even where the counts agree')
-note(/across 2 platforms/.test(thirdDetail), `the rest of the disclosure still renders  ${JSON.stringify(thirdDetail)}`)
+// This fixture's counts agree (3 vs 3) and carry one negative, so the line renders
+// AND leads with the complaint. Both halves matter: the line was held once for
+// over-calling criticism (#149) and once for firing none at all (#155).
+note(/1 critical/.test(thirdDetail), `sentiment leads with the complaint  ${JSON.stringify(thirdDetail.slice(0, 160))}`)
+note(/2 positive/.test(thirdDetail), 'and still reports the favourable posts')
+note(/Of the 3 posts here/.test(thirdDetail), 'scoped to the cited posts, not the venue record')
 
 // ------------------------------------------- nothing in range serves the dish
 //
