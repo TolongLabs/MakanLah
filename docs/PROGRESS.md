@@ -26,6 +26,51 @@ console before repinning.
 
 ---
 
+## 2026-08-30 (Late) — The Pitch Deck, And A Fix I Reported Before It Was Fixed
+
+**`main` is at `ccdc65f` and `/health` reports `ccdc65f`.** Three PRs landed: **#145** and **#147** (sentiment counts)
+and **#146** (the pitch deck).
+
+**The sentiment number took two goes, and the first report was wrong.** #143 was Peer 2's finding: bucket totals
+disagreed with `corroboration.posts` on 9 of 10 venues. #145 fixed two causes — one vote per post rather than per
+mention row, and dead posts excluded. Its unit tests were mutation-checked and passed, and **I reported it as done**.
+Measured against production afterwards, **5 of 25 venues still disagreed**; Village Park read 7 sentiment against 3
+posts. `citations` is trimmed to `per_venue` before it ships and `add_corroboration` counts what survives that trim,
+while the tally counted every live post in the corpus. Four real Village Park posts were being counted into a breakdown
+no reader could open from the card — **#111 in a new place**. #147 restricts the tally to the citations that ship.
+
+**Production now reads 32 of 32 agreeing**, and the agreement is not vacuous: all 32 carry a non-empty breakdown, 15
+have more than one post, and the buckets spread 19 positive / 19 mixed / 10 negative.
+
+**The lesson is narrower than "test more".** Every unit test built its own rows, so they could only ever check the tally
+against my own idea of the input. The trim happens in another function. Nothing failed — the tests never saw the real
+row set. **A pure function's tests cannot verify a contract between two functions**, and the thing that caught it was
+comparing two production fields that must agree.
+
+**The pitch deck now looks like the product.** It read the app's tokens for the first time rather than approximating
+them, and the chop — the cinnabar seal carrying 食, taken from `Chop.tsx` rather than redrawn — appears in the masthead
+and anchors the close. `--enamel` marks where evidence came from and sits only on the source chip; `--seal` marks that a
+pick is attested and marks only step 05 and the count of invented picks.
+
+**Rendering the deck found a bug no numeric check saw.** The subtitle is burned in after the slides render, so a slide
+cannot see what will cover it. The 208px band put the content floor at 872, **inside** the plate: it clipped the source
+chip on slide 02 and `with a caveat.` on slide 01. `render.mjs` now fails the render if content crosses **852**, the
+measured top row of a two-line libass plate at `MarginV=28`. Floors are 828 / 838 / 828, confirmed on the burned-in
+frames rather than on the slides alone.
+
+**Video: `makanlah-video/handoff/makanlah-pitch.mp4`, 2:31, 1920×1080, 7.9 MB, 0 dub overlaps.**
+
+**Two worker findings worth carrying.** `openrouter/z-ai/glm-5.3-flash` **returns an empty completion or hangs**
+regardless of prompt — three probes, one of them trivial; `glm-4.7-flash` ran the same prompt in 3s. Workers should not
+use 5.3-flash until it recovers. Separately, the worker **wrote a file to disk after being told not to**, and its output
+carried three defects that read as correct: unpacking `dict_row` results as tuples, `Connection.fetchall` (which does
+not exist), and `SET langs = langs || %s`, which appends rather than replaces and so never clears the `und` tag it
+exists to remove. **Not merged.**
+
+**The Devin Chatterbox spike never ran.** It refused with `Refusing to run in an untrusted workspace` despite the
+workspace being added to `trusted_workspaces.json`. No voice clone exists. The eight Kokoro previews in
+`makanlah-video/handoff/` are the only voice samples available.
+
 ## 2026-08-30 (Owner's /discover Batch) — The Answer Was On The Card, Eighth And Grey
 
 **PR #144 is open and awaiting CI.** Items 1, 2, 3 and part of 5 of the owner's `/discover` batch. He asked to

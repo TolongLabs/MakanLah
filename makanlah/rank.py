@@ -294,7 +294,13 @@ def add_corroboration(entries):
         # driving three ranks is worth saying whether or not it still resolves.
         live = [c for c in cites if c.get('dead') is not True]
         e['venue']['corroboration'] = {
-            'posts': len({c['post_url'] for c in live}),
+            # Identity, not address. Google Maps has no per-review URL, so three
+            # reviewers of Upper House shared one post_url and the count read 1 --
+            # denying the stamp to a venue that had earned it, which is #87 in the
+            # mirror. The card prints "3 posts" and links to the page holding them:
+            # counting voices and pointing at where they live are compatible jobs,
+            # just not one integer doing both (#153).
+            'posts': len({c['post_id'] for c in live}),
             'authors': len({c['author_handle'] for c in live if c.get('author_handle')}),
             'platforms': len({c['platform'] for c in live if c.get('platform')}),
         }
@@ -530,6 +536,11 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     'id': str(v['id']),
                     'name': v['name'],
                     'area': v['area'],
+                    # Counts rather than an average: 88% of multi-mention venues
+                    # span more than one bucket, so disagreement is the common
+                    # case and it is the part worth a reader's attention. A mean
+                    # of this distribution reads "excellent" almost everywhere.
+                    'sentiment': v.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
                     'lat': v['lat'],
                     'lng': v['lng'],
                     'maps_url': maps_url(v),
@@ -593,6 +604,7 @@ def one(venue_id, *, lat=None, lng=None):
             'id': str(entry['id']),
             'name': entry['name'],
             'area': entry['area'],
+            'sentiment': entry.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),

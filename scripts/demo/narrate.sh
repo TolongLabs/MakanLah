@@ -14,7 +14,11 @@ SCRIPT="${DEMO_SCRIPT:-$(dirname "$0")/narration.txt}"
 FF="${DEMO_FFMPEG:-$(command -v ffmpeg || echo "$DIR/node_modules/ffmpeg-static/ffmpeg")}"
 OUT="${DEMO_OUT:-$DIR/makanlah-demo.mp4}"
 
-for f in "$DIR/capture.webm" "$DIR/beats.json" "$SCRIPT"; do
+# assemble.sh joins the capture to the pitch slides; when it has run, that is
+# the video to narrate over. Falls back to the raw capture for a plain demo.
+SRC="${DEMO_SOURCE:-$DIR/capture-joined.mp4}"
+[ -f "$SRC" ] || SRC="$DIR/capture.webm"
+for f in "$SRC" "$DIR/beats.json" "$SCRIPT"; do
   [ -f "$f" ] || { echo "missing: $f (run record.mjs first)" >&2; exit 1; }
 done
 [ -x "$FF" ] || { echo "no ffmpeg at $FF" >&2; exit 1; }
@@ -80,7 +84,7 @@ dur() {
   awk -F'Duration: ' '/Duration: /{split($2,a,","); split(a[1],t,":");
     print t[1]*3600+t[2]*60+t[3]; exit}' <<<"$probe"
 }
-vid=$(dur "$DIR/capture.webm"); aud=$(dur "$DIR/narration.wav")
+vid=$(dur "$SRC"); aud=$(dur "$DIR/narration.wav")
 
 # The capture is 1440x900, which is 16:10. Cropping to 16:9 would cut content, so
 # it scales to 1728x1080 and pads with the app's own background colour, which
@@ -101,8 +105,15 @@ tpad=""
 subs="subtitles='$DIR/narration.srt':force_style='FontName=DejaVu Sans,FontSize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H40101010,BorderStyle=3,Outline=3,Shadow=0,Alignment=2,MarginV=28'"
 
 
-"$FF" -y -i "$DIR/capture.webm" -i "$DIR/narration.wav" \
-  -filter_complex "[0:v]${tpad}scale=1728:1080,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#F4F7F4,${subs}[v]" \
+# The raw capture is 1440x900 and needs scaling into a 1920x1080 frame. The
+# joined pitch cut is ALREADY 1920x1080, and re-applying that scale would shrink
+# the picture inside a second set of bars -- silently, since ffmpeg is happy to
+# letterbox something that already fits. Ask the file rather than assume.
+src_w=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$SRC" | head -1)
+if [ "${src_w:-0}" -ge 1920 ]; then fit=""; else fit="scale=1728:1080,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#F4F7F4,"; fi
+
+"$FF" -y -i "$SRC" -i "$DIR/narration.wav" \
+  -filter_complex "[0:v]${tpad}${fit}${subs}[v]" \
   -map "[v]" -map 1:a -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p \
   -c:a aac -b:a 128k -movflags +faststart "$OUT" >/dev/null 2>&1
 

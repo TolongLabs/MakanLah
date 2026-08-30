@@ -148,7 +148,7 @@ def venue_evidence(con, venue_id, limit=40):
     """
     rows = con.execute(
         """select m.excerpt, m.dishes, m.sentiment, m.confidence,
-                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
+                  p.id as post_id, p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
                   case when p.dead_at is not null then true else null end as dead
            from mention m join source_post p on p.id = m.post_id
            where m.venue_id = %s and m.excerpt is not null
@@ -265,7 +265,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     rows = con.execute(
         """select v.id as venue_id, v.name, v.area, v.city, v.lat, v.lng, v.place_id,
                   m.excerpt, m.dishes, m.sentiment, m.confidence,
-                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
+                  p.id as post_id, p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
                   case when p.dead_at is not null then true else null end as dead
            from venue v
            join mention m on m.venue_id = v.id
@@ -290,6 +290,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 'place_id': r['place_id'],
                 'dishes': [],
                 'citations': [],
+                'sentiment': {'positive': 0, 'mixed': 0, 'negative': 0},
             },
         )
         for d in r['dishes'] or []:
@@ -297,6 +298,12 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 v['dishes'].append(d)
         pool.setdefault(r['venue_id'], []).append(
             {
+                # Identity and address are different things, and the client needs both.
+                # Google Maps has no per-review URL, so review_url() returns the venue
+                # page and three reviewers share one address. Deduping on post_url
+                # collapsed them into one citation and denied the corroboration stamp
+                # to venues that had genuinely earned it (#153).
+                'post_id': str(r['post_id']),
                 'post_url': r['post_url'],
                 'excerpt': r['excerpt'],
                 'platform': r['platform'],
@@ -306,9 +313,86 @@ def venues_with_citations(con, venue_ids, per_venue=3):
             }
         )
 
+    kept = {}
     for venue_id, cites in pool.items():
-        out[venue_id]['citations'] = diverse_citations(cites, per_venue)
+        shown = diverse_citations(cites, per_venue)
+        out[venue_id]['citations'] = shown
+        kept[venue_id] = {c['post_id'] for c in shown if not c.get('dead')}
+    for venue_id, counts in tally_sentiment(rows, kept).items():
+        out[venue_id]['sentiment'] = counts
     return out
+
+
+def tally_sentiment(rows, kept=None):
+    """Bucket counts per venue, one vote per POST, over posts the card can show.
+
+    Three separate things had to be true before this number meant anything, and the
+    first two were fixed a commit apart:
+
+    - One vote per post. Counting mention rows made a card read "1 post" and "All 9
+      posts positive" at once.
+    - No dead posts. Counting them repeats #111 -- a breakdown that cannot be traced
+      to an openable post is the unverifiable assertion this product exists not to
+      make.
+    - The same posts corroboration counts. `citations` is trimmed to per_venue before
+      it ships, and add_corroboration counts what survives that trim. Tallying every
+      live post in the corpus instead gave Village Park 7 sentiment against 3 posts:
+      four of those seven were real, and none of them were on the card. `kept` is the
+      set of post_urls that survived, so every counted post is one a reader can open.
+
+    Several mentions behind one identity are averaged, not reduced to the worst.
+    That rule was written for one author's own disagreeing sentences and it is wrong
+    here, because `post_url` is not one author: Google Maps has no per-review URL, so
+    `review_url()` returns the venue's page and all 1,388 Maps mentions share just 178
+    URLs -- about eight reviews each. Taking the worst turned one 1-star review into a
+    verdict on all eight (#149). 王美记 read "2 of 2 posts critical" with a mean of
+    +0.19 and no complaint in any excerpt shown.
+    """
+    by_venue = {}
+    for r in rows:
+        if r['dead']:
+            continue
+        if kept is not None and str(r['post_id']) not in kept.get(r['venue_id'], ()):
+            continue
+        if r['sentiment'] is None:
+            continue
+        by_venue.setdefault(r['venue_id'], {}).setdefault(str(r['post_id']), []).append(float(r['sentiment']))
+    out = {}
+    for venue_id, by_post in by_venue.items():
+        counts = {'positive': 0, 'mixed': 0, 'negative': 0}
+        for scores in by_post.values():
+            counts[sentiment_bucket(sum(scores) / len(scores))] += 1
+        out[venue_id] = counts
+    return out
+
+
+def sentiment_bucket(score):
+    """Three buckets, on the star scale that produces most of these scores.
+
+    star_sentiment is (stars - 3) / 2, so the cut points are stars: 4 and 5 are
+    positive, 3 is mixed, 1 and 2 are critical. Naming a 4-star review "mixed" to
+    manufacture spread would be inventing a reservation the reviewer did not have.
+
+    The negative cut is -0.4 rather than -0.5, and the two platforms decide it
+    separately. Maps scores are quantised to {-1, -0.5, 0, 0.5, 1}, so any cut in
+    (-0.5, 0) treats Maps identically -- 1-2 stars critical, 3 mixed. RedNote is
+    scored continuously by the extraction model and is the only thing the exact
+    value moves.
+
+    -0.4 is where its negative population actually separates, read by hand across
+    all 14 negative RedNote mentions: at -0.4 and below sit 避雷 (avoid), 别去
+    (don't go) and 强烈不推荐; at -0.3 and above sit 可吃可不吃 (take it or leave
+    it) and 确实好吃，但要排40分钟. -0.5 filed 王美记's "不推荐" twice and "性价比
+    很低" as mixed (#155); -0.2 filed a queue complaint as critical (#149).
+    """
+    if score is None:
+        return None
+    s = float(score)
+    if s >= 0.5:
+        return 'positive'
+    if s <= -0.4:
+        return 'negative'
+    return 'mixed'
 
 
 def diverse_citations(citations, limit):

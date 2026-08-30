@@ -22,8 +22,16 @@ Two signals, both computed from what citations already carry:
 from makanlah.rank import add_corroboration
 
 
-def cite(url, author, platform='rednote'):
-    return {'post_url': url, 'author_handle': author, 'platform': platform, 'excerpt': 'x'}
+def cite(url, author, platform='rednote', post_id=None):
+    # Identity defaults to address. That is true for RedNote, where one post has one
+    # URL, and it keeps every case written before #153 meaning what it meant.
+    return {
+        'post_id': post_id or url,
+        'post_url': url,
+        'author_handle': author,
+        'platform': platform,
+        'excerpt': 'x',
+    }
 
 
 def entry(vid, cites):
@@ -106,9 +114,9 @@ class TestADeadPostIsNotASecondSource:
         # 阿喜: one live Google Maps review, two dead RedNote posts.
         c = self._one(
             [
-                {'post_url': 'm1', 'platform': 'google_maps', 'author_handle': None, 'dead': None},
-                {'post_url': 'r1', 'platform': 'rednote', 'author_handle': 'a', 'dead': True},
-                {'post_url': 'r2', 'platform': 'rednote', 'author_handle': 'b', 'dead': True},
+                {'post_id': 'm1', 'post_url': 'm1', 'platform': 'google_maps', 'author_handle': None, 'dead': None},
+                {'post_id': 'r1', 'post_url': 'r1', 'platform': 'rednote', 'author_handle': 'a', 'dead': True},
+                {'post_id': 'r2', 'post_url': 'r2', 'platform': 'rednote', 'author_handle': 'b', 'dead': True},
             ]
         )
         assert c == {'posts': 1, 'authors': 0, 'platforms': 1}
@@ -120,8 +128,8 @@ class TestADeadPostIsNotASecondSource:
         # with the strongest evidence in the corpus.
         c = self._one(
             [
-                {'post_url': 'm1', 'platform': 'google_maps', 'author_handle': None, 'dead': None},
-                {'post_url': 'r1', 'platform': 'rednote', 'author_handle': 'a'},
+                {'post_id': 'm1', 'post_url': 'm1', 'platform': 'google_maps', 'author_handle': None, 'dead': None},
+                {'post_id': 'r1', 'post_url': 'r1', 'platform': 'rednote', 'author_handle': 'a'},
             ]
         )
         assert c == {'posts': 2, 'authors': 1, 'platforms': 2}
@@ -130,9 +138,43 @@ class TestADeadPostIsNotASecondSource:
         """One listicle driving three ranks is worth saying whether or not it still
         resolves, so the dead filter must not reach `shared_with` (#87)."""
         entries = [
-            {'venue': {'id': 'a'}, 'citations': [{'post_url': 'p', 'platform': 'rednote', 'dead': True}]},
-            {'venue': {'id': 'b'}, 'citations': [{'post_url': 'p', 'platform': 'rednote', 'dead': True}]},
+            {
+                'venue': {'id': 'a'},
+                'citations': [{'post_id': 'p', 'post_url': 'p', 'platform': 'rednote', 'dead': True}],
+            },
+            {
+                'venue': {'id': 'b'},
+                'citations': [{'post_id': 'p', 'post_url': 'p', 'platform': 'rednote', 'dead': True}],
+            },
         ]
         out = add_corroboration(entries)
         assert out[0]['citations'][0]['shared_with'] == ['b']
         assert out[1]['citations'][0]['shared_with'] == ['a']
+
+
+class TestThreeReviewersCanShareOneUrl:
+    """Google Maps has no per-review URL, so review_url() returns the venue page.
+
+    Counting addresses made Upper House read `1 post` over three testimonies by three
+    different people, and `independentlyBacked` needs `posts >= 2` -- so the stamp was
+    withheld from a venue that had earned it. That is #87 in the mirror: there the
+    stamp claimed corroboration that did not exist, here it denied corroboration that
+    did. Both are the stamp saying something untrue.
+    """
+
+    def test_three_reviews_on_one_venue_page_are_three_posts(self):
+        url = 'https://www.google.com/maps/search/?api=1&query=Upper%20House'
+        cites = [cite(url, None, 'google_maps', post_id=f'rev{i}') for i in (1, 2, 3)]
+        got = add_corroboration([entry('v1', cites)])
+        assert got[0]['venue']['corroboration']['posts'] == 3
+
+    def test_the_same_review_seen_twice_is_still_one_post(self):
+        # Identity has to dedupe as well as separate, or the count inflates instead.
+        url = 'https://maps.example/x'
+        cites = [cite(url, None, 'google_maps', post_id='rev1') for _ in range(3)]
+        assert add_corroboration([entry('v1', cites)])[0]['venue']['corroboration']['posts'] == 1
+
+    def test_a_rednote_post_quoted_twice_is_still_one_post(self):
+        # The pre-#153 behaviour that must not regress: one URL, one identity.
+        cites = [cite('https://rednote/p1', 'a'), cite('https://rednote/p1', 'a')]
+        assert add_corroboration([entry('v1', cites)])[0]['venue']['corroboration']['posts'] == 1

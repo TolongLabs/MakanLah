@@ -74,18 +74,31 @@ try {
   // 1. Landing. The ?api= is how this client is pointed at a backend; it is
   //    stored, so later navigations do not need it.
   await page.goto(`${WEB}/?api=${encodeURIComponent(API)}`, { waitUntil: 'networkidle' })
-  await beat(page, 2200)
+  // Landing is the slowest route -- reveal sections plus corpus figures from
+  // /health, measured settling at ~1845ms. Hold past that before the beat.
+  await beat(page, 2600)
   mark('landing')
-  await page.mouse.wheel(0, 700)
-  await beat(page, 2200)
-  await page.mouse.wheel(0, 900)
-  await beat(page, 2200)
-  await page.mouse.wheel(0, -1600)
-  await beat(page, 1200)
+
+  // The chatbot-versus-real-post comparison IS the pitch's opening argument and
+  // it got four seconds in the launch cut. Scroll onto it and stay there.
+  const compare = page.locator('text=/Ask A Chatbot/i').first()
+  if (await compare.isVisible().catch(() => false)) {
+    await compare.scrollIntoViewIfNeeded()
+  } else {
+    await page.mouse.wheel(0, 700)
+  }
+  await beat(page, 1400)
+  mark('compare')
+  await beat(page, 7000)
+  await page.mouse.wheel(0, 420)
+  await beat(page, 7200)
 
   // 2. The taste wizard. This is the thing that makes it not a search box.
   await page.goto(`${WEB}/taste`, { waitUntil: 'networkidle' })
-  await beat(page, 1800)
+  // Layout settles at ~749ms but the mascot needs ~4s more: pixi fetches a
+  // 508KB chunk, the moc3 and the textures. Filming her half-painted is worse
+  // than filming her late.
+  await beat(page, 5200)
   mark('taste')
 
   for (let step = 0; step < 6; step++) {
@@ -148,7 +161,24 @@ try {
     // The closing line is read over this. Scrolling through the rest of the trail
     // keeps it moving rather than holding a dead frame under the narration.
     await page.mouse.wheel(0, 500)
-    await beat(page, 5500)
+    await beat(page, 3200)
+  }
+
+  // 6. The honesty beat. The venue the route lands on may have no dead citation
+  //    at all, so this navigates to one that has BOTH -- 興记肉骨茶 carries two
+  //    live posts and one that no longer opens. An all-dead page would make the
+  //    line "it says so" land without the contrast that gives it meaning.
+  const DEAD_VENUE = process.env.DEMO_DEAD_VENUE || '6ac6d7e4-e048-4298-8437-a060c6a30fa9'
+  await page.goto(`${WEB}/r/${DEAD_VENUE}`, { waitUntil: 'networkidle' })
+  await beat(page, 2600)
+  const deadRow = page.locator('text=/no longer opens/i').first()
+  if (await deadRow.isVisible().catch(() => false)) {
+    await deadRow.scrollIntoViewIfNeeded()
+    await beat(page, 1200)
+    mark('dead')
+    await beat(page, 6000)
+  } else {
+    console.log('  ! no dead-citation row on the venue page -- the honesty beat did not film')
   }
   mark('end')
 } catch (e) {

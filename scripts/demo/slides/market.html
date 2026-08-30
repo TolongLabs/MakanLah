@@ -1,0 +1,64 @@
+<!doctype html>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=Noto+Serif+SC:wght@400&display=swap" rel="stylesheet" />
+<link href="slide.css" rel="stylesheet" />
+<style>
+  .figs {
+    margin-top: 56px; display: grid; grid-template-columns: repeat(4, 1fr);
+    column-gap: 50px; border-top: 1px solid var(--rule); padding-top: 30px;
+  }
+  .fig .v {
+    font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 100px;
+    font-weight: 600; letter-spacing: -0.04em; line-height: 0.98;
+  }
+  /* The only figure that is a claim about integrity rather than volume. */
+  .fig.attested .v { color: var(--seal); }
+  .fig .k { margin-top: 13px; font-size: 23px; font-weight: 600; }
+  .fig .n { margin-top: 9px; font-family: var(--testimony); font-size: 20px; line-height: 1.55; color: var(--ink-soft); }
+  .testimony {
+    margin-top: auto; display: grid; grid-template-columns: 1.4fr 1fr; gap: 76px;
+    border-top: 1px solid var(--rule); padding-top: 34px;
+  }
+  /* line-height 1.75 and no letter-spacing: the rule the app uses for CJK, which
+     sits on a different vertical rhythm to Latin and mangles under tracking. */
+  .q { font-family: var(--testimony); font-size: 31px; line-height: 1.7; color: var(--ink); }
+  .src {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 9px; font-size: 18px;
+    color: var(--enamel); background: var(--enamel-quiet); padding: 7px 13px; border-radius: 2px;
+  }
+  .scope-k { font-size: 23px; font-weight: 600; }
+  .scope-v { margin-top: 9px; font-family: var(--testimony); font-size: 20px; line-height: 1.55; color: var(--ink-soft); }
+</style>
+<body>
+  <div class="masthead">
+    <div class="brand"><svg class="chop" viewBox="0 0 100 100" aria-hidden="true"><mask id="m02"><rect width="100" height="100" fill="#fff"/><path d="M49.47234042553191 18.999999999999993 53.693617021276594 21.90212765957446 52.638297872340424 22.957446808510632Q65.56595744680851 30.608510638297865 80.60425531914893 34.565957446808504L77.70212765957447 39.578723404255314Q62.92765957446808 35.09361702127659 48.94468085106383 26.123404255319144Q37.33617021276596 35.621276595744675 20.97872340425532 40.634042553191485L19.395744680851063 35.621276595744675Q37.599999999999994 29.81702127659574 49.47234042553191 18.999999999999993ZM70.57872340425531 37.99574468085106V62.26808510638297H34.43404255319149V75.4595744680851L48.680851063829785 71.7659574468085L50.26382978723404 76.51489361702127L31.79574468085106 81.0L29.157446808510635 77.83404255319148V37.99574468085106H48.1531914893617L45.25106382978723 33.246808510638296L50.26382978723404 31.663829787234036Q52.638297872340424 34.565957446808504 53.95744680851064 37.99574468085106ZM34.43404255319149 43.008510638297864V47.757446808510636H65.30212765957447V43.008510638297864ZM34.43404255319149 52.506382978723394V57.25531914893617H65.30212765957447V52.506382978723394ZM45.51489361702127 63.587234042553185 62.66382978723404 68.86382978723404Q67.94042553191488 65.69787234042553 71.1063829787234 62.00425531914893L75.59148936170212 64.9063829787234L68.20425531914893 70.97446808510638L79.54893617021276 76.25106382978723L76.6468085106383 81.0Q59.761702127659575 72.29361702127659 42.34893617021277 67.80851063829786Z" fill="#000"/></mask><rect width="100" height="100" fill="currentColor" mask="url(#m02)"/></svg><div class="wm">MakanLah</div></div>
+    <div class="slug"><span>The Corpus Today</span><span class="no">02 / 03</span></div>
+  </div>
+  <div class="eyebrow">What Is In It</div>
+  <h1>Every number here is countable.</h1>
+  <p class="sub">Not a projection and not a roadmap. This is what the corpus holds right now, and each figure is one query away from being checked.</p>
+
+  <div class="figs">
+    <div class="fig"><div class="v">1,507</div><div class="k">Posts Read</div>
+      <div class="n">Public, written by people, captured with attribution intact.</div></div>
+    <div class="fig"><div class="v">118</div><div class="k">People Behind Them</div>
+      <div class="n">Distinct authors. Two posts by one account is one person saying it twice.</div></div>
+    <div class="fig"><div class="v">247</div><div class="k">Places Named</div>
+      <div class="n">Each with coordinates, so you can walk to it.</div></div>
+    <div class="fig attested"><div class="v">0</div><div class="k">Picks We Made Up</div>
+      <div class="n">A result without a post behind it is never returned.</div></div>
+  </div>
+
+  <div class="testimony">
+    <div>
+      <div class="q">「藏在甲洞的本地人真爱老店，本人更爱这家的干肉骨茶。」</div>
+      <div class="src">RedNote &middot; a real post, cited on the card it recommends</div>
+    </div>
+    <div>
+      <div class="scope-k">Kuala Lumpur, and it is a start</div>
+      <div class="scope-v">Two platforms today. The architecture takes a third without a rewrite, and every city after this is the same pipeline pointed somewhere new.</div>
+    </div>
+  </div>
+</body>
