@@ -126,7 +126,15 @@ def nearest_serving(con, dishes_folded, lat, lng, limit=3):
              select distinct on (v.id) v.id, v.name, v.area, v.place_id, v.lat, v.lng,
                     (6371000 * acos(least(1, greatest(-1,
                        cos(radians(%s)) * cos(radians(v.lat)) * cos(radians(v.lng) - radians(%s))
-                       + sin(radians(%s)) * sin(radians(v.lat)))))) as distance_m
+                       + sin(radians(%s)) * sin(radians(v.lat)))))) as distance_m,
+                    -- The gap surface must not apply a weaker evidence standard than
+                    -- the ranked one. Kapitan cannot be ranked -- every post naming it
+                    -- is dead -- but was named as "nearest serving" in exactly the
+                    -- shape of a venue backed by three readable posts. Same shape,
+                    -- different standard, and the client could not tell them apart.
+                    (select count(*) from mention m2 join source_post p2 on p2.id = m2.post_id
+                      where m2.venue_id = v.id and m2.excerpt is not null
+                        and p2.dead_at is null) as live_citations
              from venue v join mention m on m.venue_id = v.id
              where v.lat is not null
                and exists (select 1 from unnest(m.dishes) d where lower(btrim(d)) = any(%s))
@@ -352,7 +360,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     for venue_id, cites in pool.items():
         shown = diverse_citations(cites, per_venue)
         out[venue_id]['citations'] = shown
-        kept[venue_id] = {c['post_id'] for c in shown if not c.get('dead')}
+        kept[venue_id] = {c['post_id'] for c in shown}
     for venue_id, counts in tally_sentiment(rows, kept).items():
         out[venue_id]['sentiment'] = counts
     return out
@@ -369,11 +377,18 @@ def tally_sentiment(rows, kept=None):
     - No dead posts. Counting them repeats #111 -- a breakdown that cannot be traced
       to an openable post is the unverifiable assertion this product exists not to
       make.
-    - The same posts corroboration counts. `citations` is trimmed to per_venue before
-      it ships, and add_corroboration counts what survives that trim. Tallying every
-      live post in the corpus instead gave Village Park 7 sentiment against 3 posts:
-      four of those seven were real, and none of them were on the card. `kept` is the
-      set of post_urls that survived, so every counted post is one a reader can open.
+    - The same posts the card SHOWS. `citations` is trimmed to per_venue before it
+      ships, and tallying every post in the corpus instead gave Village Park 7
+      sentiment against 3 posts, none of the extra four on the card.
+
+    Dead posts ARE counted here, which is the opposite of what corroboration does,
+    and the difference is deliberate. Corroboration claims a reader can go and check
+    two independent people, so a post nobody can open is not a second source (#111).
+    This summarises the testimony on the card, and the card SHOWS a dead citation --
+    labelled, but shown. 1919餐馆 displayed 「别去」 (don't go) and read `all
+    positive`, because the tally skipped the dead post the reader was looking at.
+    **What we show is what we count**, or the summary contradicts the evidence
+    beside it.
 
     Several mentions behind one identity are averaged, not reduced to the worst.
     That rule was written for one author's own disagreeing sentences and it is wrong
@@ -385,8 +400,6 @@ def tally_sentiment(rows, kept=None):
     """
     by_venue = {}
     for r in rows:
-        if r['dead']:
-            continue
         if kept is not None and str(r['post_id']) not in kept.get(r['venue_id'], ()):
             continue
         if r['sentiment'] is None:
