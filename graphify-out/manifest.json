@@ -953,5 +953,75 @@
     "mtime": 1788031178.7559392,
     "ast_hash": "3ce50e1747132018e77900c0f950e149",
     "semantic_hash": "3ce50e1747132018e77900c0f950e149"
+  },
+  "docs/DESIGN.md": {
+    "mtime": 1788105229.327296,
+    "ast_hash": "a3d43581fcfd626a8c8df536bd700db8",
+    "semantic_hash": ""
+  },
+  "docs/PRD.md": {
+    "mtime": 1788031178.710266,
+    "ast_hash": "c41ec399bb94edcd59892782084653d7",
+    "semantic_hash": ""
+  },
+  "docs/PRODUCT.md": {
+    "mtime": 1788031178.710266,
+    "ast_hash": "7150d4573aec4363476d298626c748e4",
+    "semantic_hash": ""
+  },
+  "docs/SWARM.md": {
+    "mtime": 1788031178.710266,
+    "ast_hash": "ed3b1900e313ca75bf5bfd71bece1841",
+    "semantic_hash": ""
+  },
+  "docs/TRD.md": {
+    "mtime": 1788109980.8709476,
+    "ast_hash": "9ad6a3b057257dcf4ccd146b550b5e8d",
+    "semantic_hash": ""
+  },
+  "evals/BASELINE.txt": {
+    "mtime": 1788031178.7124996,
+    "ast_hash": "3de897f21d4397a5fa12d6e1f75aeca9",
+    "semantic_hash": ""
+  },
+  "render.yaml": {
+    "mtime": 1788031178.7199388,
+    "ast_hash": "f6d298a18462bb0604d9452b2b424920",
+    "semantic_hash": ""
+  },
+  "requirements.txt": {
+    "mtime": 1788031178.7199388,
+    "ast_hash": "d9934433e0942965540e2cdc0a173d19",
+    "semantic_hash": ""
+  },
+  "scripts/demo/deck/index.html": {
+    "mtime": 1788105229.327296,
+    "ast_hash": "62e4f61fac321e8bad56a55c82f101f5",
+    "semantic_hash": ""
+  },
+  "scripts/demo/narration.txt": {
+    "mtime": 1788105229.327296,
+    "ast_hash": "644646098f977e99107394c55c4ab3a7",
+    "semantic_hash": ""
+  },
+  "scripts/demo/slides/arch.html": {
+    "mtime": 1788094409.4643116,
+    "ast_hash": "62405595e51b0cb6c0db9ec59305de93",
+    "semantic_hash": ""
+  },
+  "scripts/demo/slides/close.html": {
+    "mtime": 1788094409.4643116,
+    "ast_hash": "d8d1b590caac51e51d1c67a16254a623",
+    "semantic_hash": ""
+  },
+  "scripts/demo/slides/market.html": {
+    "mtime": 1788105229.327296,
+    "ast_hash": "02e6aba50559db32c25812b334cc6020",
+    "semantic_hash": ""
+  },
+  "web/index.html": {
+    "mtime": 1788105229.327296,
+    "ast_hash": "a36bfb09a479db178248febaa5104238",
+    "semantic_hash": ""
   }
 }
