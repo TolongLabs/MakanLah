@@ -510,3 +510,19 @@ describe('the distance row reports the radius the search actually used', () => {
     expect(container.querySelector('.find-prefs')?.textContent ?? '').toMatch(/3 km/)
   })
 })
+
+describe('the distance row survives a failed search', () => {
+  // Peer 3 on #173: run()'s catch sets `data` to null, so gating the rewrite on
+  // `data` let the row fall back to `prefs.range_m` the moment a search errored --
+  // "1 km" beside a failure state, the same bug one branch over. `asked` and
+  // `askedRadius` are both set BEFORE the await, so they survive the catch and
+  // describe the request that was actually made.
+  it('reports the radius the failed request used, not the one the wizard answered', async () => {
+    recommend.mockReset().mockRejectedValue(new Error('network'))
+    const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 1000 } })
+    await screen.findByText(/Filtered by your answers/i)
+    const text = container.querySelector('.find-prefs')?.textContent ?? ''
+    expect(text).toMatch(/All of KL/)
+    expect(text).not.toMatch(/1 km/)
+  })
+})

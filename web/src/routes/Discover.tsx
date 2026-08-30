@@ -189,9 +189,12 @@ export function Discover() {
     // both sentences. `askedRadius` is the radius the search ACTUALLY used, and it
     // is the only one of the two either sentence is entitled to.
     //
-    // Only once a search has answered. Before that `askedRadius` is 0 and would
-    // read as "All of KL" while the wizard's answer is still the honest claim.
-    .map((r) => (r.term === 'Within' && data ? { ...r, value: rangeLabel(askedRadius) } : r))
+    // Only once a search has been MADE. `asked` and `askedRadius` are both set
+    // before the await, so they survive the catch and keep describing the request
+    // that actually went out; `data` does not, and gating on it put "1 km" back
+    // beside a failure state -- the same bug one branch over. Before any search
+    // `askedRadius` is 0 and the wizard's answer is still the honest claim.
+    .map((r) => (r.term === 'Within' && asked ? { ...r, value: rangeLabel(askedRadius) } : r))
 
   return (
     <div className="page discover">
