@@ -317,10 +317,6 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     return out
 
 
-# Most critical wins when one post yields several mention rows.
-RANK_BUCKET = {'positive': 0, 'mixed': 1, 'negative': 2}
-
-
 def tally_sentiment(rows, kept=None):
     """Bucket counts per venue, one vote per POST, over posts the card can show.
 
@@ -338,8 +334,13 @@ def tally_sentiment(rows, kept=None):
       four of those seven were real, and none of them were on the card. `kept` is the
       set of post_urls that survived, so every counted post is one a reader can open.
 
-    When one post yields several mention rows the most critical bucket wins. A
-    complaint must not be averaged away by the same post's milder lines.
+    Several mentions behind one identity are averaged, not reduced to the worst.
+    That rule was written for one author's own disagreeing sentences and it is wrong
+    here, because `post_url` is not one author: Google Maps has no per-review URL, so
+    `review_url()` returns the venue's page and all 1,388 Maps mentions share just 178
+    URLs -- about eight reviews each. Taking the worst turned one 1-star review into a
+    verdict on all eight (#149). 王美记 read "2 of 2 posts critical" with a mean of
+    +0.19 and no complaint in any excerpt shown.
     """
     by_venue = {}
     for r in rows:
@@ -347,43 +348,36 @@ def tally_sentiment(rows, kept=None):
             continue
         if kept is not None and r['post_url'] not in kept.get(r['venue_id'], ()):
             continue
-        b = sentiment_bucket(r['sentiment'])
-        if not b:
+        if r['sentiment'] is None:
             continue
-        seen = by_venue.setdefault(r['venue_id'], {})
-        if RANK_BUCKET[b] > RANK_BUCKET.get(seen.get(r['post_url']), -1):
-            seen[r['post_url']] = b
+        by_venue.setdefault(r['venue_id'], {}).setdefault(r['post_url'], []).append(float(r['sentiment']))
     out = {}
     for venue_id, by_post in by_venue.items():
         counts = {'positive': 0, 'mixed': 0, 'negative': 0}
-        for b in by_post.values():
-            counts[b] += 1
+        for scores in by_post.values():
+            counts[sentiment_bucket(sum(scores) / len(scores))] += 1
         out[venue_id] = counts
     return out
 
 
 def sentiment_bucket(score):
-    """Three buckets, because an average of this distribution says nothing.
+    """Three buckets, on the star scale that produces most of these scores.
 
-    871 of 1653 mentions sit at exactly 1.0, so a mean reads "excellent" on
-    nearly every venue and a chip repeating that everywhere carries no
-    information -- `docs/DESIGN.md` calls a device that says the same thing on
-    every card a lie told in layout.
+    star_sentiment is (stars - 3) / 2, so the cut points are stars: 4 and 5 are
+    positive, 3 is mixed, 1 and 2 are critical. Naming a 4-star review "mixed" to
+    manufacture spread would be inventing a reservation the reviewer did not have.
 
-    Counts are different: **163 of 186 multi-mention venues (88%) span more than
-    one bucket**, and 73 of 247 carry at least one negative. Disagreement is the
-    common case here, and it is the part a reader should see.
-
-    The boundaries are deliberately asymmetric. Positive needs >= 0.6 because the
-    scale is crowded at the top; negative needs only <= -0.2 because a single
-    person saying a place was bad is worth surfacing even when nine disagree.
+    The old boundary was -0.2, which caught mild qualification -- an odd drink, a
+    plain room, a price called steep -- and the card turned that into a verdict
+    about a real business (#149). 王美记 rendered "2 of 2 posts critical" over
+    excerpts that contained no complaint at all.
     """
     if score is None:
         return None
     s = float(score)
-    if s >= 0.6:
+    if s >= 0.5:
         return 'positive'
-    if s <= -0.2:
+    if s <= -0.5:
         return 'negative'
     return 'mixed'
 

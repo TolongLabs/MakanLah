@@ -8,23 +8,22 @@ venues span more than one bucket, and 73 of 247 carry at least one negative.
 from makanlah.db import sentiment_bucket, tally_sentiment
 
 
-def test_the_top_of_the_scale_is_positive():
+def test_four_and_five_stars_are_positive():
+    # star_sentiment is (stars - 3) / 2, so 0.5 is a four-star review. Filing that
+    # as 'mixed' invents a reservation the reviewer did not express.
     assert sentiment_bucket(1.0) == 'positive'
-    assert sentiment_bucket(0.6) == 'positive'
+    assert sentiment_bucket(0.5) == 'positive'
 
 
-def test_the_middle_is_mixed_not_positive():
-    # 0.5 is the second most common value in the corpus. Calling it positive
-    # would put nearly everything in one bucket and empty the signal.
-    assert sentiment_bucket(0.5) == 'mixed'
+def test_three_stars_and_mild_qualification_are_mixed():
+    # -0.2 was the old negative boundary and it caught an odd drink and a room
+    # called plain, which the card then reported as a critical verdict (#149).
     assert sentiment_bucket(0.0) == 'mixed'
-    assert sentiment_bucket(-0.1) == 'mixed'
+    assert sentiment_bucket(-0.2) == 'mixed'
+    assert sentiment_bucket(-0.4) == 'mixed'
 
 
-def test_a_single_critic_is_not_rounded_away():
-    # The negative boundary is deliberately closer to zero than the positive one:
-    # one person saying a place was bad is worth surfacing even when nine disagree.
-    assert sentiment_bucket(-0.2) == 'negative'
+def test_one_and_two_stars_are_critical():
     assert sentiment_bucket(-0.5) == 'negative'
     assert sentiment_bucket(-1.0) == 'negative'
 
@@ -34,10 +33,15 @@ def test_a_missing_score_is_not_a_bucket():
     assert sentiment_bucket(None) is None
 
 
-def test_the_thresholds_are_asymmetric_on_purpose():
-    # Guards the asymmetry itself: a symmetric split at +/-0.6 would file every
-    # mild complaint as 'mixed' and the negative bucket would almost never fill.
-    assert sentiment_bucket(-0.3) == 'negative'
+def test_the_cut_points_sit_on_the_star_scale():
+    # The scale most of these scores come from: 4-5 positive, 3 mixed, 1-2 critical.
+    assert [sentiment_bucket((n - 3) / 2) for n in (1, 2, 3, 4, 5)] == [
+        'negative',
+        'negative',
+        'mixed',
+        'positive',
+        'positive',
+    ]
     assert sentiment_bucket(0.3) == 'mixed'
 
 
@@ -63,11 +67,18 @@ def test_a_venue_whose_every_post_is_dead_reports_nothing():
     assert tally_sentiment([_row('v1', 'p1', 1.0, dead=True)]) == {}
 
 
-def test_the_harshest_line_in_a_post_is_the_one_that_counts():
-    # Averaging within a post would let a complaint be cancelled by the same
-    # author's milder sentences.
-    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p1', -0.9)]
-    assert tally_sentiment(rows)['v1'] == {'positive': 0, 'mixed': 0, 'negative': 1}
+def test_mentions_behind_one_url_are_averaged_not_reduced_to_the_worst():
+    # post_url is not one author. Maps has no per-review URL, so 1,388 mentions
+    # share 178 URLs and the worst-wins rule turned one 1-star review into a verdict
+    # on eight (#149). 王美记's eight Maps reviews mean +0.19 -- genuinely mixed.
+    rows = [_row('v1', 'p1', s) for s in (-1.0, -0.5, -0.5, 0.5, 0.5, 0.5, 1.0, 1.0)]
+    assert tally_sentiment(rows)['v1'] == {'positive': 0, 'mixed': 1, 'negative': 0}
+
+
+def test_a_lone_bad_review_is_still_reported_as_bad():
+    # Averaging must not become a way of hiding criticism: one review, one identity,
+    # nothing to average it against.
+    assert tally_sentiment([_row('v1', 'p1', -1.0)])['v1']['negative'] == 1
 
 
 def test_totals_equal_the_number_of_live_posts():
@@ -75,7 +86,7 @@ def test_totals_equal_the_number_of_live_posts():
     # the corroboration line shows, or the card stays dark.
     rows = [
         _row('v1', 'p1', 1.0),
-        _row('v1', 'p1', 0.5),
+        _row('v1', 'p1', 0.9),
         _row('v1', 'p2', -0.5),
         _row('v1', 'p3', 0.0),
         _row('v1', 'p4', 1.0, dead=True),
