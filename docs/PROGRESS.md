@@ -26,6 +26,66 @@ console before repinning.
 
 ---
 
+## PARKED — 2026-08-30, Workstation Restart
+
+**Read this first on resume.** Everything below is pushed; the working tree was clean at shutdown.
+
+### #144 Is Green And Waiting On A Person, Not On CI
+
+Branch `feat/discover-why-and-modals` at **`834d3d2`**. CI green, both new checks confirmed _run_ rather than skipped.
+Deploy-verified preview: <https://cffa9491.makanlah-b5h.pages.dev/discover>
+
+It carries both of the owner's `/discover` batches: the why-row subtitle, the `Why This Showed` disclosure, Ask as a
+streaming copilot with a live Live2D stage and collapsing tool trace, All Sources as a briefing dialog on a real
+`/r/:venueId` URL, `distance_gap`, the sentiment line, `post_id` identity, the Redo My Taste sizing, and Directions
+removed from the card.
+
+**Three owner questions are the only thing blocking merge**, all one-word answers:
+
+1. `Why This Showed` — one tap, or always open?
+2. The model-written blurb — stays off the cards, or comes back?
+3. **#141** dot density — quiet ground, or more present?
+
+### The One Live Disagreement: #166
+
+**`main` is at `57ef49e`, which is NOT deployed. Prod is `785992a`.** Do not deploy `57ef49e` before this is settled —
+`makanlah-13` agreed to hold it.
+
+#166 changes `tally_sentiment` to **count dead posts**, so `1919餐馆` would read `2 positive, 1 critical` over 3
+displayed citations instead of `2 positive` over 2. It was built on a diagnosis of mine that I have since retracted.
+
+**The question, in one sentence:** does the sentiment line describe _the posts the card shows_, or _the posts a reader
+can open_?
+
+- **#166 assumes the former**, because the dead excerpt is rendered in the All Sources trail.
+- **The shipped client assumes the latter**, on #111 grounds: a post nobody can open is not evidence, which is why
+  `add_corroboration` already excludes dead citations. The copy is scoped to "Of the N posts here", true about the
+  openable ones.
+
+Both defensible, only one true. `makanlah-13` now leans toward reverting that half of #166 and keeping its
+`distance_gap` half, which is unaffected and wanted. **The client flag was verified against `785992a` and is safe; if
+`57ef49e` deploys unresolved, re-verify before trusting any sentiment line.**
+
+### Third Scope Error Of The Day, Recorded
+
+The justification for printing unanimous sentiment leaned on "163 of 186 venues span more than one bucket" — a figure
+about a venue's **whole record**. The line describes the **cited, live, trimmed** posts, two or three of them. Measured
+at render: **36 of 44 lines read "all positive" — 82%, not 12%.** The line stays, because silence would make its own
+absence mean three unrelated things, but `evidence.ts` now carries the measured number rather than the borrowed one.
+
+Layer, origin, population: three sessions, three scope errors, one afternoon. All three in [`AUTONOMY.md`](AUTONOMY.md).
+
+### Not Mine, In Flight
+
+- **#157** (`makanlah-13`) — Google Maps gets its own venue discovery path. Every venue currently enters through
+  RedNote's ~20 keywords, so Maps supplies 84% of the evidence and cannot introduce a restaurant. This is why the list
+  reads thin, and it outranks the copilot backend
+- **`/ask/stream`** — schema settled, client built and falling back to `POST /ask`. Nothing of mine breaks when it lands
+- **The map image** — `venue.map_image_url`, stored at ingestion. `MapPreview` renders nothing until it exists
+- **`Undisclosed Location`** — extraction lost the name; recoverable server-side from the place id it already carries
+
+---
+
 ## 2026-08-30 (Late) — The Pitch Deck, And A Fix I Reported Before It Was Fixed
 
 **`main` is at `ccdc65f` and `/health` reports `ccdc65f`.** Three PRs landed: **#145** and **#147** (sentiment counts)
