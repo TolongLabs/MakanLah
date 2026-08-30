@@ -33,8 +33,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_index",
-      "community": 140,
-      "community_name": "index.py",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "index.py"
     },
     {
@@ -44,8 +44,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_index_rationale_1",
-      "community": 140,
-      "community_name": "index.py",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "vercel entrypoint. the app itself lives in api/main.py and is untouched...."
     },
     {
@@ -89,8 +89,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "request",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "request"
     },
     {
@@ -102,8 +102,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "api_main_prefsmodel",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "prefsmodel"
     },
     {
@@ -113,8 +113,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "basemodel",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "basemodel"
     },
     {
@@ -138,8 +138,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_health",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "health()"
     },
     {
@@ -149,8 +149,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "post",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "post"
     },
     {
@@ -161,8 +161,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_recommend",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "recommend()"
     },
     {
@@ -257,8 +257,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_affordable",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "_affordable()"
     },
     {
@@ -269,8 +269,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_charge",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "_charge()"
     },
     {
@@ -281,8 +281,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_client_ip",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "_client_ip()"
     },
     {
@@ -293,8 +293,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_rate_limit",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "_rate_limit()"
     },
     {
@@ -306,8 +306,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "api_main_credentials",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "credentials"
     },
     {
@@ -319,8 +319,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "api_main_prefs",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "prefs"
     },
     {
@@ -331,8 +331,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_shape",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "_shape()"
     },
     {
@@ -343,8 +343,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_current_user",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "current_user()"
     },
     {
@@ -367,8 +367,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_signup",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "signup()"
     },
     {
@@ -379,8 +379,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_login",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "login()"
     },
     {
@@ -391,8 +391,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_guest",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "guest()"
     },
     {
@@ -403,8 +403,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_logout",
-      "community": 49,
-      "community_name": "login",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "logout()"
     },
     {
@@ -415,8 +415,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_me",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "me()"
     },
     {
@@ -426,8 +426,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "put",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "put"
     },
     {
@@ -438,8 +438,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_put_prefs",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "put_prefs()"
     },
     {
@@ -463,8 +463,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_ask",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "ask()"
     },
     {
@@ -500,8 +500,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_suggestions",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "suggestions()"
     },
     {
@@ -512,8 +512,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "api_main_venue",
-      "community": 131,
-      "community_name": "one",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "venue()"
     },
     {
@@ -534,8 +534,8 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "api_main_rationale_89",
-      "community": 75,
-      "community_name": "BaseModel",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "the taste wizard's answers. they arrived on every search and had nowhere to..."
     },
     {
@@ -545,8 +545,8 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "api_main_rationale_118",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "reports corpus state, and key presence by name only \u2014 never a value."
     },
     {
@@ -556,8 +556,8 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "api_main_rationale_163",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "every entry cites a real post. an entry that cannot be cited is dropped before..."
     },
     {
@@ -600,8 +600,8 @@
       "source_location": "L340",
       "_origin": "ast",
       "id": "api_main_rationale_340",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "behind cloudflare the socket peer is cloudflare, so the real visitor is in cf-..."
     },
     {
@@ -611,8 +611,8 @@
       "source_location": "L354",
       "_origin": "ast",
       "id": "api_main_rationale_354",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "per-ip, sliding window. the window now persists across cold starts when a..."
     },
     {
@@ -622,8 +622,8 @@
       "source_location": "L403",
       "_origin": "ast",
       "id": "api_main_rationale_403",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "none when absent, unknown or expired. callers that require a user raise 401."
     },
     {
@@ -633,8 +633,8 @@
       "source_location": "L453",
       "_origin": "ast",
       "id": "api_main_rationale_453",
-      "community": 49,
-      "community_name": "login",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "one shared account. everything done under it is visible to every other guest,..."
     },
     {
@@ -644,8 +644,8 @@
       "source_location": "L499",
       "_origin": "ast",
       "id": "api_main_rationale_499",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "one question about one venue, answered from the corpus or not at all. `covered:..."
     },
     {
@@ -666,8 +666,8 @@
       "source_location": "L550",
       "_origin": "ast",
       "id": "api_main_rationale_550",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "search chips for /discover, chosen by a model and written by the corpus. every..."
     },
     {
@@ -677,8 +677,8 @@
       "source_location": "L572",
       "_origin": "ast",
       "id": "api_main_rationale_572",
-      "community": 131,
-      "community_name": "one",
+      "community": 10,
+      "community_name": "main.py",
       "norm_label": "one venue and its citation trail. not gated by auth. 404 rather than an empty..."
     },
     {
@@ -791,8 +791,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_backfill_citation_urls",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 149,
+      "community_name": "backfill_citation_urls.py",
       "norm_label": "backfill_citation_urls.py"
     },
     {
@@ -803,8 +803,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_backfill_citation_urls_backfill",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 149,
+      "community_name": "backfill_citation_urls.py",
       "norm_label": "backfill()"
     },
     {
@@ -815,8 +815,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_backfill_citation_urls_main",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 149,
+      "community_name": "backfill_citation_urls.py",
       "norm_label": "main()"
     },
     {
@@ -826,8 +826,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_backfill_citation_urls_rationale_1",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 149,
+      "community_name": "backfill_citation_urls.py",
       "norm_label": "add the place id to google maps citation urls already written (#163)...."
     },
     {
@@ -884,7 +884,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "backfill_prices.py"
     },
     {
@@ -896,7 +896,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_figure_describes_the_meal",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "figure_describes_the_meal()"
     },
     {
@@ -908,7 +908,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_candidates",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "candidates()"
     },
     {
@@ -920,7 +920,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_run",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "run()"
     },
     {
@@ -932,7 +932,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_main",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "main()"
     },
     {
@@ -943,7 +943,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_rationale_1",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "fill `price_band` from post text the corpus already holds (#158). the tester's..."
     },
     {
@@ -954,7 +954,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_rationale_33",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "whether a figure in this post is a claim about what eating there costs. the..."
     },
     {
@@ -965,7 +965,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_prices_rationale_46",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "mentions with no band, and the post text behind them."
     },
     {
@@ -976,7 +976,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_review_dishes",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "backfill_review_dishes.py"
     },
     {
@@ -988,7 +988,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_review_dishes_candidates",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "candidates()"
     },
     {
@@ -1000,7 +1000,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_review_dishes_run",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "run()"
     },
     {
@@ -1012,7 +1012,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_review_dishes_main",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "main()"
     },
     {
@@ -1023,7 +1023,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_review_dishes_rationale_1",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "tag maps reviews with the dishes they name, and the price they state (#157,..."
     },
     {
@@ -1034,7 +1034,7 @@
       "_origin": "ast",
       "id": "ingest_backfill_review_dishes_rationale_27",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "maps mentions carrying no dishes, with the review text behind them."
     },
     {
@@ -1045,7 +1045,7 @@
       "_origin": "ast",
       "id": "ingest_capture_rednote",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "capture_rednote.py"
     },
     {
@@ -1057,7 +1057,7 @@
       "_origin": "ast",
       "id": "ingest_capture_rednote_load_cache",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "load_cache()"
     },
     {
@@ -1069,7 +1069,7 @@
       "_origin": "ast",
       "id": "ingest_capture_rednote_capture",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "capture()"
     },
     {
@@ -1081,7 +1081,7 @@
       "_origin": "ast",
       "id": "ingest_capture_rednote_main",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "main()"
     },
     {
@@ -1092,7 +1092,7 @@
       "_origin": "ast",
       "id": "ingest_capture_rednote_rationale_1",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "capture rednote posts to the raw cache. separate from pipeline.py on purpose:..."
     },
     {
@@ -1102,7 +1102,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_cdp",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": "cdp.py"
     },
@@ -1114,7 +1114,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_cdp_new_tab",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": "new_tab()"
     },
@@ -1126,7 +1126,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_cdp_close_tab",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": "close_tab()"
     },
@@ -1138,8 +1138,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_cdp_alive",
-      "community": 57,
-      "community_name": "cdp.py",
+      "community": 37,
+      "community_name": "gmaps.py",
       "norm_label": "alive()"
     },
     {
@@ -1152,7 +1152,7 @@
       "_origin": "ast",
       "id": "ingest_cdp_page",
       "community": 58,
-      "community_name": "Page",
+      "community_name": "cdp.py",
       "norm_label": "page"
     },
     {
@@ -1164,7 +1164,7 @@
       "_origin": "ast",
       "id": "ingest_cdp_page_init",
       "community": 58,
-      "community_name": "Page",
+      "community_name": "cdp.py",
       "norm_label": ".__init__()"
     },
     {
@@ -1176,7 +1176,7 @@
       "_origin": "ast",
       "id": "ingest_cdp_page_send",
       "community": 58,
-      "community_name": "Page",
+      "community_name": "cdp.py",
       "norm_label": ".send()"
     },
     {
@@ -1188,7 +1188,7 @@
       "_origin": "ast",
       "id": "ingest_cdp_page_goto",
       "community": 58,
-      "community_name": "Page",
+      "community_name": "cdp.py",
       "norm_label": ".goto()"
     },
     {
@@ -1200,7 +1200,7 @@
       "_origin": "ast",
       "id": "ingest_cdp_page_js",
       "community": 58,
-      "community_name": "Page",
+      "community_name": "cdp.py",
       "norm_label": ".js()"
     },
     {
@@ -1212,7 +1212,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "ingest_cdp_session",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": "session"
     },
@@ -1224,7 +1224,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_cdp_session_init",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": ".__init__()"
     },
@@ -1236,7 +1236,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_cdp_session_aenter",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": ".__aenter__()"
     },
@@ -1248,7 +1248,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_cdp_session_aexit",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": ".__aexit__()"
     },
@@ -1259,7 +1259,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_cdp_rationale_1",
-      "community": 57,
+      "community": 58,
       "community_name": "cdp.py",
       "norm_label": "cdp client. drives the chrome that scripts/chrome-session.sh brings up. every..."
     },
@@ -1431,8 +1431,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_enrich_dishes",
-      "community": 38,
-      "community_name": "models.py",
+      "community": 146,
+      "community_name": "enrich_dishes.py",
       "norm_label": "enrich_dishes.py"
     },
     {
@@ -1443,8 +1443,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_dishes_pending",
-      "community": 38,
-      "community_name": "models.py",
+      "community": 146,
+      "community_name": "enrich_dishes.py",
       "norm_label": "pending()"
     },
     {
@@ -1467,8 +1467,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_dishes_run",
-      "community": 38,
-      "community_name": "models.py",
+      "community": 146,
+      "community_name": "enrich_dishes.py",
       "norm_label": "run()"
     },
     {
@@ -1479,8 +1479,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_dishes_main",
-      "community": 38,
-      "community_name": "models.py",
+      "community": 146,
+      "community_name": "enrich_dishes.py",
       "norm_label": "main()"
     },
     {
@@ -1490,8 +1490,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_enrich_dishes_rationale_1",
-      "community": 38,
-      "community_name": "models.py",
+      "community": 146,
+      "community_name": "enrich_dishes.py",
       "norm_label": "pull dish names out of google maps reviews for venues that have none. 43% of..."
     },
     {
@@ -1501,8 +1501,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "ingest_enrich_dishes_rationale_43",
-      "community": 38,
-      "community_name": "models.py",
+      "community": 146,
+      "community_name": "enrich_dishes.py",
       "norm_label": "maps mentions belonging to venues that currently have no dish anywhere."
     },
     {
@@ -1525,7 +1525,7 @@
       "_origin": "ast",
       "id": "ingest_enrich_gmaps_star_sentiment",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": "star_sentiment()"
     },
     {
@@ -1548,8 +1548,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_gmaps_pending_venues",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "pending_venues()"
     },
     {
@@ -1631,7 +1631,7 @@
       "_origin": "ast",
       "id": "ingest_enrich_gmaps_rationale_33",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": "1..5 stars -> -1..1. none when the label did not carry a rating."
     },
     {
@@ -1652,8 +1652,8 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "ingest_enrich_gmaps_rationale_60",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "venues that have no google maps evidence yet. 'missing coordinates' was the..."
     },
     {
@@ -1674,8 +1674,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_enrich_places",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "enrich_places.py"
     },
     {
@@ -1686,8 +1686,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_places_apply_place",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "apply_place()"
     },
     {
@@ -1698,8 +1698,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_places_run",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "run()"
     },
     {
@@ -1710,8 +1710,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_enrich_places_main",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "main()"
     },
     {
@@ -1721,8 +1721,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_enrich_places_rationale_1",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "give venues their evidence through the places api instead of a browser. same..."
     },
     {
@@ -1732,8 +1732,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "ingest_enrich_places_rationale_35",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 60,
+      "community_name": "enrich_gmaps.py",
       "norm_label": "persist one venue's details. returns the number of mentions written."
     },
     {
@@ -1744,7 +1744,7 @@
       "_origin": "ast",
       "id": "ingest_geocode",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "geocode.py"
     },
     {
@@ -1756,7 +1756,7 @@
       "_origin": "ast",
       "id": "ingest_geocode_throttle",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "_throttle()"
     },
     {
@@ -1768,7 +1768,7 @@
       "_origin": "ast",
       "id": "ingest_geocode_geocode",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "geocode()"
     },
     {
@@ -1779,7 +1779,7 @@
       "_origin": "ast",
       "id": "ingest_geocode_rationale_1",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "nominatim geocoding. ingestion-time only, never on the request path. its usage..."
     },
     {
@@ -1790,7 +1790,7 @@
       "_origin": "ast",
       "id": "ingest_geocode_rationale_29",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "return (lat, lng, display_name, confidence) or none."
     },
     {
@@ -1896,8 +1896,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_gmaps_enrich",
-      "community": 57,
-      "community_name": "cdp.py",
+      "community": 37,
+      "community_name": "gmaps.py",
       "norm_label": "enrich()"
     },
     {
@@ -1973,8 +1973,8 @@
       "source_location": "L264",
       "_origin": "ast",
       "id": "ingest_gmaps_rationale_264",
-      "community": 57,
-      "community_name": "cdp.py",
+      "community": 37,
+      "community_name": "gmaps.py",
       "norm_label": "venues: [{'id', 'name', 'area'}] -> [{'id', 'coords', 'reviews'}]. the tab is..."
     },
     {
@@ -2262,7 +2262,7 @@
       "_origin": "ast",
       "id": "ingest_pipeline",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "pipeline.py"
     },
     {
@@ -2274,7 +2274,7 @@
       "_origin": "ast",
       "id": "ingest_pipeline_load_raw",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "load_raw()"
     },
     {
@@ -2285,8 +2285,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_pipeline_ingest_notes",
-      "community": 60,
-      "community_name": "enrich_gmaps.py",
+      "community": 59,
+      "community_name": "ingest_notes",
       "norm_label": "ingest_notes()"
     },
     {
@@ -2298,7 +2298,7 @@
       "_origin": "ast",
       "id": "ingest_pipeline_geocode_pending",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "geocode_pending()"
     },
     {
@@ -2310,7 +2310,7 @@
       "_origin": "ast",
       "id": "ingest_pipeline_embed_pending",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "embed_pending()"
     },
     {
@@ -2322,7 +2322,7 @@
       "_origin": "ast",
       "id": "ingest_pipeline_main",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "main()"
     },
     {
@@ -2333,7 +2333,7 @@
       "_origin": "ast",
       "id": "ingest_pipeline_rationale_1",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "discover -> fetch -> store raw -> extract -> resolve venue -> geocode -> embed..."
     },
     {
@@ -2343,8 +2343,8 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "ingest_pipeline_rationale_36",
-      "community": 60,
-      "community_name": "enrich_gmaps.py",
+      "community": 59,
+      "community_name": "ingest_notes",
       "norm_label": "records the run so `degraded` can be answered honestly. a run that dies mid-..."
     },
     {
@@ -2414,8 +2414,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_places_api_place_price_band",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 12,
+      "community_name": "test_places_api.py",
       "norm_label": "place_price_band()"
     },
     {
@@ -2462,8 +2462,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_places_api_get",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 72,
+      "community_name": "_rate_limit",
       "norm_label": "_get()"
     },
     {
@@ -2541,8 +2541,8 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "ingest_places_api_rationale_105",
-      "community": 50,
-      "community_name": "places_api.py",
+      "community": 12,
+      "community_name": "test_places_api.py",
       "norm_label": "prefer the ringgit figures over the symbol; fall back to the enum."
     },
     {
@@ -2597,7 +2597,7 @@
       "_origin": "ast",
       "id": "ingest_rednote",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "rednote.py"
     },
     {
@@ -2609,7 +2609,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_search",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "search()"
     },
     {
@@ -2621,7 +2621,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_fetch_note",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "fetch_note()"
     },
     {
@@ -2633,7 +2633,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_collect",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "collect()"
     },
     {
@@ -2645,7 +2645,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_strip_tokens",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "strip_tokens()"
     },
     {
@@ -2656,7 +2656,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_rationale_1",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "rednote (rednote.com) search and note capture over cdp. rednote.com is the..."
     },
     {
@@ -2667,7 +2667,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_rationale_80",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "search each keyword, then fetch note bodies until `limit` distinct notes. the..."
     },
     {
@@ -2678,7 +2678,7 @@
       "_origin": "ast",
       "id": "ingest_rednote_rationale_141",
       "community": 57,
-      "community_name": "cdp.py",
+      "community_name": "rednote.py",
       "norm_label": "xsec_token is a live request credential. it never reaches a committed file."
     },
     {
@@ -2802,7 +2802,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_strip_truncation",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "strip_truncation.py"
     },
@@ -2814,7 +2814,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "ingest_strip_truncation_main",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "main()"
     },
@@ -2825,7 +2825,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ingest_strip_truncation_rationale_1",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "remove google maps' own \"... more\" control from captured text. the scraper now..."
     },
@@ -2929,7 +2929,7 @@
       "_origin": "ast",
       "id": "makanlah_auth",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "auth.py"
     },
     {
@@ -2941,7 +2941,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_maxmem",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "_maxmem()"
     },
     {
@@ -2953,7 +2953,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_hash_password",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "hash_password()"
     },
     {
@@ -2965,7 +2965,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_verify_password",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "verify_password()"
     },
     {
@@ -2977,7 +2977,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_new_token",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "new_token()"
     },
     {
@@ -2988,8 +2988,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_auth_token_fingerprint",
-      "community": 49,
-      "community_name": "login",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "token_fingerprint()"
     },
     {
@@ -3001,7 +3001,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_looks_like_email",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "looks_like_email()"
     },
     {
@@ -3012,7 +3012,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_rationale_1",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "password hashing, opaque session tokens, and the shared guest identity. no new..."
     },
     {
@@ -3023,7 +3023,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_rationale_43",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "`scrypt$n$r$p$salt$key`, all base64. self-describing so it can be upgraded."
     },
     {
@@ -3034,7 +3034,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_rationale_61",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "constant-time, and never raises on a malformed stored value. a parse error here..."
     },
     {
@@ -3045,7 +3045,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_rationale_86",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "the value the client keeps. returned once and never stored in this form."
     },
     {
@@ -3055,8 +3055,8 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "makanlah_auth_rationale_91",
-      "community": 49,
-      "community_name": "login",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "what the database stores. a plain sha-256 rather than a kdf, deliberately: a..."
     },
     {
@@ -3067,7 +3067,7 @@
       "_origin": "ast",
       "id": "makanlah_auth_rationale_101",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "deliberately permissive. rejecting valid addresses is a worse failure than..."
     },
     {
@@ -3283,7 +3283,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_copilot",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "copilot.py"
     },
@@ -3296,7 +3296,7 @@
       "_origin": "ast",
       "id": "makanlah_copilot_price_facts",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "price_facts()"
     },
     {
@@ -3307,7 +3307,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_copilot_shape",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "_shape()"
     },
@@ -3319,7 +3319,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_copilot_ask",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "ask()"
     },
@@ -3331,7 +3331,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_copilot_cite",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "_cite()"
     },
@@ -3343,7 +3343,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_copilot_json_dumps",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "json_dumps()"
     },
@@ -3354,7 +3354,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_copilot_rationale_1",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "the interactive copilot: questions answered from the corpus, or not at all...."
     },
@@ -3366,7 +3366,7 @@
       "_origin": "ast",
       "id": "makanlah_copilot_rationale_85",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "what this venue costs, and whether a post actually said so. the copilot refused..."
     },
     {
@@ -3376,7 +3376,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "makanlah_copilot_rationale_136",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "answer from this venue's evidence, or report that it is not covered. `covered:..."
     },
@@ -3387,7 +3387,7 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "makanlah_copilot_rationale_245",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "built from database rows, never from model output."
     },
@@ -3398,7 +3398,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_db",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "db.py"
     },
@@ -3410,8 +3410,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_connect",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "connect()"
     },
     {
@@ -3434,8 +3434,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_upsert_venue",
-      "community": 14,
-      "community_name": "test_discovery_dedupe.py",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "upsert_venue()"
     },
     {
@@ -3459,7 +3459,7 @@
       "_origin": "ast",
       "id": "makanlah_db_set_coords",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "set_coords()"
     },
     {
@@ -3471,7 +3471,7 @@
       "_origin": "ast",
       "id": "makanlah_db_upsert_embedding",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "upsert_embedding()"
     },
     {
@@ -3482,8 +3482,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_dish_vocabulary",
-      "community": 3,
-      "community_name": "fold",
+      "community": 2,
+      "community_name": "price_band_from_text",
       "norm_label": "dish_vocabulary()"
     },
     {
@@ -3494,8 +3494,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_nearest_serving",
-      "community": 3,
-      "community_name": "fold",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "nearest_serving()"
     },
     {
@@ -3506,8 +3506,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_venue_dishes",
-      "community": 25,
-      "community_name": "recommend",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "venue_dishes()"
     },
     {
@@ -3518,8 +3518,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_venue_dish_counts",
-      "community": 25,
-      "community_name": "recommend",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "venue_dish_counts()"
     },
     {
@@ -3530,7 +3530,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_venue_evidence",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "venue_evidence()"
     },
@@ -3542,8 +3542,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_venue_by_id",
-      "community": 131,
-      "community_name": "one",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "venue_by_id()"
     },
     {
@@ -3555,7 +3555,7 @@
       "_origin": "ast",
       "id": "makanlah_db_venue_documents",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "venue_documents()"
     },
     {
@@ -3578,8 +3578,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_retrieve",
-      "community": 25,
-      "community_name": "recommend",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "retrieve()"
     },
     {
@@ -3590,8 +3590,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_venues_with_citations",
-      "community": 131,
-      "community_name": "one",
+      "community": 25,
+      "community_name": "recommend",
       "norm_label": "venues_with_citations()"
     },
     {
@@ -3638,8 +3638,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_diverse_citations",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": "diverse_citations()"
     },
     {
@@ -3698,8 +3698,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_already_extracted",
-      "community": 60,
-      "community_name": "enrich_gmaps.py",
+      "community": 59,
+      "community_name": "ingest_notes",
       "norm_label": "already_extracted()"
     },
     {
@@ -3710,8 +3710,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_mark_extracted",
-      "community": 60,
-      "community_name": "enrich_gmaps.py",
+      "community": 59,
+      "community_name": "ingest_notes",
       "norm_label": "mark_extracted()"
     },
     {
@@ -3722,8 +3722,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_create_user",
-      "community": 49,
-      "community_name": "login",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "create_user()"
     },
     {
@@ -3734,7 +3734,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_user_by_email",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "user_by_email()"
     },
@@ -3746,8 +3746,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_guest_user",
-      "community": 49,
-      "community_name": "login",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "guest_user()"
     },
     {
@@ -3759,7 +3759,7 @@
       "_origin": "ast",
       "id": "makanlah_db_open_session",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "open_session()"
     },
     {
@@ -3770,8 +3770,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_user_for_token",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "user_for_token()"
     },
     {
@@ -3782,8 +3782,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_close_session",
-      "community": 49,
-      "community_name": "login",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "close_session()"
     },
     {
@@ -3794,7 +3794,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_purge_expired_sessions",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "purge_expired_sessions()"
     },
@@ -3806,8 +3806,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_get_prefs",
-      "community": 49,
-      "community_name": "login",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "get_prefs()"
     },
     {
@@ -3819,7 +3819,7 @@
       "_origin": "ast",
       "id": "makanlah_db_set_prefs",
       "community": 75,
-      "community_name": "BaseModel",
+      "community_name": "db.py",
       "norm_label": "set_prefs()"
     },
     {
@@ -3830,7 +3830,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_db_popular_dishes",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "popular_dishes()"
     },
@@ -3841,7 +3841,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_db_rationale_1",
-      "community": 59,
+      "community": 75,
       "community_name": "db.py",
       "norm_label": "corpus access. the only module that speaks sql. ingest/ writes through here,..."
     },
@@ -3852,8 +3852,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "makanlah_db_rationale_20",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "pooled for the api, direct for migrations and long ingestion batches. pgbouncer..."
     },
     {
@@ -3874,8 +3874,8 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "makanlah_db_rationale_61",
-      "community": 14,
-      "community_name": "test_discovery_dedupe.py",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "ambiguity creates a new venue. merging later is safe; a wrong merge is not."
     },
     {
@@ -3885,8 +3885,8 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "makanlah_db_rationale_105",
-      "community": 3,
-      "community_name": "fold",
+      "community": 2,
+      "community_name": "price_band_from_text",
       "norm_label": "every dish string in the corpus, ignoring distance. `venue_dishes` is scoped to..."
     },
     {
@@ -3896,8 +3896,8 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "makanlah_db_rationale_117",
-      "community": 3,
-      "community_name": "fold",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "venues carrying one of these dish strings, nearest first, at any distance."
     },
     {
@@ -3907,8 +3907,8 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "makanlah_db_rationale_148",
-      "community": 25,
-      "community_name": "recommend",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "{venue_id: [dish, ...]} for a candidate set. canonicalisation stays in..."
     },
     {
@@ -3918,8 +3918,8 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "makanlah_db_rationale_166",
-      "community": 25,
-      "community_name": "recommend",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "{venue_id: {dish: mentions}}. how much a venue is actually about a dish...."
     },
     {
@@ -3929,7 +3929,7 @@
       "source_location": "L208",
       "_origin": "ast",
       "id": "makanlah_db_rationale_208",
-      "community": 72,
+      "community": 61,
       "community_name": "copilot.py",
       "norm_label": "everything the corpus actually says about one venue. the copilot answers from..."
     },
@@ -3941,7 +3941,7 @@
       "_origin": "ast",
       "id": "makanlah_db_rationale_236",
       "community": 59,
-      "community_name": "db.py",
+      "community_name": "ingest_notes",
       "norm_label": "the composite a venue is embedded from: name, aliases, dishes, excerpts. not..."
     },
     {
@@ -3962,8 +3962,8 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "makanlah_db_rationale_322",
-      "community": 25,
-      "community_name": "recommend",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "stage 2. pgvector cosine over the already-filtered candidate set."
     },
     {
@@ -3973,8 +3973,8 @@
       "source_location": "L336",
       "_origin": "ast",
       "id": "makanlah_db_rationale_336",
-      "community": 131,
-      "community_name": "one",
+      "community": 25,
+      "community_name": "recommend",
       "norm_label": "stage 4. citations come from the database, never from the model. a model asked..."
     },
     {
@@ -4017,8 +4017,8 @@
       "source_location": "L507",
       "_origin": "ast",
       "id": "makanlah_db_rationale_507",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": "take one citation from each platform before taking a second from any. ordering..."
     },
     {
@@ -4039,8 +4039,8 @@
       "source_location": "L601",
       "_origin": "ast",
       "id": "makanlah_db_rationale_601",
-      "community": 60,
-      "community_name": "enrich_gmaps.py",
+      "community": 59,
+      "community_name": "ingest_notes",
       "norm_label": "true when this post was last extracted by this exact model. \"has no mentions\"..."
     },
     {
@@ -4050,8 +4050,8 @@
       "source_location": "L629",
       "_origin": "ast",
       "id": "makanlah_db_rationale_629",
-      "community": 49,
-      "community_name": "login",
+      "community": 75,
+      "community_name": "db.py",
       "norm_label": "none when the address is already taken, rather than raising: a duplicate signup..."
     },
     {
@@ -4062,7 +4062,7 @@
       "_origin": "ast",
       "id": "makanlah_db_rationale_652",
       "community": 49,
-      "community_name": "login",
+      "community_name": "auth.py",
       "norm_label": "stores only the fingerprint. the caller holds the single copy of the token."
     },
     {
@@ -4072,8 +4072,8 @@
       "source_location": "L665",
       "_origin": "ast",
       "id": "makanlah_db_rationale_665",
-      "community": 59,
-      "community_name": "db.py",
+      "community": 134,
+      "community_name": "connect",
       "norm_label": "none for absent, unknown or expired. the caller cannot tell which, deliberately."
     },
     {
@@ -4083,7 +4083,7 @@
       "source_location": "L704",
       "_origin": "ast",
       "id": "makanlah_db_rationale_704",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "the dishes the corpus actually has the most posts about. the suggestion chips..."
     },
@@ -4118,8 +4118,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_dishes_match_forms",
-      "community": 74,
-      "community_name": "dishes.py",
+      "community": 93,
+      "community_name": "gap_terms",
       "norm_label": "match_forms()"
     },
     {
@@ -4202,7 +4202,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_dishes_dishes_in_text",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "dishes_in_text()"
     },
@@ -4235,8 +4235,8 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "makanlah_dishes_rationale_69",
-      "community": 74,
-      "community_name": "dishes.py",
+      "community": 93,
+      "community_name": "gap_terms",
       "norm_label": "every stored form of a canonical dish, for a lexical lookup."
     },
     {
@@ -4312,7 +4312,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "makanlah_dishes_rationale_273",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "every dish from `vocabulary` that this text names. sorted and deduped...."
     },
@@ -4323,8 +4323,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_excerpts",
-      "community": 20,
-      "community_name": "strip_pins",
+      "community": 65,
+      "community_name": "replay_extraction.py",
       "norm_label": "excerpts.py"
     },
     {
@@ -4347,8 +4347,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_excerpts_weight",
-      "community": 20,
-      "community_name": "strip_pins",
+      "community": 65,
+      "community_name": "replay_extraction.py",
       "norm_label": "weight()"
     },
     {
@@ -4382,8 +4382,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_excerpts_rationale_1",
-      "community": 20,
-      "community_name": "strip_pins",
+      "community": 65,
+      "community_name": "replay_extraction.py",
       "norm_label": "what makes a span of a post worth showing as testimony. shared by the..."
     },
     {
@@ -4825,8 +4825,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_ledger_get_ledger",
-      "community": 10,
-      "community_name": "main.py",
+      "community": 9,
+      "community_name": "_budget_day",
       "norm_label": "get_ledger()"
     },
     {
@@ -4964,8 +4964,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_models_answer_language",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": "answer_language()"
     },
     {
@@ -5033,8 +5033,8 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "makanlah_models_rationale_171",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": "which language the user asked in, so the answer comes back in it. chinese..."
     },
     {
@@ -5204,7 +5204,7 @@
       "_origin": "ast",
       "id": "makanlah_prices",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "prices.py"
     },
     {
@@ -5216,7 +5216,7 @@
       "_origin": "ast",
       "id": "makanlah_prices_han_to_value",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "_han_to_value()"
     },
     {
@@ -5228,7 +5228,7 @@
       "_origin": "ast",
       "id": "makanlah_prices_to_value",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "_to_value()"
     },
     {
@@ -5240,7 +5240,7 @@
       "_origin": "ast",
       "id": "makanlah_prices_band",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "_band()"
     },
     {
@@ -5252,7 +5252,7 @@
       "_origin": "ast",
       "id": "makanlah_prices_price_band_from_text",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "price_band_from_text()"
     },
     {
@@ -5263,7 +5263,7 @@
       "_origin": "ast",
       "id": "makanlah_prices_rationale_1",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "per-person price bands read out of post text. bands follow google maps' four..."
     },
     {
@@ -5274,7 +5274,7 @@
       "_origin": "ast",
       "id": "makanlah_prices_rationale_66",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "read the per-person rm band a post states, or none when it states none. a range..."
     },
     {
@@ -5284,7 +5284,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_rank",
-      "community": 76,
+      "community": 27,
       "community_name": "rank.py",
       "norm_label": "rank.py"
     },
@@ -5296,8 +5296,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_rank_distance_m",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": "_distance_m()"
     },
     {
@@ -5308,8 +5308,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_rank_format_distance",
-      "community": 76,
-      "community_name": "rank.py",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": "_format_distance()"
     },
     {
@@ -5369,7 +5369,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_supports_gap",
       "community": 76,
-      "community_name": "rank.py",
+      "community_name": "mark_gap_coverage",
       "norm_label": "_supports_gap()"
     },
     {
@@ -5381,7 +5381,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_mark_gap_coverage",
       "community": 76,
-      "community_name": "rank.py",
+      "community_name": "mark_gap_coverage",
       "norm_label": "mark_gap_coverage()"
     },
     {
@@ -5393,7 +5393,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_only_friendly_evidence",
       "community": 76,
-      "community_name": "rank.py",
+      "community_name": "mark_gap_coverage",
       "norm_label": "_only_friendly_evidence()"
     },
     {
@@ -5428,7 +5428,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_rank_dedupe",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": "dedupe()"
     },
@@ -5441,7 +5441,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_destination",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "_destination()"
     },
     {
@@ -5453,7 +5453,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_usable_place_id",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "usable_place_id()"
     },
     {
@@ -5465,7 +5465,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_maps_url",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "maps_url()"
     },
     {
@@ -5477,7 +5477,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_directions_url",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "directions_url()"
     },
     {
@@ -5500,8 +5500,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_rank_match_block",
-      "community": 76,
-      "community_name": "rank.py",
+      "community": 25,
+      "community_name": "recommend",
       "norm_label": "match_block()"
     },
     {
@@ -5524,8 +5524,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_rank_distance_gap_for",
-      "community": 3,
-      "community_name": "fold",
+      "community": 27,
+      "community_name": "rank.py",
       "norm_label": "distance_gap_for()"
     },
     {
@@ -5548,8 +5548,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_rank_one",
-      "community": 131,
-      "community_name": "one",
+      "community": 27,
+      "community_name": "rank.py",
       "norm_label": "one()"
     },
     {
@@ -5559,7 +5559,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_rank_rationale_1",
-      "community": 76,
+      "community": 27,
       "community_name": "rank.py",
       "norm_label": "the four ranking stages from docs/trd.md. only stage 3 calls a model. filter..."
     },
@@ -5615,7 +5615,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_rationale_163",
       "community": 76,
-      "community_name": "rank.py",
+      "community_name": "mark_gap_coverage",
       "norm_label": "whether this excerpt can carry the claim, not merely mention the word."
     },
     {
@@ -5626,7 +5626,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_rationale_176",
       "community": 76,
-      "community_name": "rank.py",
+      "community_name": "mark_gap_coverage",
       "norm_label": "say per venue whether its own posts speak to the gap. a blanket \"we have no..."
     },
     {
@@ -5637,7 +5637,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_rationale_217",
       "community": 76,
-      "community_name": "rank.py",
+      "community_name": "mark_gap_coverage",
       "norm_label": "true when every halal token in the excerpts sits inside a 'friendly' remark...."
     },
     {
@@ -5669,7 +5669,7 @@
       "source_location": "L315",
       "_origin": "ast",
       "id": "makanlah_rank_rationale_315",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": "collapse near-duplicate venues at presentation time, not in the corpus...."
     },
@@ -5681,7 +5681,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_rationale_375",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "the stored place_id, but only when it is actually a places api place id. 306 of..."
     },
     {
@@ -5692,7 +5692,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_rationale_389",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "built server-side. no maps sdk, no key, no billing. with a place_id it..."
     },
     {
@@ -5703,7 +5703,7 @@
       "_origin": "ast",
       "id": "makanlah_rank_rationale_399",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "where the all sources modal's directions cta points. google maps sets `frame-..."
     },
     {
@@ -5724,8 +5724,8 @@
       "source_location": "L464",
       "_origin": "ast",
       "id": "makanlah_rank_rationale_464",
-      "community": 76,
-      "community_name": "rank.py",
+      "community": 25,
+      "community_name": "recommend",
       "norm_label": "why this row is here: `{basis, dish, similarity}` per docs/trd.md. `dish` is..."
     },
     {
@@ -5746,8 +5746,8 @@
       "source_location": "L524",
       "_origin": "ast",
       "id": "makanlah_rank_rationale_524",
-      "community": 3,
-      "community_name": "fold",
+      "community": 27,
+      "community_name": "rank.py",
       "norm_label": "the corpus knows this dish and nothing in range serves it -- so say where...."
     },
     {
@@ -5757,8 +5757,8 @@
       "source_location": "L742",
       "_origin": "ast",
       "id": "makanlah_rank_rationale_742",
-      "community": 131,
-      "community_name": "one",
+      "community": 27,
+      "community_name": "rank.py",
       "norm_label": "a single venue with its citation trail, for a deep link. the venue page is the..."
     },
     {
@@ -5826,7 +5826,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_suggest",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "suggest.py"
     },
@@ -5838,7 +5838,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_suggest_band",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "_band()"
     },
@@ -5850,7 +5850,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_suggest_key",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "_key()"
     },
@@ -5862,7 +5862,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_suggest_offerable",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "offerable()"
     },
@@ -5874,7 +5874,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_suggest_candidates",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "_candidates()"
     },
@@ -5886,8 +5886,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_suggest_chips",
-      "community": 1,
-      "community_name": "suggest.py",
+      "community": 38,
+      "community_name": "models.py",
       "norm_label": "chips()"
     },
     {
@@ -5898,7 +5898,7 @@
       "_origin": "ast",
       "id": "datetime",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "datetime"
     },
     {
@@ -5909,7 +5909,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_suggest_json_dumps",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "json_dumps()"
     },
@@ -5920,7 +5920,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "makanlah_suggest_rationale_1",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "suggestion chips for the search box, chosen by a model, written by the corpus...."
     },
@@ -5931,7 +5931,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "makanlah_suggest_rationale_43",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "fold the variants the corpus stores separately. `nasi lemak`, `nasi lemak` and..."
     },
@@ -5942,7 +5942,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "makanlah_suggest_rationale_70",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "whether this dish may appear in the six unprompted chips. matched per term, not..."
     },
@@ -5953,8 +5953,8 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "makanlah_suggest_rationale_119",
-      "community": 1,
-      "community_name": "suggest.py",
+      "community": 38,
+      "community_name": "models.py",
       "norm_label": "`{'chips': [{label, query, posts, venues}], 'band': str, 'source': str}`...."
     },
     {
@@ -6000,8 +6000,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "makanlah_text_fold_variants",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": "fold_variants()"
     },
     {
@@ -6056,8 +6056,8 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "makanlah_text_rationale_120",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": "a join key that ignores simplified/traditional cjk variants. the same shop may..."
     },
     {
@@ -6204,6 +6204,83 @@
       "community": 83,
       "community_name": "bootstrap.sh",
       "norm_label": "install_or_report()"
+    },
+    {
+      "label": "chip_row_check.mjs",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "chip_row_check.mjs"
+    },
+    {
+      "label": "require",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check_require",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "require"
+    },
+    {
+      "label": "{ chromium }",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check_chromium",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "{ chromium }"
+    },
+    {
+      "label": "WIDTHS",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check_widths",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "widths"
+    },
+    {
+      "label": "PREFS",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check_prefs",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "prefs"
+    },
+    {
+      "label": "CHIPS",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check_chips",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "chips"
+    },
+    {
+      "label": "findings",
+      "file_type": "code",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "scripts_chip_row_check_findings",
+      "community": 145,
+      "community_name": "chip_row_check.mjs",
+      "norm_label": "findings"
     },
     {
       "label": "chrome-session.sh",
@@ -7690,7 +7767,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "staleness_probe.py"
     },
     {
@@ -7703,7 +7780,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_verdict",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "verdict"
     },
     {
@@ -7715,7 +7792,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_verdict_code",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".code()"
     },
     {
@@ -7727,7 +7804,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_git",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "git()"
     },
     {
@@ -7739,7 +7816,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_describe",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "describe()"
     },
     {
@@ -7751,7 +7828,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_fetch_stamp",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "fetch_stamp()"
     },
     {
@@ -7763,7 +7840,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_compare",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "compare()"
     },
     {
@@ -7775,7 +7852,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_main",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "main()"
     },
     {
@@ -7786,7 +7863,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_rationale_1",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "ask the live site which commit it is serving, and say so when that is not main...."
     },
     {
@@ -7797,7 +7874,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_rationale_65",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "one line about a commit, or a bare sha when this clone has never seen it."
     },
     {
@@ -7808,7 +7885,7 @@
       "_origin": "ast",
       "id": "scripts_staleness_probe_rationale_74",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "read /build.json off the live site. the second element is set only on failure."
     },
     {
@@ -10000,7 +10077,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "test_collapse_twins.py"
     },
     {
@@ -10012,7 +10089,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_v",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "v()"
     },
     {
@@ -10025,7 +10102,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testcollapsesatwinwithnocompetingevidence",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "testcollapsesatwinwithnocompetingevidence"
     },
     {
@@ -10037,7 +10114,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testcollapsesatwinwithnocompetingevidence_test_the_ungeocoded_twin_is_dropped",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_the_ungeocoded_twin_is_dropped()"
     },
     {
@@ -10049,7 +10126,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testcollapsesatwinwithnocompetingevidence_test_the_richer_row_survives_regardless_of_order",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_the_richer_row_survives_regardless_of_order()"
     },
     {
@@ -10061,7 +10138,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testcollapsesatwinwithnocompetingevidence_test_simplified_and_traditional_twins_collapse",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_simplified_and_traditional_twins_collapse()"
     },
     {
@@ -10074,7 +10151,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testleavesrealbranchesalone",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "testleavesrealbranchesalone"
     },
     {
@@ -10086,7 +10163,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testleavesrealbranchesalone_test_two_place_ids_are_two_venues",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_two_place_ids_are_two_venues()"
     },
     {
@@ -10098,7 +10175,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testleavesrealbranchesalone_test_a_chains_outlets_are_not_one_venue",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_a_chains_outlets_are_not_one_venue()"
     },
     {
@@ -10110,7 +10187,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testleavesrealbranchesalone_test_three_rows_collapse_only_the_evidence_free_one",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_three_rows_collapse_only_the_evidence_free_one()"
     },
     {
@@ -10122,7 +10199,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testleavesrealbranchesalone_test_different_shops_are_untouched",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_different_shops_are_untouched()"
     },
     {
@@ -10134,7 +10211,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_testleavesrealbranchesalone_test_two_rows_with_no_place_id_at_all_still_collapse",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": ".test_two_rows_with_no_place_id_at_all_still_collapse()"
     },
     {
@@ -10145,7 +10222,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_rationale_1",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "collapse a venue written twice, without asserting it in the corpus (#59)...."
     },
     {
@@ -10156,7 +10233,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_rationale_27",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "a shortlist candidate in the shape rank.dedupe actually receives."
     },
     {
@@ -10167,7 +10244,7 @@
       "_origin": "ast",
       "id": "tests_test_collapse_twins_rationale_56",
       "community": 23,
-      "community_name": "dedupe",
+      "community_name": "v",
       "norm_label": "two place_ids is evidence of two businesses. it outranks a name match."
     },
     {
@@ -10190,8 +10267,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_companion_testsafe",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": "testsafe"
     },
     {
@@ -10201,8 +10278,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_test_companion_py_parametrize",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": "parametrize"
     },
     {
@@ -10213,8 +10290,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testsafe_test_drops_a_line_that_became_a_claim",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": ".test_drops_a_line_that_became_a_claim()"
     },
     {
@@ -10225,8 +10302,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testsafe_test_keeps_small_talk",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": ".test_keeps_small_talk()"
     },
     {
@@ -10237,8 +10314,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testsafe_test_drops_a_speech_that_will_not_end",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": ".test_drops_a_speech_that_will_not_end()"
     },
     {
@@ -10249,8 +10326,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testsafe_test_strips_wrapping_quotes_a_model_adds",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": ".test_strips_wrapping_quotes_a_model_adds()"
     },
     {
@@ -10261,8 +10338,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testsafe_test_treats_empty_as_unusable",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": ".test_treats_empty_as_unusable()"
     },
     {
@@ -10274,8 +10351,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_companion_testscript",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 147,
+      "community_name": "TestScript",
       "norm_label": "testscript"
     },
     {
@@ -10286,8 +10363,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testscript_test_every_step_has_lines",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 147,
+      "community_name": "TestScript",
       "norm_label": ".test_every_step_has_lines()"
     },
     {
@@ -10298,8 +10375,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testscript_test_no_scripted_line_trips_its_own_guard",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 147,
+      "community_name": "TestScript",
       "norm_label": ".test_no_scripted_line_trips_its_own_guard()"
     },
     {
@@ -10310,8 +10387,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testscript_test_a_seed_makes_it_deterministic",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 147,
+      "community_name": "TestScript",
       "norm_label": ".test_a_seed_makes_it_deterministic()"
     },
     {
@@ -10322,8 +10399,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_companion_testscript_test_an_unknown_step_still_speaks",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 147,
+      "community_name": "TestScript",
       "norm_label": ".test_an_unknown_step_still_speaks()"
     },
     {
@@ -10514,8 +10591,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "tests_test_companion_rationale_21",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 143,
+      "community_name": "TestSafe",
       "norm_label": "a cute line is small talk. anything that reads as a claim is not."
     },
     {
@@ -10525,8 +10602,8 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "tests_test_companion_rationale_62",
-      "community": 52,
-      "community_name": "test_companion.py",
+      "community": 147,
+      "community_name": "TestScript",
       "norm_label": "the line that is always available, with no key and no network."
     },
     {
@@ -10833,7 +10910,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_copilot_price.py"
     },
     {
@@ -10845,7 +10922,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_test_a_band_parsed_from_a_post_is_attributed_to_that_post",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_a_band_parsed_from_a_post_is_attributed_to_that_post()"
     },
     {
@@ -10857,7 +10934,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_test_a_google_band_is_attributed_to_google_and_cites_nothing",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_a_google_band_is_attributed_to_google_and_cites_nothing()"
     },
     {
@@ -10869,7 +10946,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_test_a_post_derived_band_wins_over_a_google_one",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_a_post_derived_band_wins_over_a_google_one()"
     },
     {
@@ -10881,7 +10958,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_test_no_price_anywhere_is_none_so_the_refusal_stays_correct",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_no_price_anywhere_is_none_so_the_refusal_stays_correct()"
     },
     {
@@ -10893,7 +10970,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_test_an_out_of_range_band_is_ignored",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_an_out_of_range_band_is_ignored()"
     },
     {
@@ -10905,7 +10982,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_test_the_band_carries_a_ringgit_range_a_reader_can_act_on",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "test_the_band_carries_a_ringgit_range_a_reader_can_act_on()"
     },
     {
@@ -10916,7 +10993,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_rationale_1",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "the copilot said \"the posts do not cover the price\" about venues we had priced...."
     },
     {
@@ -10927,7 +11004,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_rationale_36",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "a figure a human wrote about this shop beats a platform's bucket."
     },
     {
@@ -10938,7 +11015,7 @@
       "_origin": "ast",
       "id": "tests_test_copilot_price_rationale_54",
       "community": 61,
-      "community_name": "price_facts",
+      "community_name": "copilot.py",
       "norm_label": "`2` means nothing to a person. the prompt needs words."
     },
     {
@@ -11823,7 +11900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_default_chips",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_default_chips.py"
     },
@@ -11835,7 +11912,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_a_chip_that_says_pork_is_not_offered_unprompted",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_a_chip_that_says_pork_is_not_offered_unprompted()"
     },
@@ -11847,7 +11924,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_the_same_word_in_another_language_is_also_not_offered",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_the_same_word_in_another_language_is_also_not_offered()"
     },
@@ -11859,7 +11936,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_a_dish_that_merely_contains_pork_is_still_offered",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_a_dish_that_merely_contains_pork_is_still_offered()"
     },
@@ -11871,7 +11948,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_everything_else_is_offerable",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_everything_else_is_offerable()"
     },
@@ -11883,7 +11960,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_empty_or_non_text_is_not_offerable",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_empty_or_non_text_is_not_offerable()"
     },
@@ -11895,7 +11972,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_the_excluded_set_stays_small_and_literal",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_the_excluded_set_stays_small_and_literal()"
     },
@@ -11907,7 +11984,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_the_spelling_list_catches_the_word_inside_a_longer_label",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_the_spelling_list_catches_the_word_inside_a_longer_label()"
     },
@@ -11919,7 +11996,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_the_deliberate_decision_is_not_quietly_reversed",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_the_deliberate_decision_is_not_quietly_reversed()"
     },
@@ -11931,7 +12008,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_default_chips_test_a_word_boundary_is_a_boundary_not_a_substring",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "test_a_word_boundary_is_a_boundary_not_a_substring()"
     },
@@ -11942,7 +12019,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_1",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "what the app offers before you have told it anything. the six chips on..."
     },
@@ -11953,7 +12030,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_33",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "excluding the english spelling only would be theatre."
     },
@@ -11964,7 +12041,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_39",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "the line is what the chip says, not what the dish contains. `bak kut teh` stays..."
     },
@@ -11975,7 +12052,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_58",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "if this grows into a cuisine filter, it has become the thing the module..."
     },
@@ -11986,7 +12063,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_64",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "`sup tulang babi` names pork in so many words and was still offerable. the..."
     },
@@ -11997,7 +12074,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_78",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "`bak kut teh` stays offerable. that is a recorded call, not an oversight...."
     },
@@ -12008,7 +12085,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "tests_test_default_chips_rationale_90",
-      "community": 1,
+      "community": 62,
       "community_name": "suggest.py",
       "norm_label": "latin is whole-word, so a term buried in an unrelated word does not match."
     },
@@ -12472,7 +12549,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_directions_url.py"
     },
     {
@@ -12484,7 +12561,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_test_directions_uses_the_documented_dir_endpoint",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_directions_uses_the_documented_dir_endpoint()"
     },
     {
@@ -12496,7 +12573,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_test_a_real_place_id_disambiguates_a_chain",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_a_real_place_id_disambiguates_a_chain()"
     },
     {
@@ -12508,7 +12585,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_test_a_legacy_cid_is_not_passed_as_a_place_id",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_a_legacy_cid_is_not_passed_as_a_place_id()"
     },
     {
@@ -12520,7 +12597,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_test_maps_url_applies_the_same_rule",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_maps_url_applies_the_same_rule()"
     },
     {
@@ -12532,7 +12609,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_test_no_place_id_still_produces_a_usable_link",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_no_place_id_still_produces_a_usable_link()"
     },
     {
@@ -12544,7 +12621,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_test_the_city_is_included_so_a_common_name_lands_in_kl",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "test_the_city_is_included_so_a_common_name_lands_in_kl()"
     },
     {
@@ -12555,7 +12632,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_rationale_1",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "a directions link, and a place_id that is only trusted when it is one...."
     },
     {
@@ -12566,7 +12643,7 @@
       "_origin": "ast",
       "id": "tests_test_directions_url_rationale_35",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "the 306-venue case. better a name search that resolves than a place id that may..."
     },
     {
@@ -12869,8 +12946,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_dish_lane_testtwoaliasesaddedfrommeasurement",
-      "community": 134,
-      "community_name": "TestTwoAliasesAddedFromMeasurement",
+      "community": 11,
+      "community_name": "names",
       "norm_label": "testtwoaliasesaddedfrommeasurement"
     },
     {
@@ -12881,8 +12958,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dish_lane_testtwoaliasesaddedfrommeasurement_test_an_english_query_reaches_the_chinese_tag",
-      "community": 134,
-      "community_name": "TestTwoAliasesAddedFromMeasurement",
+      "community": 11,
+      "community_name": "names",
       "norm_label": ".test_an_english_query_reaches_the_chinese_tag()"
     },
     {
@@ -12893,8 +12970,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dish_lane_testtwoaliasesaddedfrommeasurement_test_a_chinese_query_reaches_the_english_tag",
-      "community": 134,
-      "community_name": "TestTwoAliasesAddedFromMeasurement",
+      "community": 11,
+      "community_name": "names",
       "norm_label": ".test_a_chinese_query_reaches_the_english_tag()"
     },
     {
@@ -12905,8 +12982,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dish_lane_testtwoaliasesaddedfrommeasurement_test_no_short_form_swallows_its_container",
-      "community": 134,
-      "community_name": "TestTwoAliasesAddedFromMeasurement",
+      "community": 11,
+      "community_name": "names",
       "norm_label": ".test_no_short_form_swallows_its_container()"
     },
     {
@@ -13121,8 +13198,8 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "tests_test_dish_lane_rationale_88",
-      "community": 134,
-      "community_name": "TestTwoAliasesAddedFromMeasurement",
+      "community": 11,
+      "community_name": "names",
       "norm_label": "#85 measured both. the corpus tags \u53c9\u70e7\u6768\u5bb6\u5bb6\u6765 with `\u53c9\u70e7` and oh yeah kopitiam with..."
     },
     {
@@ -13132,8 +13209,8 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "tests_test_dish_lane_rationale_99",
-      "community": 134,
-      "community_name": "TestTwoAliasesAddedFromMeasurement",
+      "community": 11,
+      "community_name": "names",
       "norm_label": "`canonical()` matches on substring in both directions, so adding `pork` or `bbq..."
     },
     {
@@ -13209,7 +13286,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_dishes_in_text.py"
     },
@@ -13221,7 +13298,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_finds_a_dish_named_in_a_review",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_finds_a_dish_named_in_a_review()"
     },
@@ -13233,7 +13310,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_finds_several_dishes_in_one_review",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_finds_several_dishes_in_one_review()"
     },
@@ -13245,7 +13322,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_a_latin_dish_must_match_on_word_boundaries",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_a_latin_dish_must_match_on_word_boundaries()"
     },
@@ -13257,7 +13334,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_a_han_dish_matches_as_a_substring",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_a_han_dish_matches_as_a_substring()"
     },
@@ -13269,7 +13346,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_a_han_dish_is_found_without_surrounding_spaces",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_a_han_dish_is_found_without_surrounding_spaces()"
     },
@@ -13281,7 +13358,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_a_dish_not_in_the_vocabulary_is_never_invented",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_a_dish_not_in_the_vocabulary_is_never_invented()"
     },
@@ -13293,7 +13370,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_returns_nothing_for_empty_or_non_text",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_returns_nothing_for_empty_or_non_text()"
     },
@@ -13305,7 +13382,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_an_empty_vocabulary_finds_nothing",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_an_empty_vocabulary_finds_nothing()"
     },
@@ -13317,7 +13394,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_the_result_is_deduped_and_ordered_so_two_runs_agree",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_the_result_is_deduped_and_ordered_so_two_runs_agree()"
     },
@@ -13329,7 +13406,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_a_very_long_review_is_still_scanned",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_a_very_long_review_is_still_scanned()"
     },
@@ -13341,7 +13418,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_case_variants_in_the_vocabulary_yield_one_tag_not_three",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_case_variants_in_the_vocabulary_yield_one_tag_not_three()"
     },
@@ -13353,7 +13430,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_test_the_surviving_spelling_is_stable_across_runs",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "test_the_surviving_spelling_is_stable_across_runs()"
     },
@@ -13364,7 +13441,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_rationale_1",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "maps reviews name dishes and the corpus stores none of them. `enrich_gmaps`..."
     },
@@ -13375,7 +13452,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_rationale_31",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "`ckt` inside `mocktail` was a real invented dish. latin is whole-word."
     },
@@ -13386,7 +13463,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_rationale_37",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "\u8089\u9aa8\u8336 inside \u4e2d\u836f\u8089\u9aa8\u8336 is genuinely the same dish, so han is substring."
     },
@@ -13397,7 +13474,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_rationale_42",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "chinese does not delimit words, so a whole-word rule finds nothing at all."
     },
@@ -13408,7 +13485,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_rationale_66",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "dish_named_inside caps at 12 words because it reads a query. a review is not a..."
     },
@@ -13419,7 +13496,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "tests_test_dishes_in_text_rationale_73",
-      "community": 2,
+      "community": 131,
       "community_name": "dishes_in_text",
       "norm_label": "the corpus carries `nasi lemak`, `nasi lemak`, `fried chicken`, `fried chicken`..."
     },
@@ -13430,8 +13507,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_distance_gap",
-      "community": 93,
-      "community_name": "gap_terms",
+      "community": 3,
+      "community_name": "fold",
       "norm_label": "test_distance_gap.py"
     },
     {
@@ -13636,8 +13713,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_distance_gap_rationale_1",
-      "community": 93,
-      "community_name": "gap_terms",
+      "community": 3,
+      "community_name": "fold",
       "norm_label": "nothing in range serves what was asked for (#162). peer 3 measured this on..."
     },
     {
@@ -14286,8 +14363,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_extraction_guards",
-      "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community": 26,
+      "community_name": "normalize",
       "norm_label": "test_extraction_guards.py"
     },
     {
@@ -14640,7 +14717,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_teststarsentiment",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": "teststarsentiment"
     },
     {
@@ -14652,7 +14729,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_teststarsentiment_test_five_stars_is_maximum_positive",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": ".test_five_stars_is_maximum_positive()"
     },
     {
@@ -14664,7 +14741,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_teststarsentiment_test_one_star_is_maximum_negative",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": ".test_one_star_is_maximum_negative()"
     },
     {
@@ -14676,7 +14753,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_teststarsentiment_test_three_stars_is_neutral",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": ".test_three_stars_is_neutral()"
     },
     {
@@ -14688,7 +14765,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_teststarsentiment_test_a_label_without_a_rating_is_null_not_neutral",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": ".test_a_label_without_a_rating_is_null_not_neutral()"
     },
     {
@@ -14700,7 +14777,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_teststarsentiment_test_every_rating_lands_inside_the_schema_range",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": ".test_every_rating_lands_inside_the_schema_range()"
     },
     {
@@ -14966,8 +15043,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_extraction_guards_rationale_1",
-      "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community": 26,
+      "community_name": "normalize",
       "norm_label": "the guarantees that make a citation trustworthy. these are unit tests over pure..."
     },
     {
@@ -15033,7 +15110,7 @@
       "_origin": "ast",
       "id": "tests_test_extraction_guards_rationale_161",
       "community": 64,
-      "community_name": "test_extraction_guards.py",
+      "community_name": "star_sentiment",
       "norm_label": "google maps reviews take sentiment from the star rating, not from a model. the..."
     },
     {
@@ -17952,7 +18029,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_price_backfill_gate.py"
     },
     {
@@ -17964,7 +18041,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_test_an_explicit_ringgit_range_is_a_price_statement",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_an_explicit_ringgit_range_is_a_price_statement()"
     },
     {
@@ -17976,7 +18053,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_test_a_per_person_marker_qualifies_a_single_figure",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_a_per_person_marker_qualifies_a_single_figure()"
     },
     {
@@ -17988,7 +18065,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_test_a_bare_figure_in_prose_does_not_qualify",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_a_bare_figure_in_prose_does_not_qualify()"
     },
     {
@@ -18000,7 +18077,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_test_text_with_no_figure_at_all_does_not_qualify",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_text_with_no_figure_at_all_does_not_qualify()"
     },
     {
@@ -18012,7 +18089,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_test_a_chinese_per_person_marker_qualifies",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_a_chinese_per_person_marker_qualifies()"
     },
     {
@@ -18023,7 +18100,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_rationale_1",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "#158: a figure in a post is not automatically what a meal there costs. measured..."
     },
     {
@@ -18034,7 +18111,7 @@
       "_origin": "ast",
       "id": "tests_test_price_backfill_gate_rationale_28",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "the measured failure. the writer priced one drink, not the meal."
     },
     {
@@ -18045,7 +18122,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_price_from_text.py"
     },
     {
@@ -18056,7 +18133,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_py_parametrize",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "parametrize"
     },
     {
@@ -18068,7 +18145,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_reads_a_ringgit_figure_in_english",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_reads_a_ringgit_figure_in_english()"
     },
     {
@@ -18080,7 +18157,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_reads_a_ringgit_figure_in_chinese",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_reads_a_ringgit_figure_in_chinese()"
     },
     {
@@ -18092,7 +18169,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_reads_the_han_numeral_the_issue_named",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_reads_the_han_numeral_the_issue_named()"
     },
     {
@@ -18104,7 +18181,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_reads_a_malay_figure",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_reads_a_malay_figure()"
     },
     {
@@ -18116,7 +18193,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_a_range_takes_its_midpoint",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_a_range_takes_its_midpoint()"
     },
     {
@@ -18128,7 +18205,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_says_nothing_when_the_post_names_no_figure",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_says_nothing_when_the_post_names_no_figure()"
     },
     {
@@ -18140,7 +18217,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_does_not_read_a_number_that_is_not_a_price",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_does_not_read_a_number_that_is_not_a_price()"
     },
     {
@@ -18152,7 +18229,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_test_none_and_non_text_are_normal_outcomes",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "test_none_and_non_text_are_normal_outcomes()"
     },
     {
@@ -18163,7 +18240,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_rationale_1",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "#158: 82% of venues carry no price, and the tester said so before we measured..."
     },
     {
@@ -18174,7 +18251,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_rationale_44",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "`\u4e09\u4efd\u8089\u9a6c\u5e01\u516b\u5341` -- rm80 for three meats -- is in the corpus today and carries no..."
     },
     {
@@ -18185,7 +18262,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_rationale_59",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "the honesty constraint. never infer a band from cuisine, area or tone."
     },
     {
@@ -18196,7 +18273,7 @@
       "_origin": "ast",
       "id": "tests_test_price_from_text_rationale_65",
       "community": 2,
-      "community_name": "dishes_in_text",
+      "community_name": "price_band_from_text",
       "norm_label": "the corpus is full of numbers that are not money. a parser that grabs any digit..."
     },
     {
@@ -18333,8 +18410,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_ranking",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": "test_ranking.py"
     },
     {
@@ -18346,8 +18423,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdistance",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": "testdistance"
     },
     {
@@ -18358,8 +18435,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdistance_test_known_kl_distance_is_about_right",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": ".test_known_kl_distance_is_about_right()"
     },
     {
@@ -18370,8 +18447,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdistance_test_a_missing_coordinate_yields_none_rather_than_zero",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": ".test_a_missing_coordinate_yields_none_rather_than_zero()"
     },
     {
@@ -18382,8 +18459,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdistance_test_identical_points_are_zero",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": ".test_identical_points_are_zero()"
     },
     {
@@ -18396,7 +18473,7 @@
       "_origin": "ast",
       "id": "tests_test_ranking_testmapsurl",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "testmapsurl"
     },
     {
@@ -18408,7 +18485,7 @@
       "_origin": "ast",
       "id": "tests_test_ranking_testmapsurl_test_url_contains_the_venue_and_needs_no_key",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": ".test_url_contains_the_venue_and_needs_no_key()"
     },
     {
@@ -18420,7 +18497,7 @@
       "_origin": "ast",
       "id": "tests_test_ranking_testmapsurl_test_place_id_is_used_to_disambiguate_a_chain",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": ".test_place_id_is_used_to_disambiguate_a_chain()"
     },
     {
@@ -18432,7 +18509,7 @@
       "_origin": "ast",
       "id": "tests_test_ranking_testmapsurl_test_a_chinese_name_is_escaped_not_dropped",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": ".test_a_chinese_name_is_escaped_not_dropped()"
     },
     {
@@ -18444,7 +18521,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": "testdedupe"
     },
@@ -18456,7 +18533,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_v",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": "._v()"
     },
@@ -18468,7 +18545,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_a_contained_name_collapses_into_the_longer_one",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_a_contained_name_collapses_into_the_longer_one()"
     },
@@ -18480,7 +18557,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_the_better_evidenced_row_survives",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_the_better_evidenced_row_survives()"
     },
@@ -18492,7 +18569,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_citations_are_merged_not_discarded",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_citations_are_merged_not_discarded()"
     },
@@ -18504,7 +18581,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_dishes_are_merged",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_dishes_are_merged()"
     },
@@ -18516,7 +18593,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_merely_sharing_a_word_does_not_collapse_two_venues",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_merely_sharing_a_word_does_not_collapse_two_venues()"
     },
@@ -18528,7 +18605,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_distinct_venues_are_untouched",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_distinct_venues_are_untouched()"
     },
@@ -18540,7 +18617,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testdedupe_test_a_chinese_generic_suffix_still_collapses",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": ".test_a_chinese_generic_suffix_still_collapses()"
     },
@@ -18553,8 +18630,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": "testanswerlanguage"
     },
     {
@@ -18565,8 +18642,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_english_question",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_english_question()"
     },
     {
@@ -18577,8 +18654,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_malay_question",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_malay_question()"
     },
     {
@@ -18589,8 +18666,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_chinese_question",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_chinese_question()"
     },
     {
@@ -18601,8 +18678,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_english_words_that_are_also_malay_slang_stay_english",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_english_words_that_are_also_malay_slang_stay_english()"
     },
     {
@@ -18613,8 +18690,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_a_latin_venue_name_inside_a_chinese_question_stays_chinese",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_a_latin_venue_name_inside_a_chinese_question_stays_chinese()"
     },
     {
@@ -18625,8 +18702,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_a_malay_dish_name_in_an_english_sentence_stays_english",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_a_malay_dish_name_in_an_english_sentence_stays_english()"
     },
     {
@@ -18637,8 +18714,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testanswerlanguage_test_empty_query_does_not_crash",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": ".test_empty_query_does_not_crash()"
     },
     {
@@ -18663,8 +18740,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_ranking_cur",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 150,
+      "community_name": "_Cur",
       "norm_label": "_cur"
     },
     {
@@ -18675,8 +18752,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_cur_init",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 150,
+      "community_name": "_Cur",
       "norm_label": ".__init__()"
     },
     {
@@ -18687,8 +18764,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_cur_fetchall",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 150,
+      "community_name": "_Cur",
       "norm_label": ".fetchall()"
     },
     {
@@ -18699,8 +18776,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_cur_fetchone",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 150,
+      "community_name": "_Cur",
       "norm_label": ".fetchone()"
     },
     {
@@ -18821,8 +18898,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": "testcitationdiversity"
     },
     {
@@ -18833,8 +18910,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_c",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": "._c()"
     },
     {
@@ -18845,8 +18922,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_test_each_platform_gets_a_slot_before_any_gets_a_second",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": ".test_each_platform_gets_a_slot_before_any_gets_a_second()"
     },
     {
@@ -18857,8 +18934,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_test_a_single_platform_still_fills_every_slot",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": ".test_a_single_platform_still_fills_every_slot()"
     },
     {
@@ -18869,8 +18946,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_test_best_first_order_is_preserved_within_a_platform",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": ".test_best_first_order_is_preserved_within_a_platform()"
     },
     {
@@ -18881,8 +18958,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_test_fewer_citations_than_the_limit_is_not_padded",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": ".test_fewer_citations_than_the_limit_is_not_padded()"
     },
     {
@@ -18893,8 +18970,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_test_no_citations_yields_none_rather_than_a_placeholder",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": ".test_no_citations_yields_none_rather_than_a_placeholder()"
     },
     {
@@ -18905,8 +18982,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testcitationdiversity_test_three_platforms_each_appear_before_any_repeats",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": ".test_three_platforms_each_appear_before_any_repeats()"
     },
     {
@@ -18918,8 +18995,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testpartialrunisnotapermanentfailure",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 148,
+      "community_name": "TestPartialRunIsNotAPermanentFailure",
       "norm_label": "testpartialrunisnotapermanentfailure"
     },
     {
@@ -18930,8 +19007,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testpartialrunisnotapermanentfailure_test_the_handler_catches_baseexception",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 148,
+      "community_name": "TestPartialRunIsNotAPermanentFailure",
       "norm_label": ".test_the_handler_catches_baseexception()"
     },
     {
@@ -18942,8 +19019,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testpartialrunisnotapermanentfailure_test_a_partial_run_that_did_work_is_recorded_as_a_pass",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 148,
+      "community_name": "TestPartialRunIsNotAPermanentFailure",
       "norm_label": ".test_a_partial_run_that_did_work_is_recorded_as_a_pass()"
     },
     {
@@ -18954,8 +19031,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_ranking_testpartialrunisnotapermanentfailure_test_a_real_error_is_not_recorded_as_a_pass",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 148,
+      "community_name": "TestPartialRunIsNotAPermanentFailure",
       "norm_label": ".test_a_real_error_is_not_recorded_as_a_pass()"
     },
     {
@@ -18977,8 +19054,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_ranking_rationale_1",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 144,
+      "community_name": "test_ranking.py",
       "norm_label": "ranking behaviour that does not need a database."
     },
     {
@@ -18989,7 +19066,7 @@
       "_origin": "ast",
       "id": "tests_test_ranking_rationale_26",
       "community": 27,
-      "community_name": "maps_url",
+      "community_name": "rank.py",
       "norm_label": "no maps sdk, no key, no billing."
     },
     {
@@ -18999,7 +19076,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "tests_test_ranking_rationale_44",
-      "community": 23,
+      "community": 140,
       "community_name": "dedupe",
       "norm_label": "two rows for one restaurant waste a slot and read like a bug. this collapses..."
     },
@@ -19010,8 +19087,8 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "tests_test_ranking_rationale_104",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 142,
+      "community_name": "answer_language",
       "norm_label": "the answer comes back in the language the question was asked in. naming it in..."
     },
     {
@@ -19032,8 +19109,8 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "tests_test_ranking_rationale_238",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 141,
+      "community_name": "diverse_citations",
       "norm_label": "two sources the user cannot see is the same as one source. ordering citations..."
     },
     {
@@ -19043,8 +19120,8 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "tests_test_ranking_rationale_286",
-      "community": 4,
-      "community_name": "TestSourceHealth",
+      "community": 148,
+      "community_name": "TestPartialRunIsNotAPermanentFailure",
       "norm_label": "a run cut off by `timeout` used to leave its ingest_run row open forever with..."
     },
     {
@@ -20008,7 +20085,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "test_suggest.py"
     },
     {
@@ -20021,7 +20098,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testmealtime",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "testmealtime"
     },
     {
@@ -20032,7 +20109,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_py_parametrize",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "parametrize"
     },
     {
@@ -20044,7 +20121,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testmealtime_test_bands",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_bands()"
     },
     {
@@ -20057,7 +20134,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testfolding",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "testfolding"
     },
     {
@@ -20069,7 +20146,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testfolding_test_folds_case_variants_and_keeps_the_bigger_one",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_folds_case_variants_and_keeps_the_bigger_one()"
     },
     {
@@ -20081,7 +20158,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testfolding_test_does_not_fold_a_translation",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_does_not_fold_a_translation()"
     },
     {
@@ -20094,7 +20171,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "testchips"
     },
     {
@@ -20106,7 +20183,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_pool",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "._pool()"
     },
     {
@@ -20118,7 +20195,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_falls_back_to_corpus_order_with_no_key",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_falls_back_to_corpus_order_with_no_key()"
     },
     {
@@ -20130,7 +20207,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_a_model_reorders_but_cannot_write_a_label",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_a_model_reorders_but_cannot_write_a_label()"
     },
     {
@@ -20142,7 +20219,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_an_invented_dish_cannot_reach_the_page",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_an_invented_dish_cannot_reach_the_page()"
     },
     {
@@ -20154,7 +20231,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_out_of_range_indices_are_dropped",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_out_of_range_indices_are_dropped()"
     },
     {
@@ -20166,7 +20243,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_duplicate_picks_do_not_duplicate_a_chip",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_duplicate_picks_do_not_duplicate_a_chip()"
     },
     {
@@ -20178,7 +20255,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_a_short_answer_is_still_topped_up",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_a_short_answer_is_still_topped_up()"
     },
     {
@@ -20190,7 +20267,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_a_dead_lane_is_not_an_error",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_a_dead_lane_is_not_an_error()"
     },
     {
@@ -20202,7 +20279,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_every_chip_carries_the_posts_behind_it",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_every_chip_carries_the_posts_behind_it()"
     },
     {
@@ -20214,7 +20291,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_testchips_test_an_empty_corpus_offers_nothing_rather_than_inventing",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".test_an_empty_corpus_offers_nothing_rather_than_inventing()"
     },
     {
@@ -20226,7 +20303,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_at",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "_at()"
     },
     {
@@ -20238,7 +20315,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_settings",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "_settings()"
     },
     {
@@ -20251,7 +20328,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_fakeconnect",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "_fakeconnect"
     },
     {
@@ -20263,7 +20340,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_fakeconnect_enter",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".__enter__()"
     },
     {
@@ -20275,7 +20352,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_fakeconnect_exit",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": ".__exit__()"
     },
     {
@@ -20287,7 +20364,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_fake_connect",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "_fake_connect()"
     },
     {
@@ -20299,7 +20376,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_picks",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "_picks()"
     },
     {
@@ -20311,7 +20388,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_boom",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "_boom()"
     },
     {
@@ -20322,7 +20399,7 @@
       "_origin": "ast",
       "id": "tests_test_suggest_rationale_1",
       "community": 1,
-      "community_name": "suggest.py",
+      "community_name": "test_suggest.py",
       "norm_label": "the suggestion chips, and the one property that makes them safe. a chip is a..."
     },
     {
@@ -20482,8 +20559,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "tests_test_variant_names_testfoldvariants",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": "testfoldvariants"
     },
     {
@@ -20494,8 +20571,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_variant_names_testfoldvariants_test_simplified_and_traditional_fold_together",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": ".test_simplified_and_traditional_fold_together()"
     },
     {
@@ -20506,8 +20583,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_variant_names_testfoldvariants_test_latin_gloss_does_not_break_the_fold",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": ".test_latin_gloss_does_not_break_the_fold()"
     },
     {
@@ -20518,8 +20595,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_variant_names_testfoldvariants_test_different_shops_still_differ",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": ".test_different_shops_still_differ()"
     },
     {
@@ -20530,8 +20607,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "tests_test_variant_names_testfoldvariants_test_fold_is_stable_and_total",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": ".test_fold_is_stable_and_total()"
     },
     {
@@ -20661,8 +20738,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "tests_test_variant_names_rationale_30",
-      "community": 62,
-      "community_name": "fold_variants",
+      "community": 54,
+      "community_name": "disambiguate",
       "norm_label": "detection. must see through the script variant without merging anything."
     },
     {
@@ -22075,8 +22152,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "web_src_tests_stage_failure_test",
-      "community": 44,
-      "community_name": "Taste.tsx",
+      "community": 70,
+      "community_name": "Companion.tsx",
       "norm_label": "stage-failure.test.tsx"
     },
     {
@@ -22294,8 +22371,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "web_src_api_recommendresponse",
-      "community": 24,
-      "community_name": "api.ts",
+      "community": 15,
+      "community_name": "Discover.tsx",
       "norm_label": "recommendresponse"
     },
     {
@@ -22345,8 +22422,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "web_src_api_apierror",
-      "community": 24,
-      "community_name": "api.ts",
+      "community": 5,
+      "community_name": "auth.ts",
       "norm_label": "apierror"
     },
     {
@@ -22357,8 +22434,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "web_src_api_apierror_constructor",
-      "community": 24,
-      "community_name": "api.ts",
+      "community": 5,
+      "community_name": "auth.ts",
       "norm_label": ".constructor()"
     },
     {
@@ -22420,8 +22497,8 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "web_src_api_chip",
-      "community": 24,
-      "community_name": "api.ts",
+      "community": 15,
+      "community_name": "Discover.tsx",
       "norm_label": "chip"
     },
     {
@@ -22736,8 +22813,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "web_src_companion_lines_script",
-      "community": 70,
-      "community_name": "Companion.tsx",
+      "community": 44,
+      "community_name": "Taste.tsx",
       "norm_label": "script"
     },
     {
@@ -23587,8 +23664,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "web_src_evidence_sharedbasis",
-      "community": 15,
-      "community_name": "Discover.tsx",
+      "community": 13,
+      "community_name": "evidence.ts",
       "norm_label": "sharedbasis()"
     },
     {
@@ -23599,8 +23676,8 @@
       "_callable": true,
       "_origin": "ast",
       "id": "web_src_evidence_listbasisline",
-      "community": 15,
-      "community_name": "Discover.tsx",
+      "community": 13,
+      "community_name": "evidence.ts",
       "norm_label": "listbasisline()"
     },
     {
@@ -24342,7 +24419,7 @@
       "label": "cravingOf()",
       "file_type": "code",
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L640",
+      "source_location": "L655",
       "_callable": true,
       "_origin": "ast",
       "id": "web_src_routes_discover_cravingof",
@@ -24354,7 +24431,7 @@
       "label": "Skeletons()",
       "file_type": "code",
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L646",
+      "source_location": "L661",
       "_callable": true,
       "_origin": "ast",
       "id": "web_src_routes_discover_skeletons",
@@ -42969,6 +43046,72 @@
       "_origin": "ast",
       "source": "scripts_bootstrap_install_or_report",
       "target": "scripts_bootstrap_have",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_chip_row_check",
+      "target": "scripts_chip_row_check_chips",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_chip_row_check",
+      "target": "scripts_chip_row_check_chromium",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_chip_row_check",
+      "target": "scripts_chip_row_check_findings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_chip_row_check",
+      "target": "scripts_chip_row_check_prefs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_chip_row_check",
+      "target": "scripts_chip_row_check_require",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/chip_row_check.mjs",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_chip_row_check",
+      "target": "scripts_chip_row_check_widths",
       "confidence_score": 1.0
     },
     {
@@ -64416,7 +64559,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L430",
+      "source_location": "L445",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -64631,7 +64774,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L246",
+      "source_location": "L261",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -68072,7 +68215,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L620",
+      "source_location": "L635",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -68132,7 +68275,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L281",
+      "source_location": "L296",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -68156,7 +68299,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L282",
+      "source_location": "L297",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -68204,7 +68347,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L459",
+      "source_location": "L474",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -68439,7 +68582,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L555",
+      "source_location": "L570",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -68595,7 +68738,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L382",
+      "source_location": "L397",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -69195,7 +69338,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L307",
+      "source_location": "L322",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -69243,7 +69386,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L284",
+      "source_location": "L299",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -69322,7 +69465,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L640",
+      "source_location": "L655",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover",
@@ -69377,7 +69520,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L646",
+      "source_location": "L661",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover",
@@ -69438,7 +69581,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "web/src/routes/Discover.tsx",
-      "source_location": "L294",
+      "source_location": "L309",
       "weight": 1.0,
       "_origin": "ast",
       "source": "web_src_routes_discover_discover",
@@ -71367,5 +71510,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "97031f339ab1c716c6290087e918ea1d67b2c419"
+  "built_at_commit": "9349c9634aa063324ab956c70841d2e4d1930d18"
 }
