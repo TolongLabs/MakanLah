@@ -1,15 +1,37 @@
-# Narration, keyed to the beats record.mjs measures rather than to fixed
-# timestamps. Each line is: beat | offset_ms | text
+# Narration for the Merdeka pitch cut, keyed to the beats record.mjs measures
+# rather than to fixed timestamps. Each line is: beat | offset_ms | text
 #
 # The offset is from that beat, so a page that gets slower moves the narration
-# with it. Hand-tuned absolute offsets drift the moment anything upstream
-# changes, and narration that contradicts the picture is worse than silence.
+# with it. schedule.py then pushes any line that would still be speaking when
+# the next one starts -- three lines overlapped in the first launch cut and no
+# mechanical audio check can hear that.
 #
-# Beats: landing, taste, discover, corroboration, venue, end.
+# EVERY NUMBER BELOW IS MEASURED. 1507 posts, 118 distinct authors, 247 venues,
+# two platforms, all Kuala Lumpur. There is deliberately no claim about language
+# percentages: `langs` is `und` on 1388 of 1507 posts (#133), so the mixed-script
+# handling is SHOWN on screen instead of asserted as a statistic.
+#
+# Beats: landing, compare, taste, discover, corroboration, venue, dead, arch,
+# market, close.
 
-landing       |  300 | MakanLah recommends restaurants in Kuala Lumpur. Every pick shows the post it came from.
-taste         |  200 | It doesn't start with a search box. It asks what you're craving, who you're with, and how far you're willing to go.
-discover      |  200 | Then it reads what people actually wrote. Real posts, from RedNote and Google Maps, in English, Malay and Chinese.
+landing       |  400 | Ask a chatbot where to eat in Kuala Lumpur, and it will answer. It will sound certain.
+compare       |  300 | It will not tell you where that came from, when, or whether the place is still open. Because it does not know. It is finishing a sentence.
+compare       | 9000 | Meanwhile, Malaysians have already written it down. On RedNote. On Google Maps. In English, Malay and Chinese, often in the same sentence.
+
+taste         |  300 | MakanLah does not start with a search box. It asks what you are craving, who you are with, and how far you are willing to go.
+
+discover      |  300 | Then it reads what people actually wrote.
+discover      | 4000 | Every pick shows the post behind it. The writer's own words, their handle, and a link to the original.
 corroboration |  400 | When two platforms carry the same place, both posts sit side by side. Nothing has to claim the sources agree. You can read them.
-venue         |  200 | Every result carries the words someone wrote. Not a generated summary. The post itself, with a link back to it.
-venue         | 5200 | That's the difference. A recommendation you can check.
+venue         |  400 | This is the whole trail for one restaurant. Everything the corpus holds, and nothing it does not.
+dead          |  400 | And when a post no longer opens, it says so, rather than quietly dropping the evidence and hoping you do not notice.
+
+arch          |  600 | Nothing is fetched while you wait. Posts are captured in the background, extracted into a normalised corpus, and ranked on our own machines.
+arch          | 9000 | No single platform is load-bearing. If one goes dark, the app degrades instead of dying.
+
+market        |  600 | Today that corpus is one thousand five hundred and seven posts, written by one hundred and eighteen people, about two hundred and forty seven places in Kuala Lumpur.
+market        | 9500 | Every single one of them is checkable.
+
+close         |  600 | This is Kuala Lumpur, and it is a start.
+close         | 3600 | A better Malaysia is not built by an app that sounds confident. It is built by taking people at their word, in whatever language they wrote it, and admitting what you do not know.
+close         | 14000 | MakanLah. Recommendations you can trace. Selamat Hari Merdeka.

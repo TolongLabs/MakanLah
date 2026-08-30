@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f7f7f4; --ink: #16180f; --ink-soft: #5c5f52; --rule: #d9dad0;
+    --enamel: #0b6b5e; --seal: #c3272b;
+    --chrome: "Archivo", system-ui, sans-serif;
+    --testimony: "Newsreader", "Noto Serif SC", Georgia, serif;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px; background: var(--paper); color: var(--ink);
+    font-family: var(--chrome); padding: 92px 120px; display: flex; flex-direction: column;
+  }
+  .eyebrow { font-size: 21px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+  h1 { font-size: 62px; font-weight: 600; letter-spacing: -0.02em; margin-top: 18px; }
+  .sub { font-family: var(--testimony); font-size: 30px; color: var(--ink-soft); margin-top: 16px; max-width: 1240px; }
+  .figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 56px; margin-top: 104px; }
+  .fig { border-top: 3px solid var(--ink); padding-top: 20px; }
+  .fig .v { font-size: 112px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+  .fig .k { font-size: 27px; color: var(--ink-soft); margin-top: 18px; }
+  .fig .n { font-family: var(--testimony); font-size: 23px; color: var(--ink-soft); margin-top: 12px; line-height: 1.6; }
+  .quote {
+    margin-top: auto; border-top: 1px solid var(--rule); padding-top: 42px;
+    display: grid; grid-template-columns: 1.35fr 1fr; gap: 72px; align-items: start;
+  }
+  .quote .q { font-family: var(--testimony); font-size: 31px; line-height: 1.5; }
+  .quote .a { font-size: 20px; color: var(--ink-soft); margin-top: 16px; letter-spacing: 0.04em; }
+  .scope .k { font-size: 27px; font-weight: 600; }
+  .scope .v { font-family: var(--testimony); font-size: 23px; color: var(--ink-soft); margin-top: 9px; line-height: 1.5; }
+  .foot { margin-top: 34px; font-size: 20px; color: var(--ink-soft); letter-spacing: 0.05em; }
+  .seal { color: var(--seal); }
+</style>
+<body>
+  <div class="eyebrow">What Is In It Today</div>
+  <h1>Every number here is countable.</h1>
+  <p class="sub">Not a projection, not a roadmap. This is what the corpus holds right now, and each figure is one query away from being checked.</p>
+
+  <div class="figs">
+    <div class="fig"><div class="v">1,507</div><div class="k">Posts read</div>
+      <div class="n">Public, written by people, captured with attribution intact.</div></div>
+    <div class="fig"><div class="v">118</div><div class="k">People behind them</div>
+      <div class="n">Distinct authors. Two posts by one account is one person saying it twice.</div></div>
+    <div class="fig"><div class="v">247</div><div class="k">Places named</div>
+      <div class="n">Each with coordinates, so you can walk to it.</div></div>
+    <div class="fig"><div class="v seal">0</div><div class="k">Picks we made up</div>
+      <div class="n">A result without a post behind it is never returned.</div></div>
+  </div>
+
+  <div class="quote">
+    <div>
+      <div class="q">「藏在甲洞的本地人真爱老店，本人更爱这家的干肉骨茶。」</div>
+      <div class="a">RedNote · a real post, cited on the card it recommends</div>
+    </div>
+    <div class="scope">
+      <div class="k">Kuala Lumpur, and it is a start</div>
+      <div class="v">Two platforms today. The architecture takes a third without a rewrite, and every city after this is the same pipeline pointed somewhere new.</div>
+    </div>
+  </div>
+  <div class="foot">MakanLah — the corpus, 30 August 2026</div>
+</body>
