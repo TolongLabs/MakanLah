@@ -530,6 +530,11 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     'id': str(v['id']),
                     'name': v['name'],
                     'area': v['area'],
+                    # Counts rather than an average: 88% of multi-mention venues
+                    # span more than one bucket, so disagreement is the common
+                    # case and it is the part worth a reader's attention. A mean
+                    # of this distribution reads "excellent" almost everywhere.
+                    'sentiment': v.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
                     'lat': v['lat'],
                     'lng': v['lng'],
                     'maps_url': maps_url(v),
@@ -593,6 +598,7 @@ def one(venue_id, *, lat=None, lng=None):
             'id': str(entry['id']),
             'name': entry['name'],
             'area': entry['area'],
+            'sentiment': entry.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),

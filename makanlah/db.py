@@ -290,8 +290,12 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 'place_id': r['place_id'],
                 'dishes': [],
                 'citations': [],
+                'sentiment': {'positive': 0, 'mixed': 0, 'negative': 0},
             },
         )
+        b = sentiment_bucket(r['sentiment'])
+        if b:
+            v['sentiment'][b] += 1
         for d in r['dishes'] or []:
             if d not in v['dishes']:
                 v['dishes'].append(d)
@@ -309,6 +313,32 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     for venue_id, cites in pool.items():
         out[venue_id]['citations'] = diverse_citations(cites, per_venue)
     return out
+
+
+def sentiment_bucket(score):
+    """Three buckets, because an average of this distribution says nothing.
+
+    871 of 1653 mentions sit at exactly 1.0, so a mean reads "excellent" on
+    nearly every venue and a chip repeating that everywhere carries no
+    information -- `docs/DESIGN.md` calls a device that says the same thing on
+    every card a lie told in layout.
+
+    Counts are different: **163 of 186 multi-mention venues (88%) span more than
+    one bucket**, and 73 of 247 carry at least one negative. Disagreement is the
+    common case here, and it is the part a reader should see.
+
+    The boundaries are deliberately asymmetric. Positive needs >= 0.6 because the
+    scale is crowded at the top; negative needs only <= -0.2 because a single
+    person saying a place was bad is worth surfacing even when nine disagree.
+    """
+    if score is None:
+        return None
+    s = float(score)
+    if s >= 0.6:
+        return 'positive'
+    if s <= -0.2:
+        return 'negative'
+    return 'mixed'
 
 
 def diverse_citations(citations, limit):
