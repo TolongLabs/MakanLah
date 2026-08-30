@@ -1,10 +1,11 @@
-# Progress — 2026-08-29 · the citation trail holds on every surface, and the dish lane reads the corpus
+# Progress — 2026-08-30 · launch-ready, and the halal safeguard that was a coin flip
 
-**`main` is at `5bdd17d`, and API, client and `main` all report it.** Client `0d9a933`, API `/health` reports `0d9a933`
-— **all three aligned**, after this session found the API running two commits behind a client that had already shipped
-the UI for #110. **435 Python tests, 134 web tests, 13 guard cases, lint and format clean, CI green.** Verified on
-`main` rather than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link,
-`/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `d12ac69`. API `/health` reports `5bdd17d`, client `build.json` reports `d12ac69`.** The API is correctly
+behind: the only commit between them touches `ingest/` and `docs/`, neither of which is in the API bundle (`vercel.json`
+includes `makanlah/**` and `api/**`). **A differing sha is not drift — the question is whether the diff touches a
+deployed path**, and #116 exists because answering it by hand has failed twice. **475 Python tests, lint and format
+clean, CI green.** Verified on `main` rather than on a branch: `/recommend` with a radius returns cited results,
+`/venue/{id}` serves a deep link, `/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
 **fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
@@ -22,6 +23,59 @@ measured against a 3s target in [`PRD.md`](PRD.md)** and still not met, delibera
 console before repinning.
 
 **Web client is live:** <https://makanlah-b5h.pages.dev> · **API is live:** <https://makanlah-api.vercel.app>
+
+---
+
+## 2026-08-30 (Post-Launch State) — What Shipped After The Call, And What Is Deliberately Parked
+
+**MakanLah is launch-ready and prod is healthy.** `degraded: false`, every returned result carries citations, corpus
+1507 posts across 247 venues. Emilia, Kelvin and Nabilah all yes, verified independently against what prod serves.
+
+### #15 Advanced, Then Was Stopped On Purpose
+
+`pending_venues` orders by mention count, so **every `--limit N` run without an offset re-captured the same top N** —
+three batches produced 40 venue-passes and only 27 band repairs. #128 adds `--offset` plus a `venue.id` tie-break,
+without which `OFFSET` pagination can silently repeat or skip rows between pages and hide the very problem it fixes.
+Verified as a difference rather than a presence: page 0 and page 14 share **0 of 14** venues.
+
+| Google Maps Corpus      | Session Start | Now                                            |
+| ----------------------- | ------------- | ---------------------------------------------- |
+| Posts over 300 chars    | 52            | **350**                                        |
+| 230–250 truncation band | 488           | **362**                                        |
+| Average length          | 197           | **316**                                        |
+| Longest post            | 340           | **3229**                                       |
+| Total posts             | 1388          | **1388** — repaired in place, never duplicated |
+
+**Then stopped deliberately.** Each `enrich_gmaps` run opens an `ingest_run` row, and the API honestly reports an
+unfinished one as degraded — so while a batch is in flight, prod tells visitors _"the last Google Maps refresh did not
+finish."_ It clears itself on completion, but **running ingestion against a product whose link may be shared at any
+moment is the wrong trade.** Resume at a quiet hour.
+
+**Repairing `raw_text` changes nothing a reader sees.** Excerpts were derived at extraction time, so they stay truncated
+until `ingest/pipeline.py` replays. That replay spends DashScope credit and is therefore **the owner's call, not an
+agent's** — parked, not forgotten.
+
+### #129 — The Free Quota Lapsed Under Two Request-Path Lanes
+
+The owner reported on 2026-08-30 that Alibaba Cloud emailed to say the `qwen3.7-flash` free quota is exhausted.
+**Re-rank (every `/recommend`) and copilot (every `/ask`)** both default to `qwen3.7-flash-2026-07-15` when
+`DASHSCOPE_API_KEY` is set. Nothing broke — the lane moved from free to paid, and a `spicy noodles` query still returned
+3 ranked results in 3.6s. **Spend that day: RM 0.0716 against a RM 10 ceiling.** The exposure scales with traffic, and a
+launch post is exactly the traffic shape that makes today's number a poor predictor of tomorrow's.
+
+### A Health Field Should Report The Capability, Not Its Configuration
+
+Peer 3's generalisation, recorded because two of the three each cost a cycle:
+
+| Field                | Reported                   | The Question Actually Being Asked                |
+| -------------------- | -------------------------- | ------------------------------------------------ |
+| `database: true`     | credentials are configured | are they the ones we think, from where we think? |
+| _(no version field)_ | —                          | **is what I am looking at deployed?**            |
+| `rerank: true`       | a **key** is configured    | does the lane still have **quota**?              |
+
+Each is true, and each answers something narrower than the reader intends. They cannot be caught by disbelieving the
+value — only by noticing the question has drifted. `rerank: "ok" | "no_quota" | "unconfigured"` distinguishes what a
+boolean cannot. **Recorded on #129, not proposed as work.**
 
 ---
 
