@@ -101,6 +101,41 @@ def upsert_embedding(con, venue_id, model, vector):
     )
 
 
+def dish_vocabulary(con):
+    """Every dish string in the corpus, ignoring distance.
+
+    `venue_dishes` is scoped to the candidate pool, which made a dish outside the
+    radius indistinguishable from a dish the corpus never heard of: with a 1.5km
+    radius round PJ, `nasi lemak` named nothing, so no lane fired and the response
+    fell through to semantic and served pasta and tacos as ranked picks (#162).
+    """
+    rows = con.execute('select distinct unnest(dishes) as d from mention where dishes is not null').fetchall()
+    return [r['d'] for r in rows if r['d']]
+
+
+def nearest_serving(con, dishes_folded, lat, lng, limit=3):
+    """Venues carrying one of these dish strings, nearest first, at any distance."""
+    if not dishes_folded or lat is None or lng is None:
+        return []
+    # DISTINCT ON must order by its key first, so the distance sort has to happen
+    # outside it -- inside, the caller gets rows ordered by id and reads them as
+    # nearest-first. Matching on the exact folded dish string rather than LIKE: a
+    # substring match put a Taiwanese place on a nasi lemak query.
+    return con.execute(
+        """select * from (
+             select distinct on (v.id) v.id, v.name, v.area, v.place_id, v.lat, v.lng,
+                    (6371000 * acos(least(1, greatest(-1,
+                       cos(radians(%s)) * cos(radians(v.lat)) * cos(radians(v.lng) - radians(%s))
+                       + sin(radians(%s)) * sin(radians(v.lat)))))) as distance_m
+             from venue v join mention m on m.venue_id = v.id
+             where v.lat is not null
+               and exists (select 1 from unnest(m.dishes) d where lower(btrim(d)) = any(%s))
+             order by v.id
+           ) t order by t.distance_m limit %s""",
+        (lat, lng, lat, list(dishes_folded), limit),
+    ).fetchall()
+
+
 def venue_dishes(con, venue_ids):
     """{venue_id: [dish, ...]} for a candidate set.
 

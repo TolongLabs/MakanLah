@@ -37,7 +37,7 @@ def star_sentiment(label):
     return round((int(m.group(1)) - 3) / 2, 2)
 
 
-def review_url(venue_name, city='Kuala Lumpur'):
+def review_url(venue_name, city='Kuala Lumpur', place_id=None):
     """Where a human verifies this citation.
 
     Google Maps has no stable per-review URL, so the citation points at the
@@ -47,6 +47,12 @@ def review_url(venue_name, city='Kuala Lumpur'):
     product promises.
     """
     q = urllib.parse.quote(f'{venue_name} {city}'.strip())
+    if place_id:
+        # Without this the chip is a text search for the venue's name, which for
+        # `Undisclosed Location` -- a real place whose name the extraction lost --
+        # resolves to nothing at all. venue.maps_url has carried the id all along;
+        # the citation did not, so 0 of 20 Maps citations resolved exactly (#163).
+        return f'https://www.google.com/maps/search/?api=1&query={q}&query_place_id={place_id}'
     return f'https://www.google.com/maps/search/?api=1&query={q}'
 
 
@@ -102,6 +108,7 @@ def apply(con, records):
 
 def _apply_records(con, records, stats):
     for rec in records:
+        place_id = None
         if rec['coords']:
             lat, lng, address, place_id, _ = rec['coords']
             con.execute(
@@ -123,7 +130,7 @@ def _apply_records(con, records, stats):
                 con,
                 platform='google_maps',
                 platform_post_id=rv['review_id'],
-                url=review_url(rec['name']),
+                url=review_url(rec['name'], place_id=place_id),
                 author_handle=None,
                 posted_at_raw=rv.get('when') or None,
                 # The RedNote path has always called this; the Maps path hardcoded
