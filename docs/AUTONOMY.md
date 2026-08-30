@@ -263,6 +263,26 @@ walking-distance pool, and the sweep never touched it. **Distance-filtered resul
 is a variable and one origin is a sample of one.** The peer who filed it reproduced it in a single call by varying the
 thing the sweep had held fixed.
 
+Within the hour the same pair made the mirror-image error in the other direction. A peer reported "0 of 20 Maps citation
+URLs carry `query_place_id`" — measured on the API payload, where that field is a name search by design and always has
+been. The client substitutes the exact link at render time, and the rendered DOM read **38 of 38**. Both numbers were
+correct about different layers, and the one a user clicks is the DOM.
+
+| Held fixed | Reads as                | Missed                                  |
+| ---------- | ----------------------- | --------------------------------------- |
+| One origin | "cannot reproduce"      | A pool the sweep never queried          |
+| One layer  | "0 of 20, a regression" | A transform one layer above the reading |
+
+> **The variable an instrument holds fixed is invisible from inside that instrument.** So the correction is never "be
+> more careful" — a second pass by the same measurer holds the same thing fixed and returns the same answer with more
+> confidence. **It is a second measurer with a different fixed variable**, which is what caught both of these, in both
+> directions, on the same afternoon.
+
+The second measurer has to choose their own method for this to work. The peer checking the `38 of 38` deliberately did
+not reuse the selector they had been handed, on the grounds that a selector supplied by the session whose claim is under
+test inherits that session's assumption. They counted every `a[href*="google.com/maps"]` instead, from a different
+origin, and got 32 of 32 — agreement worth more than either reading alone.
+
 ### Unattended Mode
 
 **Agents may merge, but only onto green CI.** `.claude/hooks/guard-merge.sh` permits `gh pr merge` and denies it unless

@@ -186,14 +186,22 @@ describe('the actions row', () => {
     expect(screen.getByRole('link', { name: 'All Sources' }).getAttribute('href')).toBe('/r/v9')
   })
 
-  it('leaves Directions pointing straight at Maps rather than at a dialog', () => {
-    // Google Maps sets frame-ancestors and refuses to be embedded, so a Directions
-    // modal could only ever hold a link to Google Maps -- one extra click to reach
-    // where this already goes.
-    renderRow(result())
-    const link = screen.getByRole('link', { name: 'Directions' })
-    expect(link.getAttribute('target')).toBe('_blank')
-    expect(link.getAttribute('href')).toContain('google.com/maps')
+  it('carries two actions, not three: Directions lives in the dialog now', () => {
+    // Once All Sources became a dialog with its own Directions button and a tappable
+    // map, a Directions link on the card was a second door to the same place. The
+    // extra tap is the point: read the evidence, then go.
+    // Rendered WITH onAsk, because without it the Ask control is conditional and
+    // absent, and the assertion would pass against a card that had lost all three.
+    render(
+      <MemoryRouter>
+        <ol>
+          <ResultRow result={result()} rank={1} onAsk={() => {}} />
+        </ol>
+      </MemoryRouter>
+    )
+    expect(screen.queryByRole('link', { name: 'Directions' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'All Sources' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Ask About This/ })).toBeTruthy()
   })
 
   it('drops the model-written line from a ranked card', () => {

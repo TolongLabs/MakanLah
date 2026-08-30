@@ -111,6 +111,12 @@ export function SourcesModal() {
             </p>
           )}
 
+          {/* The only Directions on this flow now that the card carries two actions
+              rather than three, and deliberately NOT a dialog of its own: Google Maps
+              sets frame-ancestors and refuses to be embedded, so a Directions dialog
+              could hold nothing but a link to Google Maps. Opening a tab already
+              satisfies the requirement it would have served, which is not losing the
+              results behind it. */}
           <a className="btn btn-quiet brief-go" href={venue.maps_url} target="_blank" rel="noreferrer noopener">
             Directions
           </a>

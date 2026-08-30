@@ -157,18 +157,17 @@ export function ResultRow({
           {/* A real link that a modal intercepts, never a button dressed as one.
               Cmd-click, middle-click and Open In New Tab all have to reach the full
               page, and `backgroundLocation` is what lets the same href render as an
-              overlay on a normal click and as a page on a cold load. */}
+              overlay on a normal click and as a page on a cold load.
+
+              TWO ACTIONS, NOT THREE. Directions used to sit here as well, and once
+              All Sources became a dialog that carries its own Directions button and
+              a tappable map, the card's copy was a second door to the same place.
+              Costing one extra tap is the right trade: this product's whole order of
+              operations is read the evidence, then go, and a Directions link beside
+              the evidence invites skipping it. */}
           <Link className="link" to={`/r/${venue.id}`} state={{ backgroundLocation: location }}>
             All Sources
           </Link>
-          {/* NOT a modal, deliberately. Google Maps sets frame-ancestors and refuses
-              to be embedded, so a Directions dialog could only ever contain a link to
-              Google Maps -- one extra click to reach where this already goes. And the
-              stated requirement, not leaving the results behind, is already met: this
-              opens a tab. */}
-          <a className="link" href={venue.maps_url} target="_blank" rel="noreferrer noopener">
-            Directions
-          </a>
         </p>
       </div>
     </li>
