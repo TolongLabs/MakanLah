@@ -9,6 +9,7 @@ Bands are per-person RM, matching Google Maps' own four levels:
 """
 
 import pytest
+
 from makanlah.prices import price_band_from_text
 
 

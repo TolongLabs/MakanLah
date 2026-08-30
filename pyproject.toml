@@ -28,6 +28,15 @@ target-version = "py311"
 # verbatim record.
 exclude = ["data", "node_modules", ".venv", ".agents/skills", "docs/superpowers", "docs/source"]
 
+[tool.ruff.lint.isort]
+# Stated rather than inferred. Ruff decides first-party by looking for a matching
+# directory, and that answer changed between this machine and CI for the same
+# commit and the same ruff version: `from makanlah.prices import ...` was grouped
+# with pytest locally and demanded its own block in CI, so `bun run lint` passed
+# here and the identical command failed there. Naming the packages removes the
+# environment from the decision.
+known-first-party = ["makanlah", "ingest", "api", "evals"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
