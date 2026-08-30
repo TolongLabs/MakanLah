@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ApiError } from '../api'
@@ -71,9 +71,9 @@ describe('auth error copy', () => {
 describe('the nav while signed in', () => {
   afterEach(() => localStorage.clear())
 
-  function shell() {
+  function shell(path = '/discover') {
     return render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[path]}>
         <Shell>
           <p>body</p>
         </Shell>
@@ -81,25 +81,37 @@ describe('the nav while signed in', () => {
     )
   }
 
-  it('keeps saying the guest account is shared, not just at sign-in', () => {
-    // Disclosing once and never again lets somebody forget mid-session that every
-    // other guest can see what they are doing.
+  it('no longer labels the guest account in the bar', () => {
     saveSession({ token: 't', user: { is_guest: true, shared: true } })
     shell()
-    expect(screen.getByText(/Guest, Shared/i)).toBeTruthy()
-    expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull()
+    const bar = document.querySelector('.nav')
+    expect(bar?.textContent).not.toMatch(/Guest, Shared/i)
   })
 
-  it('names a real account by its email', () => {
+  it('still discloses the sharing somewhere a person will find it', () => {
+    // The bar label went at the owner's instruction and the sign-in consent copy
+    // went earlier for the same reason. Removing BOTH would leave the product never
+    // telling a guest that another guest can see what they are doing, which is a
+    // fact about somebody else's privacy rather than a piece of chrome. It moved to
+    // the drawer; this asserts it did not simply vanish.
+    saveSession({ token: 't', user: { is_guest: true, shared: true } })
+    shell()
+    const drawer = document.querySelector('[data-nav-drawer]')
+    expect(drawer?.textContent).toMatch(/shared with other guests/i)
+  })
+
+  it('names a real account by its email, in the same place as the guest notice', () => {
+    // Identity moved out of the bar with the guest label. Both account types are
+    // named in one place rather than one in the chrome and one behind a tap.
     saveSession({ token: 't', user: { email: 'someone@example.com', is_guest: false, shared: false } })
     shell()
-    expect(screen.getByText('someone@example.com')).toBeTruthy()
+    expect(document.querySelector('.nav')?.textContent).not.toMatch(/someone@example.com/)
+    expect(document.querySelector('[data-nav-drawer]')?.textContent).toMatch(/someone@example.com/)
   })
 
   it('offers one way in when there is no session, and only one', () => {
-    // The bar carries a single action now. A Sign In link beside Get Started is two
-    // doors to the same room, and on the landing page it competes with the one thing
-    // that page is for.
+    // The bar carries a single action. A Sign In link beside Get Started is two
+    // doors to the same room.
     shell()
     expect(screen.getByRole('link', { name: 'Get Started' })).toBeTruthy()
     expect(screen.queryByRole('link', { name: 'Discover' })).toBeNull()
@@ -120,5 +132,62 @@ describe('the nav while signed in', () => {
     for (const name of [/Auto/i, /Light/i, /Dark/i]) {
       expect(screen.getByRole('radio', { name })).toBeTruthy()
     }
+  })
+
+  it('leads with the menu, not the wordmark, once you are inside', () => {
+    // It REPLACES the brand rather than sitting beside it: two marks on one bar
+    // said the same thing twice and pushed the only working control to the far
+    // side of the screen.
+    shell()
+    const bar = document.querySelector('.nav')
+    const first = bar?.querySelector('.wordmark, [data-nav-drawer-toggle]')
+    expect(first?.hasAttribute('data-nav-drawer-toggle')).toBe(true)
+    expect(bar?.querySelector('.wordmark')).toBeNull()
+  })
+})
+
+/**
+ * The landing bar is a different bar, and its one control does not move.
+ *
+ * A page whose only job is to start you must not rename or relocate its own door
+ * between visits. Where it GOES changes with the session, because sending somebody
+ * already signed in back to a sign-up form is a dead end wearing the right label.
+ */
+describe('the landing bar', () => {
+  afterEach(() => localStorage.clear())
+
+  const landing = () =>
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Shell>
+          <p>body</p>
+        </Shell>
+      </MemoryRouter>
+    )
+
+  it('says Get Started whether or not somebody is signed in', () => {
+    landing()
+    expect(screen.getByRole('link', { name: 'Get Started' })).toBeTruthy()
+    cleanup()
+    saveSession({ token: 't', user: { email: 'a@b.c', is_guest: false, shared: false } })
+    landing()
+    expect(screen.getByRole('link', { name: 'Get Started' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Sign Out' })).toBeNull()
+  })
+
+  it('sends a signed-in visitor onward rather than back to a form', () => {
+    saveSession({ token: 't', user: { email: 'a@b.c', is_guest: false, shared: false } })
+    landing()
+    expect(screen.getByRole('link', { name: 'Get Started' }).getAttribute('href')).toBe('/taste')
+  })
+
+  it('sends a stranger to sign up', () => {
+    landing()
+    expect(screen.getByRole('link', { name: 'Get Started' }).getAttribute('href')).toBe('/sign-up')
+  })
+
+  it('carries no menu control at all', () => {
+    landing()
+    expect(document.querySelector('.nav [data-nav-drawer-toggle]')).toBeNull()
   })
 })

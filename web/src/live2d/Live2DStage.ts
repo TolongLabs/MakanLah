@@ -70,7 +70,13 @@ export class Live2DStage {
 
     const model = (await Live2DModel.from(opts.url, {
       idleMotionGroup: opts.idleMotionGroup,
-      autoUpdate: true
+      autoUpdate: true,
+      // pixi-live2d-display defaults this to true, which registers pointer
+      // tracking and makes her eyes and head follow the cursor across the whole
+      // document. Removed on request: on a page whose job is reading evidence, a
+      // character watching the pointer pulls attention to itself and away from
+      // the thing being read, and it does it continuously rather than once.
+      autoInteract: false
     })) as unknown as Live2DModelLike
 
     // destroy() may have run while the model was loading. Release it rather than

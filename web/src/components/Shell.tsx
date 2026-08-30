@@ -16,25 +16,27 @@ export function Shell({ children }: { children: ReactNode }) {
   // and this costs less than a context for one value read in one place.
   const session = loadSession()
   void location.key
+  // The landing is a different bar, not the same bar with a different link in it.
+  const selling = location.pathname === '/'
 
   return (
     <div className="shell">
       <header className="nav">
         <div className="nav-inner">
-          <Link className="wordmark" to="/">
-            <Chop size={26} />
-            <span className="wordmark-name">MakanLah</span>
-          </Link>
-          {/* The bar carries ONE action, and which one depends on where you are.
-              The landing sells, so it offers Get Started and nothing that competes
-              with it -- a Discover link beside it is a second door out of a page
-              whose only job is the first one. Once you are inside, the only thing
-              the bar owes you is a way out. */}
-          <nav className="nav-links" aria-label="Main">
+          {/* Leftmost, and it REPLACES the wordmark rather than sitting beside it.
+              Two brand marks on one bar -- the chop in the nav and the chop in the
+              drawer it opens -- said the same thing twice and pushed the one
+              control that does something to the far side of the screen. */}
+          {selling ? (
+            <Link className="wordmark" to="/">
+              <Chop size={26} />
+              <span className="wordmark-name">MakanLah</span>
+            </Link>
+          ) : (
             <button
               type="button"
               ref={drawerToggleRef}
-              className="nav-drawer-toggle"
+              className="nav-drawer-toggle nav-drawer-toggle-lead"
               data-nav-drawer-toggle
               onClick={() => setDrawerOpen((open) => !open)}
               aria-expanded={drawerOpen}
@@ -43,29 +45,30 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               <MenuIcon />
             </button>
+          )}
+          <nav className="nav-links" aria-label="Main">
             <ThemeSwitch />
-            {session ? (
-              <>
-                {/* The shared guest has to stay visible. Disclosing it once at the
-                    sign-in and never again would let somebody forget, mid-session,
-                    that every other guest can see what they are doing. */}
-                {session.user.shared ? (
-                  <span className="nav-account nav-account-shared">Guest, Shared</span>
-                ) : (
-                  <span className="nav-account">{session.user.email ?? 'Signed In'}</span>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-quiet nav-cta"
-                  onClick={() => {
-                    void signOut(session.token)
-                    saveSession(null)
-                    navigate('/')
-                  }}
-                >
-                  Sign Out
-                </button>
-              </>
+            {/* THE LANDING CTA IS INVARIANT. Same label, same place, whatever the
+                auth state, the scroll position or anything else -- a page whose one
+                job is to start you must not move or rename its own door. Where it
+                GOES changes, because sending somebody who is already signed in back
+                to a sign-up form is a dead end wearing the right label. */}
+            {selling ? (
+              <Link className="btn btn-primary nav-cta" to={session ? '/taste' : '/sign-up'}>
+                Get Started
+              </Link>
+            ) : session ? (
+              <button
+                type="button"
+                className="btn btn-quiet nav-cta"
+                onClick={() => {
+                  void signOut(session.token)
+                  saveSession(null)
+                  navigate('/')
+                }}
+              >
+                Sign Out
+              </button>
             ) : (
               <Link className="btn btn-primary nav-cta" to="/sign-up">
                 Get Started

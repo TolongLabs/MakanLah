@@ -141,6 +141,19 @@ export function NavDrawer({
           )}
         </nav>
         <div className="nav-drawer-footer">
+          {/* The topbar label was removed at the owner's instruction, and the
+              sign-in screen's consent copy went earlier for the same reason. That
+              left the product with NO disclosure at all that a guest account is
+              shared, which is a fact about somebody else's privacy rather than a
+              piece of chrome. It lives here instead: out of the bar, one tap away,
+              and in the place a person looks when they want to know who they are
+              signed in as. */}
+          {session &&
+            (session.user.shared ? (
+              <p className="nav-drawer-account">Guest account, shared with other guests.</p>
+            ) : (
+              <p className="nav-drawer-signed-in">{session.user.email ?? 'Signed In'}</p>
+            ))}
           <ThemeSwitch />
         </div>
       </div>
