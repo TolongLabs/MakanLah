@@ -27,6 +27,105 @@ it. 75 of 95 results and 56 of 72 distinct venues carry a band, rendered as word
 
 ---
 
+## 2026-08-30 — Owner's Frontend Batch: Glass, One Row, And Two Checks That Agreed With Themselves
+
+**Eleven owner requests, all shipped on `feat/discover-glass-cards` (PR #185).** Glass result cards on `/discover`, a
+chip rail that holds one row, the sidebar's duplicate CTA and theme switcher removed with Sign Out moved under the
+email, a glass footer sitewide, an opacity sweep, the filter caption folded into a hover tooltip, Codex-generated motifs
+on the three `/dashboard` cards, a scrim that dims and blurs the page behind the open sidebar, and a social embed
+poster.
+
+### Glassmorphism Is An Owner Override, Recorded As One
+
+`docs/DESIGN.md` lists glassmorphism-with-no-reason-for-depth as a tell. The owner was told and answered **"Override for
+my request."** It ships, and `DESIGN.md` now carries the override with its qualifiers rather than quietly contradicting
+itself. **A standing design rule that gets silently broken is worse than one that records its exceptions.**
+
+### The Three Checks That Passed By Agreeing With Themselves
+
+All three are the failure this repo keeps meeting, and none was caught by reading code.
+
+| Check                 | Reported               | Actually                                                       |
+| --------------------- | ---------------------- | -------------------------------------------------------------- |
+| One-row chip rail     | Fixed                  | Never hid a chip at any width                                  |
+| `narrate.sh` tail pad | `tail-pad 2.9s`        | Computed the pad, then discarded it on the next line           |
+| `bun run typecheck`   | `nothing to typecheck` | Tested `[ -d src ]` from a root where the source is `web/src/` |
+
+**The chip rail hid nothing.** `el.hidden = true` was the entire mechanism and `.chip-button { display: inline-flex }`
+beats the UA sheet's `[hidden]`, so the attribute was set on every overflowing chip and every one kept rendering. It
+wrapped to two rows at 320–540px and read as correct only at ≥1024px, **where all six chips fit unaided and nothing
+needed hiding**. The verification had been run at the one width where the mechanism was never exercised. Measured after
+`.chip-button[hidden] { display: none }`: **3 chips at 320px, 4 at 430, 5 at 540, 6 at 1024 and up, one row at all nine
+widths tested.**
+
+**`bun run typecheck` could not fail.** It tested `[ -d src ]` from the repo root, where `src/` does not exist — the
+source is `web/src/`. So it printed "nothing to typecheck" and exited 0 on every run since the client was created,
+including the run immediately before CI rejected this branch on `error TS2532`. **The command AGENTS.md documents as the
+typecheck was a no-op the whole time.** It now runs `tsc --noEmit` from `web/`, where the `vite/client` and
+`vitest/globals` type packages actually live — pointing it at `web/tsconfig.json` from the root was not enough and
+failed on CI's clean install with TS2688 while passing here. Exit codes checked both ways: **0 clean, 2 with the
+narrowing guard removed.**
+
+**`narrate.sh` promised in a comment what an unconditional `tpad=""` threw away**, so the closing line played 2.5s over
+no picture. **ffprobe reports the two stream durations separately and never calls a mismatch an error**, so every mux
+"worked". Video was 163.08s against 165.62s of audio; it is now 166.04s, and the frame at 165.4s renders the close slide
+with the whole final subtitle.
+
+### The Walkthrough Video Is Sound, And Its Narration Drifts — #187
+
+166.04s video against 165.62s audio, mean volume −20.9 dB, no silence gap over 6s, real content in every sampled frame.
+**But 2 of 19 narration lines are spoken while a different beat is on screen**, and 15 of 19 are pushed later than
+intended, drift peaking at **10.7s**.
+
+`schedule.py` pushes any line that would still be speaking when the next starts, and the pushes cascade. It begins at
+line 0: `record.mjs` marks `landing`, waits 1400ms, marks `compare` — and the landing line takes **6549ms** to read,
+injecting 5.2s before anything else happens. **The total is not the problem, the distribution is:** `taste` has 9.4s of
+slack and `market` 9.6s.
+
+Filed rather than fixed here. It needs a fresh capture against prod and a re-verification of all 19 lines, not a text
+edit, and **no narration text needs to change** so no measured figure is at risk.
+
+### The Link Preview Was Broken And Looked Fine
+
+`og:image` was the relative `/og.png`. **Facebook, LinkedIn, X and Slack fetch it from their own servers with no page
+context**, so it resolved against their host and 404'd — the link rendered as bare text with nothing reporting a
+failure. The file itself served 200 the whole time; the tag pointing at it was the defect. Now absolute, plus `og:url`,
+`og:site_name`, `og:image:alt` and three `twitter:*` tags.
+
+The poster is Codex Images 2.0 art composited under real type at exactly 1200×630. **The art was generated textless on
+purpose**: generated lettering is subtly wrong and a wordmark is the one thing on a link preview that cannot be.
+
+### Workers: One Lane Silently Did Nothing
+
+OpenCode (GLM-5.3-Flash) and Devin (SWE-1.7 Max, Free tier — no money spent) were fanned out, split by file to avoid
+collisions. **GLM-5.3-Flash works**, contradicting an earlier peer finding that it returns empty completions.
+
+**Devin exited 0 having done nothing**, because `--mode` is not a valid flag —
+`error: unexpected argument '--mode' found`. Correct invocation is `--permission-mode accept-edits`. This is exactly the
+self-report failure `SWARM.md` warns about: **the exit code was clean and the work was absent.** Neither worker was
+merged on its self-report; each diff was read and the hidden `opaque-check.mjs` run against it.
+
+### `scripts/opaque-check.mjs` Is New, And Mutation-Tested
+
+Reads **computed** styles from a real browser across 3 routes × 2 themes rather than grepping CSS, because a rule can be
+overridden, inherited or beaten on specificity and none of that shows in source. Fails any element with `0 < alpha < 1`
+and no `backdrop-filter` or `background-image`. **110 controls and surfaces, all solid or glass.**
+
+### Gate State, And What Is Left On #141
+
+Measured at 320–1600px: **no horizontal document scroll on any of the four routes** (`scrollWidth == clientWidth`), and
+**53 rendered labels all TitleCase** — the only flags were corpus venue names, which are data rather than chrome.
+
+**`impeccable critique` was not run: there is no `impeccable` binary on this machine.** The skill is vendored, the CLI
+is not installed. Recorded rather than claimed.
+
+**Left open on #141 deliberately:** the distance segment wraps to two rows inside one pill below ~560px, leaving a large
+asymmetric grey void. Pre-existing, unrelated to what PR #185 was asked to change, and commented on the issue with the
+measurement rather than folded into an already-large green PR.
+
+**Also gitignored `scratchpad/`.** Untracked but unignored, it turned `bun run lint` red through the `**/*.md` glob
+while CI stayed green on its clean checkout — **a gate that failed only on the machine doing the work.**
+
 ## 2026-08-30 (Evening) — Google Maps Became A Source, And Four Ceilings Came Off
 
 ### The Browser Is No Longer The Ingestion Path

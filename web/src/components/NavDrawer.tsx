@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { loadSession, saveSession, signOut } from '../auth'
 import { Chop } from './Chop'
-import { ThemeSwitch } from './ThemeSwitch'
 
 function focusable(root: HTMLElement): HTMLElement[] {
   const nodes = Array.from(
@@ -131,24 +130,13 @@ export function NavDrawer({
           <NavLink className="nav-drawer-link" to="/taste" onClick={onClose}>
             Your Taste
           </NavLink>
-          {session ? (
-            <>
-              <button type="button" className="nav-drawer-link nav-drawer-action" onClick={handleSignOut}>
-                Sign Out
-              </button>
-              <Link className="btn btn-primary nav-drawer-cta" to="/discover" onClick={onClose}>
-                Get Started
-              </Link>
-            </>
-          ) : (
-            <>
-              <NavLink className="nav-drawer-link" to="/sign-in" onClick={onClose}>
-                Sign In
-              </NavLink>
-              <Link className="btn btn-primary nav-drawer-cta" to="/sign-up" onClick={onClose}>
-                Get Started
-              </Link>
-            </>
+          {/* Get Started is NOT repeated here. The topbar carries it, and the
+              drawer sat directly under that topbar offering the same action a
+              second time. Owner decision, 2026-08-30. */}
+          {!session && (
+            <NavLink className="nav-drawer-link" to="/sign-in" onClick={onClose}>
+              Sign In
+            </NavLink>
           )}
         </nav>
         <div className="nav-drawer-footer">
@@ -157,8 +145,21 @@ export function NavDrawer({
               directly about this last one and said to remove it too. Recorded
               because it is a deliberate decision rather than an omission: a guest
               is no longer told that other guests can see what they are doing. */}
-          {session && <p className="nav-drawer-signed-in">{session.user.email ?? 'Signed In'}</p>}
-          <ThemeSwitch />
+          {/* Sign Out belongs to the account, so it sits under the account it signs
+              out of rather than in the navigation list above, where it read as a
+              destination alongside Discover and Your Taste.
+
+              The theme switch is gone for the same reason Get Started is: the
+              topbar has one, and two controls for one setting is two places to
+              wonder which is authoritative. */}
+          {session && (
+            <>
+              <p className="nav-drawer-signed-in">{session.user.email ?? 'Signed In'}</p>
+              <button type="button" className="nav-drawer-link nav-drawer-action" onClick={handleSignOut}>
+                Sign Out
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

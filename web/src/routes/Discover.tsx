@@ -1,9 +1,10 @@
-import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { apiBase, type Chip, type Prefs, type RecommendResponse, recommend, suggestions } from '../api'
 import { AskCompanion } from '../components/AskCompanion'
 import { AskModal, type AskTarget } from '../components/AskModal'
 import { ResultRow } from '../components/ResultRow'
+import { Tooltip } from '../components/Tooltip'
 import { coverageLine, evidenceOf, listBasisLine, sharedBasis } from '../evidence'
 import { count, distance } from '../format'
 import { loadPrefs, rangeLabel, summarise } from '../prefs'
@@ -112,6 +113,7 @@ export function Discover() {
   // lie as blaming the corpus for a radius.
   const [askedRadius, setAskedRadius] = useState(0)
   const [chips, setChips] = useState<Chip[]>([])
+  const chipRow = useRef<HTMLFieldSetElement>(null)
   const [target, setTarget] = useState<AskTarget>(null)
   // The onboarding craving used to ride along on every later search forever, so the
   // page claimed two different things at once: "Filtered by your answers: nasi lemak
@@ -195,6 +197,49 @@ export function Discover() {
       void run(cravingOf(prefs), radius)
     })()
   }, [navigate, prefs, run])
+
+  // The chip row is one row, always. Owner decision: show as many as the width
+  // allows and never wrap to a second.
+  //
+  // Measured rather than guessed. A count-per-breakpoint would be wrong the moment
+  // the corpus offers `banana leaf rice` instead of `BKT` -- these are dish strings
+  // read out of posts, so their width is the corpus's business, not a number this
+  // file gets to pick. Every chip renders, and the ones the browser put on a later
+  // row are hidden.
+  //
+  // The observer watches WIDTH only. Hiding a chip changes the row's height, so
+  // reacting to height would re-run the measurement that caused it.
+  useLayoutEffect(() => {
+    const row = chipRow.current
+    if (!row || !chips.length) return
+    let last = -1
+    const fitOneRow = () => {
+      const items = Array.from(row.querySelectorAll<HTMLElement>('.chip-button'))
+      if (!items.length) return
+      // Everything visible first, or a row that just got wider can never grow back.
+      for (const el of items) el.hidden = false
+      const top = items[0]?.offsetTop
+      for (const el of items) if (el.offsetTop !== top) el.hidden = true
+    }
+    fitOneRow()
+    // Measure once regardless, observe only where the browser can. jsdom has no
+    // ResizeObserver and constructing one unguarded threw inside a layout effect,
+    // which React surfaces by unmounting the whole route -- the page went blank in
+    // tests rather than merely losing the resize behaviour.
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => {
+      const w = row.clientWidth
+      if (w === last) return
+      last = w
+      fitOneRow()
+    })
+    ro.observe(row)
+    return () => ro.disconnect()
+    // `chips` arrives from /suggestions after mount. Without it in the deps this
+    // ran once against an empty row, measured nothing, and every chip stayed
+    // visible -- which is exactly what shipped until a row count was measured
+    // rather than assumed.
+  }, [chips])
 
   useEffect(() => {
     let on = true
@@ -283,7 +328,7 @@ export function Discover() {
         </form>
 
         {chips.length > 0 && (
-          <fieldset className="chips">
+          <fieldset className="chips" ref={chipRow}>
             <legend className="sr-only">Suggestions</legend>
             {chips.map((c) => (
               <button type="button" key={c.label} className="chip-button" onClick={() => pick(c)} disabled={loading}>
@@ -322,9 +367,28 @@ export function Discover() {
           <Link className="btn btn-quiet find-taste" to="/taste">
             {summary.length > 0 ? 'Redo My Taste' : 'Answer Four Questions'}
           </Link>
+          {/* The filter list is a tooltip beside the control now, not a sentence
+              under it. Owner decision, 2026-08-30: it was a full line of text
+              restating four wizard answers above the results they had already
+              shaped.
+
+              What stays on screen is the COUNT, because a hover-only affordance
+              that shows nothing until hovered gives a reader no reason to hover --
+              and on a touch screen there is no hover at all, where a count still
+              says how many answers are filtering. */}
+          {shown.length > 0 && (
+            <Tooltip label={`Filtered by your answers: ${shown.map((r) => r.value).join(', ')}.`}>
+              <button type="button" className="find-why">
+                {count(shown.length, 'filter')}
+              </button>
+            </Tooltip>
+          )}
+          {/* Drop The Craving is NOT in the tooltip. It is the one interactive
+              thing that line carried, and a button inside a hover bubble cannot be
+              reached: the pointer has to leave the trigger to get to it, which
+              dismisses the bubble. It stays a control. */}
           {shown.length > 0 && (
             <p className="find-prefs">
-              Filtered by your answers: {shown.map((r) => r.value).join(', ')}.{' '}
               {hasCraving && useCraving && (
                 <button
                   type="button"

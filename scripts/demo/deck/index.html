@@ -1,0 +1,731 @@
+<title>Recommendations You Can Trace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Noto+Serif+SC:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  /* Tokens are copied from the app's own web/src/css/tokens.css rather than
+     eyeballed, so this deck cannot drift from the product it describes.
+
+     Two accents, and they mean different things. --enamel marks WHERE evidence
+     came from and is used only on source chips. --seal marks THAT a pick is
+     attested and appears on the chop and nothing else. They sit near
+     complementary, so no section carries both in quantity. */
+  :root {
+    color-scheme: light dark;
+
+    --paper: #f7f7f4;
+    --paper-raised: #ffffff;
+    --paper-sunk: #efefe9;
+    --ink: #16180f;
+    --ink-soft: #5c5f52;
+    --ink-faint: #6c6f60;
+    --rule: #d9dad0;
+    --rule-strong: #b9bbae;
+    --enamel: #0b6b5e;
+    --enamel-quiet: #e3efec;
+    --seal: #c3272b;
+    --dot: #dcddd2;
+    --grain: 0.055;
+
+    --chrome: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --testimony: "Newsreader", "Noto Serif SC", "Songti SC", ui-serif, Georgia, serif;
+    --num: "Instrument Sans", "Archivo", ui-sans-serif, sans-serif;
+
+    --measure: 34rem;
+    --page: 68rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12130f;
+      --paper-raised: #1a1b16;
+      --paper-sunk: #0c0d0a;
+      --ink: #f2f2ec;
+      --ink-soft: #9b9e90;
+      --ink-faint: #84877a;
+      --rule: #2c2e25;
+      --rule-strong: #43463a;
+      --enamel: #3fa697;
+      --enamel-quiet: #15302c;
+      --seal: #e2564c;
+      --dot: #262820;
+      --grain: 0.085;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #12130f;
+    --paper-raised: #1a1b16;
+    --paper-sunk: #0c0d0a;
+    --ink: #f2f2ec;
+    --ink-soft: #9b9e90;
+    --ink-faint: #84877a;
+    --rule: #2c2e25;
+    --rule-strong: #43463a;
+    --enamel: #3fa697;
+    --enamel-quiet: #15302c;
+    --seal: #e2564c;
+    --dot: #262820;
+    --grain: 0.085;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--chrome);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Paper tooth. The system is paper-and-ink and a flat field reads as a browser
+     default. This is grain, not a texture effect, and it stays under 9%. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--grain);
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  main,
+  header,
+  footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  .wrap {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding-inline: 20px;
+  }
+
+  @media (min-width: 48rem) {
+    .wrap {
+      padding-inline: 40px;
+    }
+  }
+
+  /* ------------------------------------------------------------------ masthead */
+
+  .masthead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 22px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .chop {
+    color: var(--seal);
+    flex: none;
+  }
+
+  .slug {
+    font-family: var(--num);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------------------------------------------------------------------- hero */
+
+  .hero {
+    padding-block: 64px 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    font-family: var(--num);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.19em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1 {
+    margin: 14px 0 0;
+    font-size: clamp(2.1rem, 6.2vw, 3.9rem);
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 1.04;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+
+  .lede {
+    margin: 20px 0 0;
+    font-family: var(--testimony);
+    font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 46ch;
+  }
+
+  /* -------------------------------------------------------------------- section */
+
+  section {
+    padding-block: 56px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h2 {
+    margin: 12px 0 0;
+    font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.14;
+    text-wrap: balance;
+    max-width: 24ch;
+  }
+
+  section > p {
+    margin: 16px 0 0;
+    max-width: var(--measure);
+    color: var(--ink-soft);
+  }
+
+  section > p strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ----------------------------------------------------------- the result card */
+
+  /* The centre of the deck is not a description of the product, it is the product.
+     This is a real result from the live corpus, reproduced in the app's own idiom:
+     the fact row leading with what matched, two posts by two different people on
+     two different platforms, and the chop that only appears when both of those are
+     true. The English review and the Chinese post are about the same shop. */
+
+  .card {
+    margin-top: 32px;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 22px;
+    position: relative;
+    background-image: radial-gradient(circle at center, var(--dot) 0.9px, transparent 1.6px);
+    background-size: 24px 24px;
+  }
+
+  @media (min-width: 48rem) {
+    .card {
+      padding: 30px 32px;
+    }
+  }
+
+  .card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .venue {
+    margin: 0;
+    font-size: clamp(1.25rem, 3vw, 1.6rem);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .stamp {
+    flex: none;
+    color: var(--seal);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stamp-note {
+    font-family: var(--num);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    max-width: 8ch;
+    line-height: 1.3;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 8px;
+    margin: 10px 0 0;
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+  }
+
+  .facts > *:not(:last-child)::after {
+    content: "·";
+    margin-left: 8px;
+    color: var(--rule-strong);
+  }
+
+  .facts .lead {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .posts {
+    display: grid;
+    gap: 20px;
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (min-width: 44rem) {
+    .posts {
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+  }
+
+  blockquote {
+    margin: 0;
+    font-family: var(--testimony);
+    font-size: 1rem;
+    line-height: 1.66;
+    color: var(--ink);
+  }
+
+  blockquote[lang="zh"] {
+    font-size: 1.02rem;
+    line-height: 1.75;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 12px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--enamel-quiet);
+    color: var(--enamel);
+    font-size: 0.75rem;
+    font-weight: 500;
+    max-width: 100%;
+  }
+
+  .when {
+    font-family: var(--num);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  .card-foot {
+    margin: 20px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    max-width: 60ch;
+  }
+
+  /* ------------------------------------------------------------------- refusals */
+
+  .refusals {
+    display: grid;
+    gap: 0;
+    margin-top: 28px;
+  }
+
+  .refusal {
+    display: grid;
+    gap: 6px;
+    padding-block: 20px;
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (min-width: 44rem) {
+    .refusal {
+      grid-template-columns: 13rem 1fr;
+      gap: 28px;
+      align-items: baseline;
+    }
+  }
+
+  .refusal .when-it {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink-faint);
+  }
+
+  .refusal .says {
+    font-family: var(--testimony);
+    font-size: 1.02rem;
+    line-height: 1.6;
+  }
+
+  .refusal .says em {
+    font-style: normal;
+    color: var(--ink-soft);
+    display: block;
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+
+  /* --------------------------------------------------------------------- figures */
+
+  .figs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 24px;
+    margin-top: 32px;
+    padding-top: 26px;
+    border-top: 1px solid var(--rule);
+  }
+
+  @media (min-width: 44rem) {
+    .figs {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 36px;
+    }
+  }
+
+  .fig .v {
+    font-family: var(--num);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(2.2rem, 7vw, 3.4rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 0.98;
+  }
+
+  /* The only figure that is a claim about integrity rather than volume. */
+  .fig.attested .v {
+    color: var(--seal);
+  }
+
+  .fig .k {
+    margin-top: 10px;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .fig .n {
+    margin-top: 6px;
+    font-family: var(--testimony);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  /* ------------------------------------------------------------------ mechanics */
+
+  .rules {
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0;
+  }
+
+  .rules li {
+    padding-block: 18px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    gap: 4px;
+  }
+
+  .rules .r {
+    font-weight: 500;
+  }
+
+  .rules .why {
+    color: var(--ink-soft);
+    font-size: 0.94rem;
+    max-width: 58ch;
+  }
+
+  /* ---------------------------------------------------------------------- close */
+
+  footer {
+    padding-block: 52px 64px;
+  }
+
+  .close-line {
+    font-family: var(--testimony);
+    font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+    line-height: 1.55;
+    max-width: 40ch;
+    margin: 0;
+  }
+
+  .colophon {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    max-width: 62ch;
+  }
+
+  a {
+    color: var(--enamel);
+    text-underline-offset: 3px;
+  }
+
+  a:focus-visible,
+  :focus-visible {
+    outline: 2px solid var(--enamel);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>
+
+<header class="wrap">
+  <div class="masthead">
+    <div class="brand">
+      <svg class="chop" width="26" height="26" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <mask id="chopmark">
+          <rect width="100" height="100" fill="#fff" />
+          <path
+            d="M49.47234042553191 18.999999999999993 53.693617021276594 21.90212765957446 52.638297872340424 22.957446808510632Q65.56595744680851 30.608510638297865 80.60425531914893 34.565957446808504L77.70212765957447 39.578723404255314Q62.92765957446808 35.09361702127659 48.94468085106383 26.123404255319144Q37.33617021276596 35.621276595744675 20.97872340425532 40.634042553191485L19.395744680851063 35.621276595744675Q37.599999999999994 29.81702127659574 49.47234042553191 18.999999999999993ZM70.57872340425531 37.99574468085106V62.26808510638297H34.43404255319149V75.4595744680851L48.680851063829785 71.7659574468085L50.26382978723404 76.51489361702127L31.79574468085106 81.0L29.157446808510635 77.83404255319148V37.99574468085106H48.1531914893617L45.25106382978723 33.246808510638296L50.26382978723404 31.663829787234036Q52.638297872340424 34.565957446808504 53.95744680851064 37.99574468085106ZM34.43404255319149 43.008510638297864V47.757446808510636H65.30212765957447V43.008510638297864ZM34.43404255319149 52.506382978723394V57.25531914893617H65.30212765957447V52.506382978723394ZM45.51489361702127 63.587234042553185 62.66382978723404 68.86382978723404Q67.94042553191488 65.69787234042553 71.1063829787234 62.00425531914893L75.59148936170212 64.9063829787234L68.20425531914893 70.97446808510638L79.54893617021276 76.25106382978723L76.6468085106383 81.0Q59.761702127659575 72.29361702127659 42.34893617021277 67.80851063829786Z"
+            fill="#000"
+          />
+        </mask>
+        <rect width="100" height="100" fill="currentColor" mask="url(#chopmark)" />
+      </svg>
+      <span>MakanLah</span>
+    </div>
+    <div class="slug">Kuala Lumpur</div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <p class="eyebrow">What It Is</p>
+    <h1>Every pick shows the post it came from.</h1>
+    <p class="lede">
+      A restaurant recommender for Malaysia, built on what Malaysians already wrote about food. Not a model's summary of
+      it. The posts themselves, with the writer's name on them, in whatever language they were written in.
+    </p>
+  </div>
+
+  <section class="wrap">
+    <p class="eyebrow">The Problem</p>
+    <h2>A confident answer with nothing behind it.</h2>
+    <p>
+      Ask a chatbot where to eat in Kuala Lumpur and it will answer. It will sound certain. It will not tell you where
+      that came from, when, or whether the place is still open, because it does not know. It is finishing a sentence.
+    </p>
+    <p>
+      Meanwhile the answer already exists. Malaysians write about food constantly, on RedNote and on Google Maps, in
+      English and Malay and Chinese, <strong>often inside one sentence</strong>. Nobody had put it in front of a hungry
+      person with the receipts attached.
+    </p>
+  </section>
+
+  <section class="wrap">
+    <p class="eyebrow">The Mechanism</p>
+    <h2>This is a real result, not a mockup of one.</h2>
+    <p>
+      Below is what the app returns today for <strong>蛋挞</strong>, egg tart. Two people, on two different platforms,
+      in two different languages, describing the same shop. The seal appears only because that is actually true here:
+      two distinct posts by two distinct authors, never two platforms carrying one post.
+    </p>
+
+    <article class="card">
+      <div class="card-head">
+        <h3 class="venue" lang="und">华阳 Oriental Kopi</h3>
+        <div class="stamp">
+          <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <mask id="chopstamp">
+              <rect width="100" height="100" fill="#fff" />
+              <path
+                d="M49.47234042553191 18.999999999999993 53.693617021276594 21.90212765957446 52.638297872340424 22.957446808510632Q65.56595744680851 30.608510638297865 80.60425531914893 34.565957446808504L77.70212765957447 39.578723404255314Q62.92765957446808 35.09361702127659 48.94468085106383 26.123404255319144Q37.33617021276596 35.621276595744675 20.97872340425532 40.634042553191485L19.395744680851063 35.621276595744675Q37.599999999999994 29.81702127659574 49.47234042553191 18.999999999999993ZM70.57872340425531 37.99574468085106V62.26808510638297H34.43404255319149V75.4595744680851L48.680851063829785 71.7659574468085L50.26382978723404 76.51489361702127L31.79574468085106 81.0L29.157446808510635 77.83404255319148V37.99574468085106H48.1531914893617L45.25106382978723 33.246808510638296L50.26382978723404 31.663829787234036Q52.638297872340424 34.565957446808504 53.95744680851064 37.99574468085106ZM34.43404255319149 43.008510638297864V47.757446808510636H65.30212765957447V43.008510638297864ZM34.43404255319149 52.506382978723394V57.25531914893617H65.30212765957447V52.506382978723394ZM45.51489361702127 63.587234042553185 62.66382978723404 68.86382978723404Q67.94042553191488 65.69787234042553 71.1063829787234 62.00425531914893L75.59148936170212 64.9063829787234L68.20425531914893 70.97446808510638L79.54893617021276 76.25106382978723L76.6468085106383 81.0Q59.761702127659575 72.29361702127659 42.34893617021277 67.80851063829786Z"
+                fill="#000"
+              />
+            </mask>
+            <rect width="100" height="100" fill="currentColor" mask="url(#chopstamp)" />
+          </svg>
+          <span class="stamp-note">Two independent sources</span>
+        </div>
+      </div>
+
+      <p class="facts"><span class="lead">Names egg tart</span><span>3 posts, 3 people</span><span>Moderate</span></p>
+
+      <div class="posts">
+        <div>
+          <blockquote lang="en">
+            Oriental Kopi is already a huge hit in Malaysia. For those who frequents to Oriental Kopi, ordering at least
+            a set of their signature egg tart is a must.
+          </blockquote>
+          <span class="chip">Google Maps · Nazira MR</span><span class="when">3 months ago</span>
+        </div>
+        <div>
+          <blockquote lang="zh">
+            5️⃣华阳 Oriental Kopi 📍吉隆坡有10多家分行大商场都有 Pavilion, TRX, KLCC, Mid Valley, Sunway Pyramid,
+            KLIA2机场 👉连锁但稳定，游客友好、第一次来很合适
+          </blockquote>
+          <span class="chip">RedNote · 我就是自由</span><span class="when">Feb 17</span>
+        </div>
+      </div>
+
+      <p class="card-foot">
+        The Chinese post is not translated, and that is deliberate. An excerpt is somebody's words; translating them
+        would break the only promise the product makes. The metadata around it is ours, so that is in English.
+      </p>
+    </article>
+  </section>
+
+  <section class="wrap">
+    <p class="eyebrow">The Hard Part</p>
+    <h2>What it refuses to say.</h2>
+    <p>
+      Anything can sound helpful. The engineering that matters here is the refusals, because every one of them is a
+      place where guessing would have been easier and would have read better.
+    </p>
+
+    <div class="refusals">
+      <div class="refusal">
+        <div class="when-it">Asked something no post covers</div>
+        <div class="says">
+          “The provided posts do not cover whether this place is halal.”
+          <em>Nothing to cite. She will not guess it for you.</em>
+        </div>
+      </div>
+      <div class="refusal">
+        <div class="when-it">A cited post has gone</div>
+        <div class="says">
+          “This post no longer opens.”
+          <em>The dead row stays on screen. Dropping it quietly would make the evidence look stronger than it is.</em>
+        </div>
+      </div>
+      <div class="refusal">
+        <div class="when-it">Nothing in range serves it</div>
+        <div class="says">
+          “Nothing within 1 km of you serves roti canai.”
+          <em>
+            Then the nearest places that do, each marked with how many of its posts still open. A real restaurant nobody
+            has written about is not the same as one you can read about, and the two are never rendered alike.
+          </em>
+        </div>
+      </div>
+      <div class="refusal">
+        <div class="when-it">Nobody wrote down a price</div>
+        <div class="says">
+          Nothing at all.
+          <em
+            >No band inferred from the neighbourhood or the cuisine. The same rule holds for halal, and for the same
+            reason.</em
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <p class="eyebrow">The Corpus Today</p>
+    <h2>Every number here is countable.</h2>
+    <p>
+      Not a projection and not a roadmap. This is what the corpus holds right now, and each figure is one query away
+      from being checked.
+    </p>
+
+    <div class="figs">
+      <div class="fig">
+        <div class="v">4,523</div>
+        <div class="k">Posts Read</div>
+        <div class="n">Public, written by people, captured with attribution intact.</div>
+      </div>
+      <div class="fig">
+        <div class="v">814</div>
+        <div class="k">Places Named</div>
+        <div class="n">Each carrying evidence and coordinates, so you can read it and then walk to it.</div>
+      </div>
+      <div class="fig attested">
+        <div class="v">0</div>
+        <div class="k">Picks We Made Up</div>
+        <div class="n">A result without a post behind it is never returned. It is an invariant, not an aspiration.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <p class="eyebrow">How It Holds Up</p>
+    <h2>Four commitments, made in the architecture.</h2>
+
+    <ul class="rules">
+      <li>
+        <span class="r">No single source is load-bearing.</span>
+        <span class="why">
+          Not for legal cover, for uptime. Any one platform can go dark mid-sprint. Aggregating across platforms means
+          the app degrades rather than dies.
+        </span>
+      </li>
+      <li>
+        <span class="r">Nothing is fetched while you wait.</span>
+        <span class="why">
+          Posts are captured in the background and read from a normalised local corpus. Freshness is a background
+          concern, never a request-path one.
+        </span>
+      </li>
+      <li>
+        <span class="r">Two workloads, two runtimes.</span>
+        <span class="why">
+          A person waiting for a recommendation and a scraper grinding through a backlog want opposite things. They were
+          kept apart from the first commit rather than split later.
+        </span>
+      </li>
+      <li>
+        <span class="r">Every result cites its source post.</span>
+        <span class="why">
+          A ranked entry without a real post behind it is not a result. It is a hallucination with a rating, and the
+          ranker drops it before it can reach a screen.
+        </span>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p class="close-line">
+    This is Kuala Lumpur, and it is a start. The pipeline points at another city unchanged; what does not transfer is
+    the patience to read what people actually wrote.
+  </p>
+  <p class="colophon">
+    Figures read from the live API on 30 August 2026. The result above is a real response from the deployed app, quoted
+    without edits beyond trimming for length. Neither post is flagged as no longer opening, which is a weaker claim than
+    having opened both, and the weaker one is what was actually checked.
+  </p>
+</footer>

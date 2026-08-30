@@ -1,4 +1,4 @@
-# Narration for the Merdeka pitch cut, keyed to the beats record.mjs measures
+# Narration for the launch walkthrough, keyed to the beats record.mjs measures
 # rather than to fixed timestamps. Each line is: beat | offset_ms | text
 #
 # The offset is from that beat, so a page that gets slower moves the narration
@@ -6,13 +6,22 @@
 # the next one starts -- three lines overlapped in the first launch cut and no
 # mechanical audio check can hear that.
 #
-# EVERY NUMBER BELOW IS MEASURED. 1507 posts, 118 distinct authors, 247 venues,
-# two platforms, all Kuala Lumpur. There is deliberately no claim about language
-# percentages: `langs` is `und` on 1388 of 1507 posts (#133), so the mixed-script
-# handling is SHOWN on screen instead of asserted as a statistic.
+# EVERY NUMBER BELOW IS MEASURED, and the two spoken here were read from
+# /health on prod rather than taken from a handoff message: corpus_size 4523,
+# venues 814. There is deliberately no claim about language percentages: `langs`
+# is `und` on most posts (#133), so the mixed-script handling is SHOWN on screen
+# instead of asserted as a statistic. There is deliberately no author count
+# either -- the old cut said "one hundred and eighteen people" and that figure
+# has not been re-measured since the corpus quadrupled.
 #
-# Beats: landing, compare, taste, discover, corroboration, venue, dead, arch,
-# market, close.
+# The price figure is NOT spoken. Peer 1 reports 627 venues carrying a price,
+# up from 45, and it is a good number -- but it is the one figure in this script
+# I could not verify myself, and a narration that states a count nobody on
+# camera can check is the thing this product exists not to do. It belongs on the
+# market slide, where it sits next to the others as text a viewer can pause on.
+#
+# Beats: landing, compare, taste, discover, corroboration, why, sources, ask,
+# dead, arch, market, close.
 
 landing       |  400 | Ask a chatbot where to eat in Kuala Lumpur, and it will answer. It will sound certain.
 compare       |  300 | It will not tell you where that came from, when, or whether the place is still open. Because it does not know. It is finishing a sentence.
@@ -21,16 +30,21 @@ compare       | 9000 | Meanwhile, Malaysians have already written it down. On Re
 taste         |  300 | MakanLah does not start with a search box. It asks what you are craving, who you are with, and how far you are willing to go.
 
 discover      |  300 | Then it reads what people actually wrote.
-discover      | 4000 | Every pick shows the post behind it. The writer's own words, their handle, and a link to the original.
+discover      | 4000 | Every pick leads with why it is on screen. What matched, how many posts back it, how far away it is, and what it costs.
 corroboration |  400 | When two platforms carry the same place, both posts sit side by side. Nothing has to claim the sources agree. You can read them.
-venue         |  400 | This is the whole trail for one restaurant. Everything the corpus holds, and nothing it does not.
-dead          |  400 | And when a post no longer opens, it says so, rather than quietly dropping the evidence and hoping you do not notice.
+
+why           |  400 | And you can ask any pick to justify itself. One tap, and it tells you what it has not already said.
+sources       |  500 | All Sources opens the whole trail without leaving the page. Everything the corpus holds about one restaurant, and nothing it does not.
+
+ask           |  600 | Ask it something the posts do not answer, and this is what it does.
+ask           | 5200 | It does not guess. It says nobody wrote that down, and it offers you nothing to cite, because there is nothing.
+dead          |  400 | Same rule when a post no longer opens. It says so, rather than quietly dropping the evidence and hoping you do not notice.
 
 arch          |  600 | Nothing is fetched while you wait. Posts are captured in the background, extracted into a normalised corpus, and ranked on our own machines.
 arch          | 9000 | No single platform is load-bearing. If one goes dark, the app degrades instead of dying.
 
-market        |  600 | Today that corpus is one thousand five hundred and seven posts, written by one hundred and eighteen people, about two hundred and forty seven places in Kuala Lumpur.
-market        | 9500 | Every single one of them is checkable.
+market        |  600 | Today that corpus is four thousand five hundred and twenty three posts, about eight hundred and fourteen places in Kuala Lumpur.
+market        |  9500 | Every single one of them is checkable.
 
 close         |  600 | This is Kuala Lumpur, and it is a start.
 close         | 3600 | A better Malaysia is not built by an app that sounds confident. It is built by taking people at their word, in whatever language they wrote it, and admitting what you do not know.
