@@ -364,17 +364,48 @@ def dedupe(candidates):
     return kept
 
 
+def _destination(venue):
+    from urllib.parse import quote
+
+    parts = [venue['name'], venue.get('area') or '', venue.get('city') or 'Kuala Lumpur']
+    return quote(' '.join(p for p in parts if p).strip())
+
+
+def usable_place_id(venue):
+    """The stored place_id, but only when it is actually a Places API place ID.
+
+    306 of 821 venues still carry the `0x...:0x...` CID the CDP scraper lifted
+    out of a Maps URL. That is not a place ID -- handing it to the Places API
+    returned 400, and handing it to a Maps link cannot be checked with curl,
+    because Google serves its SPA shell with HTTP 200 either way. A name search
+    always resolves to something sensible, so the id is an enhancement applied
+    when it is one, never a gamble.
+    """
+    pid = venue.get('place_id')
+    return pid if isinstance(pid, str) and pid.strip() and not pid.startswith('0x') else None
+
+
 def maps_url(venue):
     """Built server-side. No maps SDK, no key, no billing.
 
     With a place_id it disambiguates a chain with twenty branches.
     """
-    from urllib.parse import quote
+    url = f'https://www.google.com/maps/search/?api=1&query={_destination(venue)}'
+    pid = usable_place_id(venue)
+    return f'{url}&query_place_id={pid}' if pid else url
 
-    q = quote(f'{venue["name"]} {venue.get("area") or ""} {venue.get("city") or "Kuala Lumpur"}'.strip())
-    if venue.get('place_id'):
-        return f'https://www.google.com/maps/search/?api=1&query={q}&query_place_id={venue["place_id"]}'
-    return f'https://www.google.com/maps/search/?api=1&query={q}'
+
+def directions_url(venue):
+    """Where the All Sources modal's Directions CTA points.
+
+    Google Maps sets `frame-ancestors` and refuses to be embedded, so the modal
+    cannot hold a live map -- it holds a static tile and this link. Documented
+    URL scheme, built from parts we already store, so no key and no request-path
+    fetch.
+    """
+    url = f'https://www.google.com/maps/dir/?api=1&destination={_destination(venue)}'
+    pid = usable_place_id(venue)
+    return f'{url}&destination_place_id={pid}' if pid else url
 
 
 GAP_VENUES = 5
@@ -670,6 +701,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     # client rendered none, because nothing serialized this (#158).
                     'price_band': v.get('price_band'),
                     'maps_url': maps_url(v),
+                    'directions_url': directions_url(v),
                     'dishes': v['dishes'][:6],
                 },
                 # `rank` is the position the re-rank assigned. It replaces `score`,
@@ -740,6 +772,7 @@ def one(venue_id, *, lat=None, lng=None):
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),
+            'directions_url': directions_url(entry),
             'dishes': entry['dishes'][:6],
         },
         'rank': None,
