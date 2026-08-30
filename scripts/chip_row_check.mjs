@@ -15,6 +15,17 @@
 // No unit test can hold this: jsdom has no layout, so `offsetTop` is 0 for every
 // element and the wrap never happens. It has to be a real browser.
 //
+// The chips are SERVED FROM A FIXTURE here, not from the live API. Two reasons: the
+// real /suggestions is time-banded, so the row changes with the hour and a CI run at
+// 03:00 MYT would test a different set than one at noon; and the layout job has no API
+// behind it, which the first version of this check discovered by measuring nothing at
+// all seven widths and failing rather than passing.
+//
+// The fixture is not invented. It is the exact row production served when the bug was
+// found -- six dishes, descending counts, with a narrow one (`fish`) last. That shape
+// is what triggers the defect: `fish` is slim enough to fit the space `curry` frees
+// when it is hidden. A tidier fixture would not reproduce it.
+//
 // Usage: node scripts/chip_row_check.mjs [baseUrl]
 
 import { createRequire } from 'node:module'
@@ -26,21 +37,49 @@ const BASE = process.argv[2] || process.env.BASE || 'http://localhost:5177'
 const WIDTHS = [360, 390, 430, 520, 700, 1024, 1280]
 const PREFS = JSON.stringify({ craving: ['nasi lemak'], company: 'family', range_m: 0, mood: 'comfort' })
 
+const CHIPS = [
+  { label: 'soup', query: 'soup', posts: 728, venues: 310 },
+  { label: 'rice', query: 'rice', posts: 665, venues: 397 },
+  { label: 'chicken', query: 'chicken', posts: 619, venues: 351 },
+  { label: 'curry', query: 'curry', posts: 272, venues: 191 },
+  { label: 'BKT', query: 'BKT', posts: 256, venues: 162 },
+  { label: 'fish', query: 'fish', posts: 246, venues: 180 }
+]
+
 const browser = await chromium.launch({ channel: 'chrome' })
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
 const page = await ctx.newPage()
 page.setDefaultTimeout(30000)
+await page.route('**/suggestions', (route) =>
+  route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ chips: CHIPS, band: 'fixture', source: 'corpus' })
+  })
+)
+// Neither is under test, and both are slow to nothing without an API behind them.
+await page.route('**/recommend', (route) =>
+  route.fulfill({ status: 200, contentType: 'application/json', body: '{"results":[],"degraded":false}' })
+)
+await page.route('**/companion', (route) => route.fulfill({ status: 200, body: '{}' }))
 await page.goto(BASE, { waitUntil: 'domcontentloaded' })
 await page.evaluate((p) => localStorage.setItem('makanlah.prefs', p), PREFS)
 
 const findings = []
 let measured = 0
 
+// Load ONCE and resize, rather than reloading per width. A fresh load at each width
+// measures the row before the webfont settles, and the fallback face gives different
+// chip widths -- which made this check pass against the very bug it was written for.
+// One load, fonts ready, then resize: that is the sequence that reproduces it.
+await page.goto(`${BASE}/discover`, { waitUntil: 'networkidle' }).catch(() => {})
+await page.waitForSelector('.chip-button', { timeout: 25000 }).catch(() => {})
+await page.evaluate(() => document.fonts.ready)
+await page.waitForTimeout(600)
+
 for (const width of WIDTHS) {
   await page.setViewportSize({ width, height: 844 })
-  await page.goto(`${BASE}/discover`, { waitUntil: 'networkidle' }).catch(() => {})
-  await page.waitForSelector('.chip-button', { timeout: 25000 }).catch(() => {})
-  await page.waitForTimeout(1200)
+  await page.waitForTimeout(250)
 
   const r = await page.evaluate(() => {
     const all = [...document.querySelectorAll('.chip-button')]

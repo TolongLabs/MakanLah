@@ -232,6 +232,11 @@ export function Discover() {
       for (const el of items.slice(firstWrapped)) el.hidden = true
     }
     fitOneRow()
+    // Re-fit once the webfont lands. The first pass can run against the fallback
+    // face, whose chips are a different width, and nothing else re-measures until
+    // the viewport changes -- so a row fitted against Arial stays fitted against
+    // Arial while Archivo renders. Guarded because jsdom has no `document.fonts`.
+    document.fonts?.ready?.then(fitOneRow).catch(() => {})
     // Measure once regardless, observe only where the browser can. jsdom has no
     // ResizeObserver and constructing one unguarded threw inside a layout effect,
     // which React surfaces by unmounting the whole route -- the page went blank in
