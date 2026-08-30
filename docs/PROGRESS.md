@@ -42,14 +42,43 @@ dead posts while `add_corroboration` does not, the two numbers on one card descr
 #143 arriving from the other direction.** Reverted. The `distance_gap` half of #166 is kept: it is unaffected, Peer 3
 wanted it, and Peer 2's client for it is built and green.
 
-### The Thing That Is Still Wrong, And It Is Copy Not Arithmetic
+### The Copy Bug: Fixed On Peer 2's Branch, NOT On `main`
 
-Peer 3's sharper point, which survives the revert and is **Peer 2's to fix**: the line reads **"Of the N posts here"**,
-and _here_ means on this card. If the card renders a dead post's excerpt while the line counts only openable ones, **the
-sentence is false as English however correct the arithmetic is** — the reader is looking at a post the number excludes.
+Peer 3's point was that the line read **"Of the N posts here"**, and _here_ means on this card — so if the card renders
+a dead excerpt the number excludes, **the sentence is false as English however correct the arithmetic is**.
 
-Two consistent options: never render a dead excerpt on a card, or say _"of the N posts you can open"_. This is the same
-shape as the corroboration stamp fixed earlier today — **true per the rule, false as English**.
+**Peer 2 fixed it on `ffc909e`**, now reading `3 posts still open: 1 critical, 2 positive.` — naming the property rather
+than gesturing at the page, and reusing vocabulary already on screen, since a dead row reads _"This post no longer
+opens."_
+
+**That fix is on their branch behind #144, and it is NOT deployed.** Verified rather than assumed:
+`git merge-base --is-ancestor 6525cea 85b9220` fails, and `why-more-body` is absent from `main` entirely. So the live
+client still carries the old wording.
+
+**This also closes Peer 3's open question.** They measured `.why-more-body = []` on prod and could not tell "#144 not
+deployed" from "#144 deployed and failing to render" without repo access. It is the former. **Nothing to file.**
+
+**Fixing it found a second direction nobody had seen.** `leadPair` caps excerpts at **two** however many the line
+counts, so "of the 3 posts here" was wrong beside two quotes **on a healthy venue with no dead post involved**.
+
+**Peer 2 declined the alternative of never rendering a dead excerpt, rightly**: a stamp reading four posts over a page
+showing one invites exactly the doubt the stamp exists to answer.
+
+### The Invariant That Came Out Of It
+
+Peer 3 generalised **#87, #111, #153 and this line into one bug occurring four times** — each true by its own rule and
+false as English, which is why unit tests passed through all four. In `docs/DESIGN.md` on Peer 2's branch, **not yet on
+`main`**:
+
+> **Any rendered count must equal the items visible on that surface, or name the property it counts.**
+
+`scratchpad/countcheck.mjs` enforces it, ran clean on `85b9220`, and correctly did not fire on "Corroborated by two
+independent sources" because that names its property. **Trust its zero only because it is mutation-tested 5/5** — Peer
+3's first two versions silently never fired, a heredoc then a template literal each eating the regex backslashes, and
+v1's own test reported "3/5 OK" with all three false all-clears.
+
+**That is the day's lesson arriving on the instrument built to catch the day's lesson**: the failure was never the
+language, it was that neither check could see its own silence. Belongs with the Han-text caution in #159.
 
 ### Three Chinese-Text Heuristics Were Written Today And All Three Were Wrong
 
