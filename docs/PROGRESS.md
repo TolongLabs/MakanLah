@@ -64,10 +64,28 @@ through all four. The invariant is now in
 [`DESIGN.md`](DESIGN.md#a-count-must-match-what-is-rendered-or-name-what-it-counts): **any rendered count must equal the
 items visible on that surface, or name the property it counts.** They are writing the test for it on resume.
 
-### The One Live Disagreement: #166
+### First Thing To Pick Up On Resume: `distance_gap` Can Now Tell The Two Classes Apart
 
-**`main` is at `57ef49e`, which is NOT deployed. Prod is `785992a`.** Do not deploy `57ef49e` before this is settled —
-`makanlah-13` agreed to hold it.
+`85b9220` adds the per-entry flag Peer 3 asked for. `roti canai` names Kapitan and Devi's Corner at
+`live_citations: 0, verifiable: false`; `nasi lemak` names Nasi Lemak Bumbung at `live: 9, verifiable: true`.
+
+**The client does not read it yet.** The gap surface currently names every entry identically and offers evidence for
+none of them, which was correct while the payload could not distinguish them and is now merely conservative. With the
+flag it can say which entries have readable posts behind them and which are real restaurants nobody's surviving post
+describes. **Deliberately not started during the park** — it is new copy on a live surface and the tree was clean.
+
+### #166 — Resolved, Reverted, Deployed
+
+**Settled.** `makanlah-13` reverted the dead-post half; `distance_gap` was kept. Live build is **`85b9220`**, verified
+on prod: `1919餐馆` reads `sentiment {positive: 2}` against `corroboration.posts: 2`, identical to the `785992a`
+behaviour the client flag was verified against. **Nothing under the client moved.**
+
+The deciding argument: if sentiment counted dead posts while `add_corroboration` did not, the two numbers on one card
+would describe different populations — **#143 arriving from the other direction**. A new additive field
+`sentiment_posts` ships alongside; the client does not read it yet and nothing breaks either way.
+
+**The original framing, kept because the question was real:** does the line describe the posts the card shows, or the
+posts a reader can open? Both were defensible. It resolved to the latter, and the wording was then changed to say so.
 
 #166 changes `tally_sentiment` to **count dead posts**, so `1919餐馆` would read `2 positive, 1 critical` over 3
 displayed citations instead of `2 positive` over 2. It was built on a diagnosis of mine that I have since retracted.
@@ -75,14 +93,12 @@ displayed citations instead of `2 positive` over 2. It was built on a diagnosis 
 **The question, in one sentence:** does the sentiment line describe _the posts the card shows_, or _the posts a reader
 can open_?
 
-- **#166 assumes the former**, because the dead excerpt is rendered in the All Sources trail.
-- **The shipped client assumes the latter**, on #111 grounds: a post nobody can open is not evidence, which is why
-  `add_corroboration` already excludes dead citations. The copy is scoped to "Of the N posts here", true about the
-  openable ones.
+- **#166 assumed the former**, because the dead excerpt is rendered in the All Sources trail.
+- **The client assumed the latter**, on #111 grounds: a post nobody can open is not evidence, which is why
+  `add_corroboration` already excludes dead citations.
 
-Both defensible, only one true. `makanlah-13` now leans toward reverting that half of #166 and keeping its
-`distance_gap` half, which is unaffected and wanted. **The client flag was verified against `785992a` and is safe; if
-`57ef49e` deploys unresolved, re-verify before trusting any sentiment line.**
+Both defensible, only one true, and it resolved to the second. The wording then had to change to match, which is the
+"still open" section above.
 
 ### Third Scope Error Of The Day, Recorded
 
