@@ -101,6 +101,49 @@ def upsert_embedding(con, venue_id, model, vector):
     )
 
 
+def dish_vocabulary(con):
+    """Every dish string in the corpus, ignoring distance.
+
+    `venue_dishes` is scoped to the candidate pool, which made a dish outside the
+    radius indistinguishable from a dish the corpus never heard of: with a 1.5km
+    radius round PJ, `nasi lemak` named nothing, so no lane fired and the response
+    fell through to semantic and served pasta and tacos as ranked picks (#162).
+    """
+    rows = con.execute('select distinct unnest(dishes) as d from mention where dishes is not null').fetchall()
+    return [r['d'] for r in rows if r['d']]
+
+
+def nearest_serving(con, dishes_folded, lat, lng, limit=3):
+    """Venues carrying one of these dish strings, nearest first, at any distance."""
+    if not dishes_folded or lat is None or lng is None:
+        return []
+    # DISTINCT ON must order by its key first, so the distance sort has to happen
+    # outside it -- inside, the caller gets rows ordered by id and reads them as
+    # nearest-first. Matching on the exact folded dish string rather than LIKE: a
+    # substring match put a Taiwanese place on a nasi lemak query.
+    return con.execute(
+        """select * from (
+             select distinct on (v.id) v.id, v.name, v.area, v.place_id, v.lat, v.lng,
+                    (6371000 * acos(least(1, greatest(-1,
+                       cos(radians(%s)) * cos(radians(v.lat)) * cos(radians(v.lng) - radians(%s))
+                       + sin(radians(%s)) * sin(radians(v.lat)))))) as distance_m,
+                    -- The gap surface must not apply a weaker evidence standard than
+                    -- the ranked one. Kapitan cannot be ranked -- every post naming it
+                    -- is dead -- but was named as "nearest serving" in exactly the
+                    -- shape of a venue backed by three readable posts. Same shape,
+                    -- different standard, and the client could not tell them apart.
+                    (select count(*) from mention m2 join source_post p2 on p2.id = m2.post_id
+                      where m2.venue_id = v.id and m2.excerpt is not null
+                        and p2.dead_at is null) as live_citations
+             from venue v join mention m on m.venue_id = v.id
+             where v.lat is not null
+               and exists (select 1 from unnest(m.dishes) d where lower(btrim(d)) = any(%s))
+             order by v.id
+           ) t order by t.distance_m limit %s""",
+        (lat, lng, lat, list(dishes_folded), limit),
+    ).fetchall()
+
+
 def venue_dishes(con, venue_ids):
     """{venue_id: [dish, ...]} for a candidate set.
 
@@ -334,11 +377,20 @@ def tally_sentiment(rows, kept=None):
     - No dead posts. Counting them repeats #111 -- a breakdown that cannot be traced
       to an openable post is the unverifiable assertion this product exists not to
       make.
-    - The same posts corroboration counts. `citations` is trimmed to per_venue before
-      it ships, and add_corroboration counts what survives that trim. Tallying every
-      live post in the corpus instead gave Village Park 7 sentiment against 3 posts:
-      four of those seven were real, and none of them were on the card. `kept` is the
-      set of post_urls that survived, so every counted post is one a reader can open.
+    - The same posts the card SHOWS. `citations` is trimmed to per_venue before it
+      ships, and tallying every post in the corpus instead gave Village Park 7
+      sentiment against 3 posts, none of the extra four on the card.
+
+    Dead posts are excluded, matching add_corroboration exactly. This was briefly
+    changed and changed back, and the reasoning is worth keeping: 1919餐馆 renders a
+    dead 「别去」 (don't go) excerpt above a line reading `all positive`, which looks
+    like the tally missing it. It is not -- that mention scores -1.0 correctly and is
+    excluded because nobody can open the post.
+
+    Counting it would make sentiment and corroboration describe different sets on the
+    same card, which is #143 arriving from the other direction. The fix for the
+    apparent contradiction is the word "here" in the copy and the unopenable label on
+    the dead row, not counting evidence we have told the reader they cannot check.
 
     Several mentions behind one identity are averaged, not reduced to the worst.
     That rule was written for one author's own disagreeing sentences and it is wrong

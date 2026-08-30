@@ -65,9 +65,12 @@ def test_one_post_is_one_vote_however_many_mentions_it_makes():
 
 
 def test_a_dead_post_casts_no_vote():
-    # #111 again: a breakdown counting posts a reader cannot open is an assertion
-    # with no evidence behind it, which is the one thing this product must not do.
-    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', 1.0, dead=True)]
+    # Matches add_corroboration exactly. Counting a dead post would make the two
+    # numbers on one card describe different sets, which is #143 from the other
+    # direction. 1919餐馆 renders a dead 「别去」 excerpt above "all positive" and
+    # that looks wrong, but the repair is the copy's "here" and the unopenable
+    # label, not counting evidence the reader has been told they cannot check.
+    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', -1.0, dead=True)]
     assert tally_sentiment(rows)['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
 
 
@@ -89,9 +92,10 @@ def test_a_lone_bad_review_is_still_reported_as_bad():
     assert tally_sentiment([_row('v1', 'p1', -1.0)])['v1']['negative'] == 1
 
 
-def test_totals_equal_the_number_of_live_posts():
-    # The invariant the client gates on: sum(sentiment) must equal the post count
-    # the corroboration line shows, or the card stays dark.
+def test_totals_equal_the_number_of_posts_shown():
+    # The client reads `sentiment_posts` rather than inferring agreement with
+    # corroboration.posts, which counts a different set on purpose: corroboration
+    # excludes dead posts, this does not.
     rows = [
         _row('v1', 'p1', 1.0),
         _row('v1', 'p1', 0.9),

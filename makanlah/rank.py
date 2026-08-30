@@ -501,12 +501,63 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         if lexical_set:
             ordered = lexical + [v for v in ordered if v not in lexical_set]
 
+        # The corpus knows this dish, and nothing in range serves it. `vocabulary` is
+        # scoped to the candidate pool, which made that indistinguishable from a dish
+        # nobody has written about: the query named nothing, no lane fired, and the
+        # response fell through to semantic. `nasi lemak` inside 1.5km of PJ returned
+        # pasta, tacos and a bakery, ranked, with `coverage_gaps: []` and a
+        # corroboration stamp on each (#162). Every citation was real; the ranked
+        # ANSWER asserted a relevance no post supported.
+        far = None
+        if not named:
+            wide = frozenset(dishes.fold(d) for d in db.dish_vocabulary(con) if dishes.fold(d))
+            # Detect with the wide lane, NAME with the strict one. Whether the corpus
+            # knows this dish at all is a recall question -- `nasi lemak sedap` must
+            # reach `nasi lemak`. Which restaurants to put in front of somebody is a
+            # precision question, and getting it wrong invents the claim the gap
+            # exists to avoid.
+            _, label = dishes.named_in(query, wide)
+            label = label or dishes.dish_named_inside(query, wide)
+            elsewhere_dish = label
+            elsewhere = dishes.gap_terms(label, wide) if label else frozenset()
+            if elsewhere:
+                far = {
+                    'term': elsewhere_dish,
+                    'nearest': [
+                        {
+                            'name': r['name'],
+                            'area': r['area'],
+                            'distance_m': int(r['distance_m']) if r['distance_m'] is not None else None,
+                            'maps_url': maps_url(r),
+                            # A venue whose every post is dead still serves the dish --
+                            # a restaurant does not stop cooking because a post 404s,
+                            # and the attribution was extracted while they were live.
+                            # So it is named, but never as though it were checkable.
+                            'live_citations': int(r['live_citations'] or 0),
+                            'verifiable': bool(r['live_citations']),
+                        }
+                        for r in db.nearest_serving(con, sorted(elsewhere), lat, lng)[:GAP_VENUES]
+                    ],
+                }
+
         enriched = db.venues_with_citations(con, ordered)
 
     # The invariant, enforced before a response is built: an entry that cannot be
     # cited is dropped, never returned with a caveat.
     candidates = dedupe([enriched[v] for v in ordered if v in enriched and enriched[v]['citations']])
     candidates = with_live_citations(candidates)
+
+    # Nothing in range serves what was asked for. Returning the substitutes with a
+    # note would be the thing docs/TRD.md forbids -- a venue that does not match,
+    # under prose conceding it does not match.
+    if far:
+        return {
+            'results': [],
+            'distance_gap': far,
+            'degraded': degraded,
+            'degraded_reasons': reasons,
+            'sources_used': [],
+        }
 
     gap = evidence_gap(named, dish, lexical, enriched, candidates)
     if gap:
@@ -541,6 +592,12 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     # case and it is the part worth a reader's attention. A mean
                     # of this distribution reads "excellent" almost everywhere.
                     'sentiment': v.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
+                    # How many posts the breakdown above describes. The client used to
+                    # infer this by checking sum(sentiment) == corroboration.posts,
+                    # which cannot tell "these describe the same set" from "these
+                    # coincidentally tie" -- and they stopped tying once sentiment
+                    # started counting the dead citation the card actually shows.
+                    'sentiment_posts': sum((v.get('sentiment') or {}).values()),
                     'lat': v['lat'],
                     'lng': v['lng'],
                     'maps_url': maps_url(v),
@@ -605,6 +662,7 @@ def one(venue_id, *, lat=None, lng=None):
             'name': entry['name'],
             'area': entry['area'],
             'sentiment': entry.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
+            'sentiment_posts': sum((entry.get('sentiment') or {}).values()),
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),

@@ -16,6 +16,7 @@ distinguishes the second.
 """
 
 import difflib
+import re
 import unicodedata
 
 DISH_ALIASES = {
@@ -100,6 +101,13 @@ NEAR = 0.85
 # resolve exactly; it is three-letter fragments that should not be guessed at.
 MIN_NEAR_LEN = 4
 
+# Splits a dish string into words. CJK has no spaces, so a Han query falls to the
+# alias and fold lanes rather than this one, which is what those lanes are for.
+WORDS = re.compile(r'[^\W_]+', re.UNICODE)
+
+# `egg` and `pork` are real ingredients; two-letter fragments are noise.
+MIN_INGREDIENT_LEN = 3
+
 
 def named_in(query, vocabulary):
     """Which stored dish strings a query names: `(folded_keys, label)`.
@@ -114,7 +122,7 @@ def named_in(query, vocabulary):
     actually good at -- grouping `肉骨茶` with `bak kut teh` across languages,
     which no amount of string folding will ever do.
 
-    Three lanes, and the result is their UNION rather than the first that hits:
+    Four lanes, and the result is their UNION rather than the first that hits:
 
     1. **The alias table**, so a query in one language reaches venues tagged in
        another
@@ -122,6 +130,8 @@ def named_in(query, vocabulary):
     3. **A near match**, for the corpus's own spelling -- `cha seiw`, `rosated
        chicken` and `buratta` are all real rows, and so is `noodle` beside
        `noodles`
+    4. **A whole-word ingredient**, so `chicken` finds `roasted chicken`,
+       `crab` finds `roe crab`, but `egg` does NOT find `eggplant`
 
     The union rather than a first-hit is measured, not assumed. Across the whole
     810-key vocabulary there are **29 near-pairs at 0.85, no key has more than two
@@ -157,4 +167,98 @@ def named_in(query, vocabulary):
         if near:
             label = label or near[0]
 
+    # Whole word, not substring: `crab` must reach `roe crab` while `egg` must not
+    # reach `eggplant`. Splitting on non-word characters rather than whitespace so
+    # `fish & seafood` and `chili,rice` both yield their parts.
+    if len(q) >= MIN_INGREDIENT_LEN:
+        hits = {d for d in vocabulary if q in set(WORDS.findall(fold(d)))}
+        found |= hits
+        if hits:
+            label = label or q
+
     return frozenset(found), label
+
+
+# A dish string this short is a fragment, not a dish. `canonical()` matches by
+# substring in both directions so that 肉骨茶 groups with bak kut teh, which also
+# makes the single character 肉 -- "meat" -- canonicalise to bak kut teh.
+MIN_GAP_DISH = 2
+
+HAN = re.compile(r'[\u4e00-\u9fff]')
+
+
+def gap_terms(query, vocabulary):
+    """The dish strings a gap may safely NAME, which is stricter than what it may search.
+
+    `named_in` unions four lanes and is tuned for recall: a search that surfaces one
+    extra venue costs the user a glance. A distance gap tells somebody "the nearest
+    place serving this is 1.7km away", and naming the wrong restaurant there is a new
+    false claim of exactly the kind the gap exists to prevent. So this uses only the
+    two exact lanes -- the alias table and an exact fold -- and drops the near-match
+    and ingredient lanes, which is what let `satay` reach `rosated chicken` and
+    `char kway teow` reach `elder garden mocktail`.
+    """
+    q = fold(query)
+    if not q or len(q) > 40:
+        return frozenset()
+    out = {v for v in vocabulary if fold(v) == q}
+    key = canonical_for_query(query)
+    if key:
+        forms = [fold(f) for f in match_forms(key)] + [fold(key)]
+        out |= {v for v in vocabulary if len(fold(v)) >= MIN_GAP_DISH and _carries(fold(v), forms)}
+    return frozenset(out)
+
+
+def _carries(dish, forms):
+    """Does this dish string genuinely name one of these forms?
+
+    Latin forms must match as a WHOLE WORD. `canonical()` matches by substring, and
+    the alias table holds short forms: `ckt` matched `elder garden mo(ckt)ail` and
+    `sate` matched `ro(sate)d chicken`, which put a tea house on a char kway teow gap
+    and a roast pork shop on a satay gap.
+
+    Han forms keep substring matching, because CJK has no word boundaries and
+    肉骨茶 inside 中药肉骨茶 is the same dish -- which is the job the alias table
+    exists to do.
+    """
+    words = set(WORDS.findall(dish))
+    for f in forms:
+        if len(f) < MIN_GAP_DISH:
+            continue
+        if HAN.search(f):
+            if f in dish:
+                return True
+        elif f in words or f == dish or all(w in words for w in WORDS.findall(f)):
+            return True
+    return False
+
+
+def dish_named_inside(query, vocabulary):
+    """A dish name appearing INSIDE a longer query, for gap detection only.
+
+    `named_in` is whole-query by design, so `nasi lemak sedap` -- tasty nasi lemak --
+    resolved to nothing and fell through to the semantic lane, which served a bakery.
+    That rule is right for ranking: a query mentioning a dish in passing should not
+    be forced onto the lexical lane.
+
+    Deciding whether to SAY "we know this dish and none is near you" is a different
+    question, and containment is the safe side of it: the cost of missing is serving
+    a substitute silently, which is the bug this exists to close.
+
+    Returns a canonical key, or None. Multi-word keys are matched as a contiguous
+    word run so `nasi lemak` is found in `nasi lemak sedap` but not in `lemak nasi`.
+    """
+    words = WORDS.findall(fold(query))
+    if not words or len(words) > 12:
+        return None
+    for key in set(DISH_ALIASES) | {fold(v) for v in vocabulary}:
+        parts = WORDS.findall(fold(key))
+        n = len(parts)
+        # Single-word keys are excluded: `rice` inside `rice bowl for lunch` is an
+        # ingredient, not the dish somebody asked for, and the ingredient lane in
+        # named_in already covers that case for ranking.
+        if n < 2 or n > len(words) or len(fold(key)) < MIN_GAP_DISH:
+            continue
+        if any(words[i : i + n] == parts for i in range(len(words) - n + 1)):
+            return key
+    return None

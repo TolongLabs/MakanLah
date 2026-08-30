@@ -26,97 +26,95 @@ console before repinning.
 
 ---
 
-## PARKED — 2026-08-30, Workstation Restart
+## 2026-08-30 — PAUSED For A Workstation Restart
 
-**Read this first on resume.** Everything below is pushed; the working tree was clean at shutdown.
+**`main` is deployable. Deploy it on resume and tell both peers the sha** — Peer 3 asked to be pinged with whichever
+build is live.
 
-### #144 Is Green And Waiting On A Person, Not On CI
+### What Happened Right Before The Pause
 
-Branch `feat/discover-why-and-modals` at **`834d3d2`**. CI green, both new checks confirmed _run_ rather than skipped.
-Deploy-verified preview: <https://cffa9491.makanlah-b5h.pages.dev/discover>
+PR #166 changed `tally_sentiment` to count dead posts, built on Peer 2's diagnosis that `1919餐馆` was misscored. **Peer
+2 retracted that diagnosis and it was right to.** The mention scores **−1.0 correctly**; the post is `dead: true` and is
+excluded because nobody can open it.
 
-It carries both of the owner's `/discover` batches: the why-row subtitle, the `Why This Showed` disclosure, Ask as a
-streaming copilot with a live Live2D stage and collapsing tool trace, All Sources as a briefing dialog on a real
-`/r/:venueId` URL, `distance_gap`, the sentiment line, `post_id` identity, the Redo My Taste sizing, and Directions
-removed from the card.
+**Both peers then independently argued for reverting, and the deciding reason is the same one:** if sentiment counts
+dead posts while `add_corroboration` does not, the two numbers on one card describe different populations — **which is
+#143 arriving from the other direction.** Reverted. The `distance_gap` half of #166 is kept: it is unaffected, Peer 3
+wanted it, and Peer 2's client for it is built and green.
 
-**Three owner questions are the only thing blocking merge**, all one-word answers:
+### The Copy Bug: Fixed On Peer 2's Branch, NOT On `main`
 
-1. `Why This Showed` — one tap, or always open?
-2. The model-written blurb — stays off the cards, or comes back?
-3. **#141** dot density — quiet ground, or more present?
+Peer 3's point was that the line read **"Of the N posts here"**, and _here_ means on this card — so if the card renders
+a dead excerpt the number excludes, **the sentence is false as English however correct the arithmetic is**.
 
-### The Sentiment Line Says "Still Open", Not "Here"
+**Peer 2 fixed it on `ffc909e`**, now reading `3 posts still open: 1 critical, 2 positive.` — naming the property rather
+than gesturing at the page, and reusing vocabulary already on screen, since a dead row reads _"This post no longer
+opens."_
 
-`makanlah-fb` caught the wording after the count was settled: **"Of the N posts here" is false as English** whenever the
-surfaces show more than the line counts, however right the number is. Both surfaces do. `VenueTrail` renders dead posts
-deliberately — they are the record a stamp gets checked against — and `leadPair` shows at most two excerpts however many
-are counted. So a dialog listing three entries sat beside a line counting two, and a card showing two excerpts sat
-beside a line counting three.
+**That fix is on their branch behind #144, and it is NOT deployed.** Verified rather than assumed:
+`git merge-base --is-ancestor 6525cea 85b9220` fails, and `why-more-body` is absent from `main` entirely. So the live
+client still carries the old wording.
 
-Now reads `3 posts still open: 1 critical, 2 positive.` **True per the rule and false as English is the corroboration
-stamp bug again**, and naming the property rather than gesturing at the page is the fix. "Still open" is also the
-vocabulary already on screen, since a dead row reads "This post no longer opens."
+**This also closes Peer 3's open question.** They measured `.why-more-body = []` on prod and could not tell "#144 not
+deployed" from "#144 deployed and failing to render" without repo access. It is the former. **Nothing to file.**
 
-**And it generalises, which is the durable part.** `makanlah-fb` named the class: **#87**, **#111**, **#153** and this
-line are one bug four times — a count that is true by its own rule and false as English, which is why unit tests passed
-through all four. The invariant is now in
-[`DESIGN.md`](DESIGN.md#a-count-must-match-what-is-rendered-or-name-what-it-counts): **any rendered count must equal the
-items visible on that surface, or name the property it counts.** They are writing the test for it on resume.
+**Fixing it found a second direction nobody had seen.** `leadPair` caps excerpts at **two** however many the line
+counts, so "of the 3 posts here" was wrong beside two quotes **on a healthy venue with no dead post involved**.
 
-### First Thing To Pick Up On Resume: `distance_gap` Can Now Tell The Two Classes Apart
+**Peer 2 declined the alternative of never rendering a dead excerpt, rightly**: a stamp reading four posts over a page
+showing one invites exactly the doubt the stamp exists to answer.
 
-`85b9220` adds the per-entry flag Peer 3 asked for. `roti canai` names Kapitan and Devi's Corner at
-`live_citations: 0, verifiable: false`; `nasi lemak` names Nasi Lemak Bumbung at `live: 9, verifiable: true`.
+### The Invariant That Came Out Of It
 
-**The client does not read it yet.** The gap surface currently names every entry identically and offers evidence for
-none of them, which was correct while the payload could not distinguish them and is now merely conservative. With the
-flag it can say which entries have readable posts behind them and which are real restaurants nobody's surviving post
-describes. **Deliberately not started during the park** — it is new copy on a live surface and the tree was clean.
+Peer 3 generalised **#87, #111, #153 and this line into one bug occurring four times** — each true by its own rule and
+false as English, which is why unit tests passed through all four. In `docs/DESIGN.md` on Peer 2's branch, **not yet on
+`main`**:
 
-### #166 — Resolved, Reverted, Deployed
+> **Any rendered count must equal the items visible on that surface, or name the property it counts.**
 
-**Settled.** `makanlah-13` reverted the dead-post half; `distance_gap` was kept. Live build is **`85b9220`**, verified
-on prod: `1919餐馆` reads `sentiment {positive: 2}` against `corroboration.posts: 2`, identical to the `785992a`
-behaviour the client flag was verified against. **Nothing under the client moved.**
+`scratchpad/countcheck.mjs` enforces it, ran clean on `85b9220`, and correctly did not fire on "Corroborated by two
+independent sources" because that names its property. **Trust its zero only because it is mutation-tested 5/5** — Peer
+3's first two versions silently never fired, a heredoc then a template literal each eating the regex backslashes, and
+v1's own test reported "3/5 OK" with all three false all-clears.
 
-The deciding argument: if sentiment counted dead posts while `add_corroboration` did not, the two numbers on one card
-would describe different populations — **#143 arriving from the other direction**. A new additive field
-`sentiment_posts` ships alongside; the client does not read it yet and nothing breaks either way.
+**That is the day's lesson arriving on the instrument built to catch the day's lesson**: the failure was never the
+language, it was that neither check could see its own silence. Belongs with the Han-text caution in #159.
 
-**The original framing, kept because the question was real:** does the line describe the posts the card shows, or the
-posts a reader can open? Both were defensible. It resolved to the latter, and the wording was then changed to say so.
+### Three Chinese-Text Heuristics Were Written Today And All Three Were Wrong
 
-#166 changes `tally_sentiment` to **count dead posts**, so `1919餐馆` would read `2 positive, 1 critical` over 3
-displayed citations instead of `2 positive` over 2. It was built on a diagnosis of mine that I have since retracted.
+Carry this into #159, which touches Han text throughout:
 
-**The question, in one sentence:** does the sentiment line describe _the posts the card shows_, or _the posts a reader
-can open_?
+- Peer 2's `length < 3` name guard flagged **鱼你**, a real two-character venue
+- Peer 3's negative-excerpt sweep matched **踩雷 inside 不踩雷** and **雷 inside 無雷**, inverting all three hits
+- My gap matcher matched **`ckt` inside `elder garden mo(ckt)ail`** and **`sate` inside `ro(sate)d chicken`**
 
-- **#166 assumed the former**, because the dead excerpt is rendered in the All Sources trail.
-- **The client assumed the latter**, on #111 grounds: a post nobody can open is not evidence, which is why
-  `add_corroboration` already excludes dead citations.
+None were visible to an English-language test pass. The rule that worked: **whole-word for Latin, substring for Han**,
+because 肉骨茶 inside 中药肉骨茶 is genuinely the same dish and there is no word boundary to lean on.
 
-Both defensible, only one true, and it resolved to the second. The wording then had to change to match, which is the
-"still open" section above.
+### A Scope Error All Three Sessions Made
 
-### Third Scope Error Of The Day, Recorded
+Peer 2 justified printing unanimity on **163 of 186 multi-mention venues span more than one bucket** — my figure,
+describing a venue's **whole record**. The line describes the **cited, live, trimmed** posts, two or three, where **36
+of 44 read "all positive" — 82%, not 12%**. The number was not wrong; it answered a different question than the card
+asks. Same shape as reporting #143 fixed while production still disagreed on 5 of 25.
 
-The justification for printing unanimous sentiment leaned on "163 of 186 venues span more than one bucket" — a figure
-about a venue's **whole record**. The line describes the **cited, live, trimmed** posts, two or three of them. Measured
-at render: **36 of 44 lines read "all positive" — 82%, not 12%.** The line stays, because silence would make its own
-absence mean three unrelated things, but `evidence.ts` now carries the measured number rather than the borrowed one.
+### Where Everything Stopped
 
-Layer, origin, population: three sessions, three scope errors, one afternoon. All three in [`AUTONOMY.md`](AUTONOMY.md).
+| Branch / PR                                | State                                                                                                                                                                  |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **#165**                                   | Open, green — an earlier docs checkpoint                                                                                                                               |
+| **#144**                                   | Open, green, **blocked on three one-word answers from the owner** (Peer 2's): disclosure one-tap or always-open, whether the model blurb returns, dot density for #141 |
+| **`feat/gmaps-discovery-wip`** (`250c602`) | **Unverified.** `discover()` for #157, never run against a signed-in browser; `LIST_JS` is a guess at the results-feed DOM. Do not merge because it compiles           |
+| Peer 2                                     | Parked clean at `80511ce`, preview deploy-verified                                                                                                                     |
+| Peer 3                                     | Parked, record at `scratchpad/UAT-ROUND2.md`                                                                                                                           |
 
-### Not Mine, In Flight
+**Peer 3's one open question**: on Peer 2's preview `834d3d2`, `1919餐馆` returned 3 cards with **no sentiment line
+found**. They explicitly flag this as probably their own selector — they matched a quoted copy string literally — and it
+needs a 1440 and a non-lean run. **Assume the instrument until someone checks.**
 
-- **#157** (`makanlah-13`) — Google Maps gets its own venue discovery path. Every venue currently enters through
-  RedNote's ~20 keywords, so Maps supplies 84% of the evidence and cannot introduce a restaurant. This is why the list
-  reads thin, and it outranks the copilot backend
-- **`/ask/stream`** — schema settled, client built and falling back to `POST /ask`. Nothing of mine breaks when it lands
-- **The map image** — `venue.map_image_url`, stored at ingestion. `MapPreview` renders nothing until it exists
-- **`Undisclosed Location`** — extraction lost the name; recoverable server-side from the place id it already carries
+**Next up is #157**, Maps venue discovery — the ceiling on everything else and the thing a real tester actually
+complained about. All three sessions agree it precedes the copilot, whose schema is settled and whose client half Peer 2
+has already built.
 
 ---
 
