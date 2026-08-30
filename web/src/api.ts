@@ -199,10 +199,10 @@ const TIMEOUT_MS = 30_000
 const DEFAULT_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://127.0.0.1:8000'
 
 /**
- * The API is not deployed yet, so a hosted page has no backend to talk to and a
- * browser blocks an https page calling http://127.0.0.1 anyway. `?api=<url>`
- * repoints it and is remembered, so this page works against a tunnel today and
- * against the real API the moment one exists, without a rebuild.
+ * The API base URL comes from VITE_API_BASE_URL at build time, and a hosted
+ * https page cannot call http://127.0.0.1 regardless. `?api=<url>` repoints it
+ * and is remembered, so one build can be aimed at a local API, a preview
+ * deployment or production without rebuilding.
  */
 export function apiBase(): string {
   try {

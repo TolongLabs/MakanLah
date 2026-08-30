@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Run the API locally against the Neon corpus.
 #
-# The API is not deployed: Fly.io has no free allowance and the owner's card is
-# unfunded, so this is how the app is served until that changes. See fly.toml —
-# the deploy is one command once it is.
+# For development. The API IS deployed -- Vercel, sin1 -- and shipping a change
+# is `scripts/deploy-api.sh`, which asserts /health reports the sha it just sent.
+# This script exists so you can run against the corpus without deploying.
 
 set -uo pipefail
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "not a git repository" >&2; exit 1; }

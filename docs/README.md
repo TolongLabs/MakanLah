@@ -1,234 +1,287 @@
-# MakanLah
+<a id="readme-top"></a>
 
-Find somewhere good to eat nearby, based on what Malaysians actually recommend.
+<div align="center">
+  <img src="../web/public/og.png" alt="MakanLah" width="100%">
 
-A web and mobile-friendly app that ranks restaurants by personal preference, drawing on real social recommendations —
-primarily Xiaohongshu / RedNote, plus other platforms — and showing the posts behind every pick.
+  <h3>MakanLah</h3>
 
-|                |                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| **Status**     | Pre-scaffold. No application code. Scraper stack, corpus store and app framework all unchosen |
-| **MVP city**   | Kuala Lumpur                                                                                  |
-| **Blocked on** | The Xiaohongshu access spike. Nothing else starts until it returns                            |
+  <p>
+    <b>Restaurant recommendations for Kuala Lumpur, ranked by what Malaysians actually wrote.</b><br />
+    Every pick shows you the post it came from. If nobody wrote it, we do not say it.
+  </p>
+
+![Python](https://img.shields.io/badge/Python_3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Postgres](https://img.shields.io/badge/Neon_Postgres-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![pgvector](https://img.shields.io/badge/pgvector-4B8BBE?style=for-the-badge)
+
+[Live App](https://makanlah-b5h.pages.dev) · [API](https://makanlah-api.vercel.app/health) · [PRD](PRD.md) ·
+[TRD](TRD.md) · [Runbook](runbook.md) · [Design](DESIGN.md)
+
+</div>
+
+## Table of Contents
+
+<details>
+  <summary>Expand</summary>
+  <ol>
+    <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#the-one-rule-that-governs-everything">The One Rule That Governs Everything</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#whats-in-the-corpus">What Is In The Corpus</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#tech-stack">Tech Stack</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#project-structure">Project Structure</a></li>
+    <li><a href="#limitations">Limitations</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#team">Team</a></li>
+  </ol>
+</details>
+
+---
+
+## About The Project
+
+Ask a Malaysian where to eat and they will not read you a star rating. They will tell you about a place, and usually who
+told them. **MakanLah is that, mechanised.** It reads what people write about food in Kuala Lumpur — on RedNote and
+Google Maps, in English, Malay and Chinese, often all three in one sentence — and ranks restaurants near you against
+what you asked for.
+
+The output is not a score. It is a restaurant, a distance, a price band, and **the post that made us mention it**,
+quoted verbatim with a link you can open.
+
+A Malaysian tester put the original problem plainly:
+
+> I feel like the restaurants options are kinda limited. Why ah? A lot of the restaurants I know that have good reviews
+> and popular also are not on the app wor.
+
+He was right, and fixing him is most of what this repository is a record of.
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
 
 ## The One Rule That Governs Everything
 
-> **No single data source may be load-bearing.** Not for legal cover — for uptime. Any one platform can go dark
-> mid-sprint, and an app whose data layer has a single point of failure goes dark with it.
+**A recommendation that cannot show you its source is not returned.**
 
-Aggregate across platforms, cache hard, persist a normalized local corpus, and read from the corpus rather than the
-platform. Never fetch live on a user request.
+Not softened, not flagged, not returned with a caveat — dropped before the response is built. This is enforced in SQL
+rather than in prose: both retrieval paths inner-join the `mention` table, so a venue with no post behind it is
+invisible to the ranker by construction, not by discipline.
+
+It has consequences the product wears openly:
+
+- A query the corpus cannot answer returns **nothing**, and says why, rather than returning something close
+- Asked whether a place is halal, the copilot answers from a post or **admits it does not know**. It never infers from a
+  name, a cuisine or a nearby landmark
+- A price is shown when a writer named a figure or Google published one, and those two are **labelled differently**,
+  because one cites a post and the other does not
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
 
-## Start Here
+## How It Works
 
-**The Xiaohongshu spike comes before everything.** RedNote gates content behind login, fingerprints devices, and
-rate-limits hard. If structured data cannot be pulled at usable volume, MakanLah has no product — and every hour of
-scaffolding spent before that is proven is wasted.
+Two runtimes that never share a request. Ingestion runs on a workstation and holds the browser session; the API is
+hosted, reads a normalized corpus, and **never fetches from a platform while a user waits**.
 
-One orchestrator session, timeboxed, no workers. The question it answers:
+```
+    RedNote ──┐
+              ├─► capture ─► extract ─► resolve venue ─► geocode ─► embed ──► Neon
+ Google Maps ─┘   (batch, workstation)                                          │
+                                                                                │
+                                    ┌───────────────────────────────────────────┘
+                                    ▼
+  query ─► distance filter ─► pgvector retrieval ─┬─► LLM re-rank ─► cite ─► results
+                                                  │
+                              lexical dish lane ──┘   (an exact dish match goes in front)
+```
 
-> Can we pull ~50 KL restaurant posts with structured fields — name, location, dish, sentiment — into a normalized
-> record?
+The re-rank decides order; **citations are attached afterwards, from the database**. A model is never asked to produce a
+URL, because a model asked for a URL produces a plausible one.
 
-Only after that returns does `/gsd-new-project` make sense.
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
-| File                               | What's In It                                                                                                                                                     |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`PRODUCT.md`](PRODUCT.md)         | What MakanLah is, users, scope, data-source policy, open decisions, risks                                                                                        |
-| [`AUTONOMY.md`](AUTONOMY.md)       | **Read this before deciding you are blocked.** Standing authorization, a pre-made default for every open decision, and the four things that genuinely stop a run |
-| [`SWARM.md`](SWARM.md)             | How it gets built — GSD orchestration, worker contract, model lanes, measurements                                                                                |
-| [`PROGRESS.md`](PROGRESS.md)       | Where the work actually is. Rewritten every session, printed at every start                                                                                      |
-| [`CREDENTIALS.md`](CREDENTIALS.md) | Every login a human must do once, before an unattended run starts                                                                                                |
-| [`../AGENTS.md`](../AGENTS.md)     | Project instructions for agentic tools, and humans                                                                                                               |
+---
 
-Work in progress lives in the [Issues board](https://github.com/TolongLabs/MakanLah/issues), not in a checklist here.
+## What Is In The Corpus
+
+Measured, not estimated. Regenerate any of these from `/health` or the queries in [`runbook.md`](runbook.md).
+
+|                               |           |
+| ----------------------------- | --------- |
+| Venues                        | **823**   |
+| With evidence (recommendable) | **814**   |
+| Carrying a price              | **627**   |
+| Posts                         | **4,523** |
+| Mentions (post ↔ venue)       | **4,764** |
+| Distinct authors              | **2,190** |
+| Platforms                     | **2**     |
+
+**Recommendable is not the same as reachable, and the second is the honest one.** Across a fixed battery of 46 real KL
+queries, **~250 distinct venues** come back — about 30% of what is citable. The gap is retrieval, not coverage, and it
+is measured rather than estimated: filling ~325 of 920 available result slots, median 5 to 7.5 results per query, and
+**no query returning nothing**.
+
+Language is a correctness requirement here rather than a feature. Posts arrive in English, Malay and Chinese and
+code-switch mid-sentence, so `source_post.langs` is an array by design — a single-language column would erase the thing
+the corpus actually is.
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
+
+---
+
+## Architecture
+
+Three deployables and one shared library. The library exists so the corpus schema, the embedding client and the language
+handling are written once and imported by two processes that otherwise share nothing.
+
+| Piece       | Runs               | Job                                                         |
+| ----------- | ------------------ | ----------------------------------------------------------- |
+| `ingest/`   | Workstation, batch | Holds the signed-in browser session. Never serves a request |
+| `api/`      | Vercel, Singapore  | Reads the corpus. Never scrapes                             |
+| `web/`      | Cloudflare Pages   | Static, installable, holds no secret                        |
+| `makanlah/` | Imported by both   | Schema, ranking, text handling, model clients               |
+
+**No single source is load-bearing.** That is an uptime commitment, not legal cover: any one platform can go dark
+mid-sprint, and a data layer with one point of failure goes dark with it. Google Maps carries most of the evidence and,
+since it became a discovery source of its own, can also introduce venues RedNote never mentioned.
+
+Deeper detail — API contracts, the corpus schema, ranking stages and the reasoning behind each — is in
+[`TRD.md`](TRD.md), which is canonical over this file for anything technical.
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
+
+---
+
+## Tech Stack
+
+| Layer           | Choice                         | Why                                                          |
+| --------------- | ------------------------------ | ------------------------------------------------------------ |
+| Corpus          | Neon Postgres + pgvector       | One store for rows, full-text and vectors, in one region     |
+| API             | FastAPI on Vercel (`sin1`)     | Python, so the corpus layer is shared with ingestion         |
+| Client          | Vite + React, Cloudflare Pages | A PWA installs in seconds; an app store is a five-minute tax |
+| Ingestion       | Python, CDP, Google Places API | No key needed for RedNote; Places replaced browser scraping  |
+| Package manager | Bun (JS), uv (Python)          |                                                              |
+| Lint and format | Biome, Prettier, Ruff          | Split by extension so neither can undo the other             |
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
 
 ## Getting Started
 
-```bash
-scripts/bootstrap.sh         # provision the machine. Idempotent; --check to dry-run
-cp .env.example .env         # then fill in what CREDENTIALS.md says you must
-scripts/preflight.sh         # will an unattended run get stuck on setup?
-```
-
-> **`scripts/unattended.sh on` reports success but does not currently work.** `deny` outranks `allow` in Claude Code, so
-> the `gh pr merge` deny in `.claude/settings.json` cannot be lifted by `settings.local.json`. An unattended run still
-> stalls at the first PR. Tracked in **[#4](https://github.com/TolongLabs/MakanLah/issues/4)**.
-
-### Running It
+Full instructions, including seeding a corpus from scratch, are in **[`runbook.md`](runbook.md)**. The short version:
 
 ```bash
-scripts/chrome-session.sh start && scripts/chrome-session.sh verify   # the signed-in browser
-uv run python ingest/capture_rednote.py --target 200                  # fetch to the raw cache
-uv run python ingest/pipeline.py                                      # extract, resolve, geocode, embed
-uv run python ingest/enrich_gmaps.py                                  # coordinates and Maps reviews
-uv run python ingest/merge_venues.py --dry-run                        # what would merge, and why
-scripts/dev-api.sh                                                    # the API on 127.0.0.1:8000
-cd web && bun install && bun run dev                                  # the client
+bun install                       # dev tooling and git hooks
+uv sync                           # Python dependencies
+cp .env.example .env              # then fill in DATABASE_URL and the model keys
+
+uv run python -m makanlah.migrate # create the schema
+scripts/dev-api.sh                # FastAPI on :8000
+cd web && bun run dev             # client on :5173
 ```
 
-**Fetching and extraction are separate commands on purpose.** Fetching is slow, rate-limited and can die halfway;
-extraction is fast and replayable against the raw cache. A schema or prompt change costs nothing to re-run, where
-re-scraping costs a rate limit and possibly a session.
+Checks, all of which CI runs:
 
-| Command             | Does                                            |
-| ------------------- | ----------------------------------------------- |
-| `bun run lint`      | Biome, Prettier and Ruff, all in check mode     |
-| `bun run format`    | All three, writing in place                     |
-| `bun run test`      | The Python suite. `test:all` adds the web suite |
-| `bun run typecheck` | `tsc --noEmit`, once `src/` exists              |
-| `gh issue list`     | The TODO board                                  |
+```bash
+bun run lint        # biome + prettier + ruff
+bun run typecheck   # tsc --noEmit, from web/
+uv run pytest -q    # 658 tests, entirely against fixtures
+```
 
-Biome covers JS, TS, JSON, CSS and HTML; Prettier covers the Markdown and YAML it cannot, wrapping prose at 120 to match
-`biome.json`'s `lineWidth`. There is no `.prettierignore`, so every Markdown file is formatted, `docs/source/` and the
-vendored skills included. Only the contents of fenced code blocks are left alone.
+**The test suite never touches a live platform.** That is deliberate: a test that scrapes is a test that fails when
+somebody else ships.
 
-**Ruff covers Python**, mirroring `biome.json` so the two cannot disagree about a shared setting: 120 columns, single
-quotes. It is scoped away from `.agents/skills` and `docs/source`, which are vendored and received sources that
-`AGENTS.md` forbids reformatting.
-
-**Every test runs against fixtures.** A suite that hits RedNote or Google Maps fails when a session expires, and a red
-check that means nothing trains everyone to ignore red checks.
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
 
-## Architecture, Such As It Is
-
-Two agent workloads on **Hermes Agent**, deliberately not sharing a runtime:
-
-| Workload      | Shape                           | Constraint                     |
-| ------------- | ------------------------------- | ------------------------------ |
-| **Copilot**   | Interactive, one user at a time | Low latency; a user is waiting |
-| **Ingestion** | Batch, scheduled, high volume   | Throughput; nobody is waiting  |
-
-Coupling them means a scraping run degrades the interactive experience.
-
-The core loop, and the reason the third step is the product:
+## Project Structure
 
 ```
-open → state preference (cuisine, budget, distance, mood)
-     → ranked shortlist with the actual social posts behind each pick
-     → pick one → directions
+makanlah/           shared library. Both runtimes import it, neither shares runtime state
+  config.py         settings from the environment. Names keys, never prints a value
+  db.py             the only module that speaks SQL
+  models.py         extract, embed and re-rank clients
+  rank.py           the four ranking stages
+  copilot.py        one question about one venue, answered from the corpus or not at all
+  dishes.py         dish matching. Whole-word for Latin, substring for Han
+  prices.py         a price band read from post text, or nothing
+  prefs.py          which wizard answers actually shaped a response
+  text.py           venue normalization and language detection
+  migrations/       the corpus schema, as Postgres
+
+ingest/             batch, on the workstation
+  places_api.py     Google Places. Replaced browser scraping for enrichment
+  enrich_places.py  reviews and price for a venue, one HTTP call each
+  discover_gmaps.py Maps as a source of venues, not only an annotation on them
+  capture_rednote.py  fetch to the raw cache. Separate from extraction on purpose
+  pipeline.py       raw -> extract -> resolve venue -> geocode -> embed
+  cdp.py            CDP client. Every call bounded, because a crashed tab hangs silently
+
+api/main.py         the interactive runtime
+web/                the static client
+tests/              pytest, against fixtures only
+evals/              pinned ground truth and a runner for ranking quality
+docs/               this file, PRD, TRD, runbook, design system, decision records
+scripts/            bootstrap, deploy, browser session, visual checks
 ```
 
-### Three Deployables, One Library
-
-| Deployable | Runs                           | Constraint                             |
-| ---------- | ------------------------------ | -------------------------------------- |
-| `ingest/`  | The workstation, on a schedule | Throughput. **Never serves a request** |
-| `api/`     | Hosted                         | Latency. **Never scrapes**             |
-| `web/`     | Cloudflare Pages, static       | First paint. **Holds no secret**       |
-
-`ingest/` and `api/` share the `makanlah/` library and share nothing at runtime. **Every arrow leaving the workstation
-points away from it** — it makes outbound connections only, accepts none, and so its address is never exposed.
-
-### The Data Layer
-
-**Two sources, neither load-bearing.** RedNote carries long-form posts that often name many venues at once; Google Maps
-carries per-venue reviews plus the coordinates and `place_id`. Maps needs **no API key and no billing** — its place URL
-embeds coordinates inline — which is also why it is the better fallback: a second login-walled source would double the
-surface that can expire unattended without doubling the resilience.
-
-**Every result cites the post it came from, and the excerpt is verbatim.** That is enforced by a database trigger, not
-by convention, because the spike measured the extractor returning quotes that read correctly and were not in the post.
-
-Stack: **Neon** (Postgres + pgvector, `ap-southeast-1`), **DashScope** Qwen for extraction and `text-embedding-v3` for
-retrieval, **FastAPI** for the API and **Vite + React** for the client. The reasoning for each is in [`TRD.md`](TRD.md).
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
 
-## Two Dates That Constrain The Plan
+## Limitations
 
-| Date           | What Changes                                                       |
-| -------------- | ------------------------------------------------------------------ |
-| **2026-09-09** | GLM-5.3-Flash promo ends; token pricing doubles                    |
-| **2026-09-23** | Devin Pro lapses; the free SWE-1.7 worker tier likely goes with it |
+Stated because a README that lists only strengths is not describing software.
 
-Both land near production. Keep worker dispatch model-agnostic — see [`SWARM.md`](SWARM.md#4-worker-contract). The
-`session-brief` hook counts down both at the start of every session.
+- **Kuala Lumpur only.** Every area, dish vocabulary and geocoding bound assumes the Klang Valley
+- **Coverage is uneven by dish.** Common dishes return ten results; a narrow query may return one or none, and the app
+  says so rather than substituting
+- **Freshness is a background concern.** The corpus is refreshed by a batch run on a workstation. Nothing refreshes on a
+  user request, by design
+- **p95 latency is over target.** The PRD asks for 3s; the re-rank pass makes it slower. Trading it for more results was
+  a deliberate call, tracked as an open issue
+- **Some venues are two rows.** Simplified and traditional Han spellings of one shop can survive as separate venues. A
+  wrong merge is not recoverable, so ambiguity is kept rather than guessed
+- **No photos.** Google's terms forbid caching Places imagery, and RedNote's CDN refuses hotlinking, so every available
+  path was partial coverage plus a terms risk. Stock food photography was rejected outright — a picture of someone
+  else's nasi lemak on a card whose whole argument is provenance is a hallucinated citation with a lens on it
 
----
-
-## How Work Ships
-
-**`main` is PR-gated.** Branch as `<type>/<slug>`, open a PR with `gh pr create`, merge with
-`gh pr merge --squash --delete-branch`. A human merges; nobody merges their own PR. `.claude/hooks/guard-git.sh`
-enforces it.
-
-**Implementation is gated on three docs.** `PRODUCT.md` (who and why), `PRD.md` (what, and what is out of scope) and
-`TRD.md` (how) must all exist before build work starts. `DESIGN.md` joins them when frontend work does.
-
-**Workers are gated on tests.** A task belongs to a worker only if a failing test can be written for it first, and no
-worker's output is merged on its self-report. `SWARM.md` §4 is the contract.
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
 ---
 
-## Layout
+## License
 
-```
-docs/
-  README.md              this file, the GitHub-facing readme
-  PRODUCT.md             who, why, scope, open decisions, risks
-  AUTONOMY.md            standing authorization, pre-made defaults, what stops a run
-  SWARM.md               how it gets built: GSD, workers, model lanes, measurements
-  PROGRESS.md            session checkpoint. The only thing that survives compaction
-  CREDENTIALS.md         every human-gated login, done once, before an unattended run
-  PRD.md                 what: requirements, acceptance criteria, out of scope
-  TRD.md                 how: architecture, contracts, corpus schema. Canonical
-  DESIGN.md              the design system, once frontend work starts
-  coding-guidelines.md   behavioural coding rules, referenced by AGENTS.md
-  agent-tooling.md       rtk and graphify, both optional and per-machine
-  source/                captured reference material, append-only
-  superpowers/research/  cited findings from exploration
-makanlah/                the shared library. Both runtimes import it, neither shares runtime state
-  config.py              settings from the environment. Names keys, never prints a value
-  text.py                venue normalization and language detection. Used by both runtimes
-  db.py                  the only module that speaks SQL
-  models.py              extract, embed and re-rank clients
-  rank.py                the four ranking stages
-  migrations/            the corpus schema as Postgres
-  research/              measurement scripts whose results live in docs/superpowers/research/
-ingest/                  batch, on the workstation. Holds the browser session. Never serves a request
-  cdp.py                 CDP client. Every call bounded, because a crashed tab hangs silently
-  rednote.py             the primary source. Targets the host, not the brand
-  gmaps.py               the second source. No API key; the place URL carries coordinates
-  capture_rednote.py     fetch to the raw cache. Separate from extraction on purpose
-  pipeline.py            store raw -> extract -> resolve venue -> geocode -> embed
-  enrich_gmaps.py        fill coordinates and take Maps reviews as evidence
-  geocode.py             Nominatim. Kept as fallback; Maps resolves far more of this corpus
-api/main.py              interactive, hosted. Reads the corpus and never scrapes
-web/                     the static client. Vite + React, installable, holds no secret
-tests/                   pytest, entirely against fixtures. Never touches a live platform
-scripts/
-  bootstrap.sh           provision a fresh machine. Idempotent
-  preflight.sh           will an unattended run get stuck on setup? Ask before it does
-  chrome-session.sh      CDP-controllable Chrome carrying the signed-in session
-  dev-api.sh             run the API locally against the corpus
-  unattended.sh          toggle self-merge-on-green-CI
-  dispatch-worker.sh     model-agnostic worker dispatch. SWARM.md §4 as code
-.github/workflows/ci.yml lint, typecheck, and the guards. Unattended, this is the reviewer
-.agents/skills/          29 skills, the committed source of truth
-.claude/skills/          symlinks into .agents/skills/, plus impeccable as a real dir
-.claude/hooks/           session brief, env drift, git guard, formatter, checkpoint reminder
-```
+Distributed under the MIT License. See [LICENSE](../LICENSE) for details.
 
-**Three deployables, one library.** `ingest/` and `api/` share `makanlah/` and share nothing at runtime: separate
-processes, separate hosts, separate failure domains. `api/` must never import from `ingest/` — that is where the browser
-session and the scrapers live, and the API host has neither.
+Content in the corpus belongs to the people who wrote it. This repository contains **no scraped content** — the schema,
+fixtures and code are here; `data/` is not, and never was.
 
-**Fetching and extraction are separate commands on purpose.** Fetching is slow, rate-limited and can fail halfway;
-extraction is fast and replayable. Raw captures live on disk, so a schema or prompt change costs nothing to re-run,
-where re-scraping costs a rate limit and possibly a session.
+<p align="right"><a href="#readme-top">&uarr;</a></p>
 
-The day-0 spike's own runner has been folded into `ingest/` now that it is the production path. What it proved is
-recorded in [`TRD.md`](TRD.md#what-the-spike-changed), and its redacted capture is in [`source/`](source/).
+---
 
-Skill provenance: [`../.agents/skills/VENDORED.md`](../.agents/skills/VENDORED.md).
+## Team
 
-The repo root deliberately has **no README**. It lives here.
+Built by **TolongLabs**.
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://github.com/AlaskanTuna"><img src="https://github.com/AlaskanTuna.png" width="96" alt="Tuna" /></a><br />
+      <b>Tuna</b><br />
+    </td>
+  </tr>
+</table>
+</div>
+
+<p align="right"><a href="#readme-top">&uarr;</a></p>
