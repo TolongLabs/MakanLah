@@ -46,6 +46,18 @@ removed from the card.
 2. The model-written blurb — stays off the cards, or comes back?
 3. **#141** dot density — quiet ground, or more present?
 
+### The Sentiment Line Says "Still Open", Not "Here"
+
+`makanlah-fb` caught the wording after the count was settled: **"Of the N posts here" is false as English** whenever the
+surfaces show more than the line counts, however right the number is. Both surfaces do. `VenueTrail` renders dead posts
+deliberately — they are the record a stamp gets checked against — and `leadPair` shows at most two excerpts however many
+are counted. So a dialog listing three entries sat beside a line counting two, and a card showing two excerpts sat
+beside a line counting three.
+
+Now reads `3 posts still open: 1 critical, 2 positive.` **True per the rule and false as English is the corroboration
+stamp bug again**, and naming the property rather than gesturing at the page is the fix. "Still open" is also the
+vocabulary already on screen, since a dead row reads "This post no longer opens."
+
 ### The One Live Disagreement: #166
 
 **`main` is at `57ef49e`, which is NOT deployed. Prod is `785992a`.** Do not deploy `57ef49e` before this is settled —

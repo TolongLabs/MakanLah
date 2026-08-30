@@ -206,7 +206,7 @@ const thirdDetail = await page.locator('.result').nth(2).locator('.why-more-body
 // over-calling criticism (#149) and once for firing none at all (#155).
 note(/1 critical/.test(thirdDetail), `sentiment leads with the complaint  ${JSON.stringify(thirdDetail.slice(0, 160))}`)
 note(/2 positive/.test(thirdDetail), 'and still reports the favourable posts')
-note(/Of the 3 posts here/.test(thirdDetail), 'scoped to the cited posts, not the venue record')
+note(/3 posts still open/.test(thirdDetail), 'names the property rather than gesturing at the page')
 
 // ------------------------------------------- nothing in range serves the dish
 //

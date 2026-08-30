@@ -118,10 +118,8 @@ describe('sentiment renders, in both directions', () => {
     // language (#149) and then because the fix over-corrected to zero criticals
     // (#155). Both directions or neither -- rendering only the favourable half
     // biases every card toward good news, which is worse than showing nothing.
-    expect(sentimentLine({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('Of the 4 posts here: all positive.')
-    expect(sentimentLine({ positive: 2, mixed: 0, negative: 1 }, 3)).toBe(
-      'Of the 3 posts here: 1 critical, 2 positive.'
-    )
+    expect(sentimentLine({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('4 posts still open, all positive.')
+    expect(sentimentLine({ positive: 2, mixed: 0, negative: 1 }, 3)).toBe('3 posts still open: 1 critical, 2 positive.')
   })
 
   it('still refuses when the counts are not about the same posts', () => {
@@ -138,9 +136,9 @@ describe('sentiment is counts, never an average', () => {
     // rounded down. Burying it under a positive majority is the one thing this line
     // must not do.
     expect(sentimentPhrase({ positive: 3, mixed: 2, negative: 4 }, 9)).toBe(
-      'Of the 9 posts here: 4 critical, 3 positive, 2 mixed.'
+      '9 posts still open: 4 critical, 3 positive, 2 mixed.'
     )
-    expect(sentimentPhrase({ positive: 9, mixed: 0, negative: 1 }, 10)).toMatch(/^Of the 10 posts here: 1 critical/)
+    expect(sentimentPhrase({ positive: 9, mixed: 0, negative: 1 }, 10)).toMatch(/^10 posts still open: 1 critical/)
   })
 
   it('prints unanimity, because unanimity turned out to be the rare case', () => {
@@ -148,21 +146,21 @@ describe('sentiment is counts, never an average', () => {
     // everywhere discriminates nothing. Measured, that reasoning was backwards: 163
     // of 186 multi-mention venues span more than one bucket, so agreement is the
     // 12% case and is the informative one.
-    expect(sentimentPhrase({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('Of the 4 posts here: all positive.')
-    expect(sentimentPhrase({ positive: 0, mixed: 3, negative: 0 }, 3)).toBe('Of the 3 posts here: all mixed.')
+    expect(sentimentPhrase({ positive: 4, mixed: 0, negative: 0 }, 4)).toBe('4 posts still open, all positive.')
+    expect(sentimentPhrase({ positive: 0, mixed: 3, negative: 0 }, 3)).toBe('3 posts still open, all mixed.')
   })
 
   it('scopes itself to the posts actually cited', () => {
-    // Citations are trimmed to `per_venue` before they ship, so the breakdown
-    // describes the posts on screen and not the venue's whole record. A venue whose
-    // only critical review missed the trim shows none, and an unscoped "All 3 posts
-    // positive" would claim more than we know.
-    expect(sentimentPhrase({ positive: 3, mixed: 0, negative: 0 }, 3)).toMatch(/^Of the 3 posts here:/)
+    // Names the property rather than gesturing at the page. "Here" was false in two
+    // directions: the dialog renders dead posts this does not count, and the card
+    // shows at most two excerpts however many it counts. True per the rule and false
+    // as English is the corroboration-stamp bug all over again.
+    expect(sentimentPhrase({ positive: 3, mixed: 0, negative: 0 }, 3)).toMatch(/^3 posts still open/)
     expect(sentimentPhrase({ positive: 3, mixed: 0, negative: 0 }, 3)).not.toMatch(/^All /)
   })
 
   it('splits a mixed reading without an average', () => {
-    expect(sentimentPhrase({ positive: 3, mixed: 1, negative: 0 }, 4)).toBe('Of the 4 posts here: 3 positive, 1 mixed.')
+    expect(sentimentPhrase({ positive: 3, mixed: 1, negative: 0 }, 4)).toBe('4 posts still open: 3 positive, 1 mixed.')
   })
 
   it('REFUSES to print when the counts are not about the same posts', () => {

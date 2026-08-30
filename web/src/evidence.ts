@@ -376,11 +376,25 @@ export function sentimentPhrase(s: Venue['sentiment'], livePosts: number): strin
   // Different units, so the breakdown is not about the posts this card can show.
   if (total !== livePosts) return null
 
-  // "Of the N posts here" rather than a bare "N posts", because citations are
-  // trimmed to `per_venue` before they ship: this describes the posts we are citing,
-  // not the venue's whole record. A venue whose only critical review missed the trim
-  // shows none, so an unscoped "All 3 posts positive" would claim more than we know.
-  const scope = `Of the ${count(total, 'post')} here:`
+  // "STILL OPEN", not "here", and the word is doing real work.
+  //
+  // This counts posts a reader can open: `add_corroboration` drops dead citations
+  // under #111, and the tally agrees with it. But the surfaces around it show more
+  // than it counts. `VenueTrail` deliberately renders dead posts — they are the
+  // record somebody checks a stamp against — and `leadPair` shows at most two
+  // excerpts however many are counted. So "here" was false in two directions at
+  // once: a dialog listing three entries beside a line counting two, and a card
+  // showing two excerpts beside a line counting three.
+  //
+  // True per the rule and false as English is exactly the shape of the corroboration
+  // stamp bug, and naming the property instead of gesturing at the page fixes it.
+  // "Still open" is also the vocabulary already on screen: a dead row reads "This
+  // post no longer opens."
+  //
+  // It stays scoped rather than absolute for the original reason too — citations are
+  // trimmed to `per_venue` before they ship, so this is never the venue's whole
+  // record.
+  const scope = `${count(total, 'post')} still open`
   if (s.negative > 0) {
     const rest: string[] = []
     if (s.positive > 0) rest.push(`${s.positive} positive`)
@@ -388,11 +402,11 @@ export function sentimentPhrase(s: Venue['sentiment'], livePosts: number): strin
     // Negative leads. `makanlah` buckets asymmetrically so a critical reading is
     // somebody with a real complaint, and burying it under a positive majority is
     // the one thing this line must not do.
-    return `${scope} ${s.negative} critical${rest.length > 0 ? `, ${rest.join(', ')}` : ''}.`
+    return `${scope}: ${s.negative} critical${rest.length > 0 ? `, ${rest.join(', ')}` : ''}.`
   }
-  if (s.mixed === 0) return `${scope} all positive.`
-  if (s.positive === 0) return `${scope} all mixed.`
-  return `${scope} ${s.positive} positive, ${s.mixed} mixed.`
+  if (s.mixed === 0) return `${scope}, all positive.`
+  if (s.positive === 0) return `${scope}, all mixed.`
+  return `${scope}: ${s.positive} positive, ${s.mixed} mixed.`
 }
 
 /** One fact in a result's why-row. `lead` marks the answer to "why is this here",
