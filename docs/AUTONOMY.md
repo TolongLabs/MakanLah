@@ -121,8 +121,8 @@ Four rules that make this hold:
 2. **Never merge a worker's output on its self-report.** Assert the artifact exists, then run the test the worker never
    saw
 3. **Never disable a check to go green.** Narrowing the change is always available; silencing the check is not
-4. **Never verify a fix with the fix's own definition.** A check that defines its own success will agree with itself
-   perfectly and prove nothing. Confirm against something the check does not own
+4. **Never verify a fix with the fix's own definition, and confirm the check can fail at all.** A check that defines its
+   own success will agree with itself perfectly and prove nothing. Confirm against something the check does not own
 
 ### A Check That Owns Its Own Definition Of Success
 
@@ -164,6 +164,28 @@ and compare the **test count** across the merge. A green suite with fewer tests 
 **`git merge-base --is-ancestor` is not evidence the content arrived.** It returned true for the reverted commit, which
 is exactly why the revert was durable: git considered it merged and would never re-apply it, so it sat latent on the
 branch and would have travelled into the next PR.
+
+#### The Check That Cannot Fail, And The Only Thing That Detects It
+
+A sixth instance, found by a peer **in their own work** rather than in someone else's: an agreement test written as
+`expect(phase, ...)` instead of `expect(phase(), ...)`. A function reference is never equal to `'idle'`, so the
+assertion could not fail for any input. It passed, as it would have passed against any implementation whatsoever.
+
+This one is worse than a check that owns its definition, because it does not even consult the thing it names. Reading it
+does not reveal the fault — the line looks like an assertion, and the suite is green.
+
+**What caught it was mutation: the component was pinned to always return `'idle'`, and the test stayed green.** That is
+the general remedy, and it is cheap:
+
+> **Break the thing on purpose and confirm the check goes red.** A check that stays green against a deliberately broken
+> subject is measuring nothing, whatever it appears to assert.
+
+Do this once, at the moment a check is written, for anything whose result will be trusted without a human looking at it.
+The peer's own framing is the one to keep: **a check is trusted the moment it is green, and nothing except mutating the
+thing under it distinguishes green-because-correct from green-because-blind.**
+
+Six instances across three sessions in a single day says this is not carelessness. It is the default failure mode of
+verification written by the same party that wrote the fix.
 
 ### Unattended Mode
 
