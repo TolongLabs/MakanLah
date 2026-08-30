@@ -148,7 +148,7 @@ def venue_evidence(con, venue_id, limit=40):
     """
     rows = con.execute(
         """select m.excerpt, m.dishes, m.sentiment, m.confidence,
-                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
+                  p.id as post_id, p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
                   case when p.dead_at is not null then true else null end as dead
            from mention m join source_post p on p.id = m.post_id
            where m.venue_id = %s and m.excerpt is not null
@@ -265,7 +265,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     rows = con.execute(
         """select v.id as venue_id, v.name, v.area, v.city, v.lat, v.lng, v.place_id,
                   m.excerpt, m.dishes, m.sentiment, m.confidence,
-                  p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
+                  p.id as post_id, p.url as post_url, p.platform, p.author_handle, p.posted_at_raw,
                   case when p.dead_at is not null then true else null end as dead
            from venue v
            join mention m on m.venue_id = v.id
@@ -298,6 +298,12 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 v['dishes'].append(d)
         pool.setdefault(r['venue_id'], []).append(
             {
+                # Identity and address are different things, and the client needs both.
+                # Google Maps has no per-review URL, so review_url() returns the venue
+                # page and three reviewers share one address. Deduping on post_url
+                # collapsed them into one citation and denied the corroboration stamp
+                # to venues that had genuinely earned it (#153).
+                'post_id': str(r['post_id']),
                 'post_url': r['post_url'],
                 'excerpt': r['excerpt'],
                 'platform': r['platform'],
@@ -311,7 +317,7 @@ def venues_with_citations(con, venue_ids, per_venue=3):
     for venue_id, cites in pool.items():
         shown = diverse_citations(cites, per_venue)
         out[venue_id]['citations'] = shown
-        kept[venue_id] = {c['post_url'] for c in shown if not c.get('dead')}
+        kept[venue_id] = {c['post_id'] for c in shown if not c.get('dead')}
     for venue_id, counts in tally_sentiment(rows, kept).items():
         out[venue_id]['sentiment'] = counts
     return out
@@ -346,11 +352,11 @@ def tally_sentiment(rows, kept=None):
     for r in rows:
         if r['dead']:
             continue
-        if kept is not None and r['post_url'] not in kept.get(r['venue_id'], ()):
+        if kept is not None and str(r['post_id']) not in kept.get(r['venue_id'], ()):
             continue
         if r['sentiment'] is None:
             continue
-        by_venue.setdefault(r['venue_id'], {}).setdefault(r['post_url'], []).append(float(r['sentiment']))
+        by_venue.setdefault(r['venue_id'], {}).setdefault(str(r['post_id']), []).append(float(r['sentiment']))
     out = {}
     for venue_id, by_post in by_venue.items():
         counts = {'positive': 0, 'mixed': 0, 'negative': 0}

@@ -45,8 +45,16 @@ def test_the_cut_points_sit_on_the_star_scale():
     assert sentiment_bucket(0.3) == 'mixed'
 
 
-def _row(venue_id, post_url, sentiment, dead=None):
-    return {'venue_id': venue_id, 'post_url': post_url, 'sentiment': sentiment, 'dead': dead}
+def _row(venue_id, post_url, sentiment, dead=None, post_id=None):
+    # post_id defaults to post_url so a case that does not care reads unchanged; the
+    # Maps cases pass them separately, because that is the whole point of #153.
+    return {
+        'venue_id': venue_id,
+        'post_id': post_id or post_url,
+        'post_url': post_url,
+        'sentiment': sentiment,
+        'dead': dead,
+    }
 
 
 def test_one_post_is_one_vote_however_many_mentions_it_makes():
