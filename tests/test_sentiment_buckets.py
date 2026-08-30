@@ -5,7 +5,7 @@ every venue. Counts carry information a mean cannot: 163 of 186 multi-mention
 venues span more than one bucket, and 73 of 247 carry at least one negative.
 """
 
-from makanlah.db import sentiment_bucket
+from makanlah.db import sentiment_bucket, tally_sentiment
 
 
 def test_the_top_of_the_scale_is_positive():
@@ -39,3 +39,53 @@ def test_the_thresholds_are_asymmetric_on_purpose():
     # mild complaint as 'mixed' and the negative bucket would almost never fill.
     assert sentiment_bucket(-0.3) == 'negative'
     assert sentiment_bucket(0.3) == 'mixed'
+
+
+def _row(venue_id, post_url, sentiment, dead=None):
+    return {'venue_id': venue_id, 'post_url': post_url, 'sentiment': sentiment, 'dead': dead}
+
+
+def test_one_post_is_one_vote_however_many_mentions_it_makes():
+    # The defect this file now guards: a post naming a venue three times counted
+    # three times, so a card read "1 post" and "All 3 posts positive" at once.
+    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p1', 1.0), _row('v1', 'p1', 1.0)]
+    assert tally_sentiment(rows)['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
+
+
+def test_a_dead_post_casts_no_vote():
+    # #111 again: a breakdown counting posts a reader cannot open is an assertion
+    # with no evidence behind it, which is the one thing this product must not do.
+    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', 1.0, dead=True)]
+    assert tally_sentiment(rows)['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
+
+
+def test_a_venue_whose_every_post_is_dead_reports_nothing():
+    assert tally_sentiment([_row('v1', 'p1', 1.0, dead=True)]) == {}
+
+
+def test_the_harshest_line_in_a_post_is_the_one_that_counts():
+    # Averaging within a post would let a complaint be cancelled by the same
+    # author's milder sentences.
+    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p1', -0.9)]
+    assert tally_sentiment(rows)['v1'] == {'positive': 0, 'mixed': 0, 'negative': 1}
+
+
+def test_totals_equal_the_number_of_live_posts():
+    # The invariant the client gates on: sum(sentiment) must equal the post count
+    # the corroboration line shows, or the card stays dark.
+    rows = [
+        _row('v1', 'p1', 1.0),
+        _row('v1', 'p1', 0.5),
+        _row('v1', 'p2', -0.5),
+        _row('v1', 'p3', 0.0),
+        _row('v1', 'p4', 1.0, dead=True),
+    ]
+    counts = tally_sentiment(rows)['v1']
+    assert sum(counts.values()) == 3
+
+
+def test_venues_are_counted_separately():
+    rows = [_row('v1', 'p1', 1.0), _row('v2', 'p1', -1.0)]
+    got = tally_sentiment(rows)
+    assert got['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
+    assert got['v2'] == {'positive': 0, 'mixed': 0, 'negative': 1}
