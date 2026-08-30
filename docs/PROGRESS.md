@@ -1,4 +1,90 @@
-# Progress — 2026-08-30 · the coverage ceiling came off, and the browser stopped being the way in
+# Progress — 2026-08-30 · the repo was made publishable, and a merged fix turned out never to have shipped
+
+**`main` is at `cff13c2`. API `/health` reports `cff13c2b`.** They agree for the first time today, and getting them to
+agree is the whole story of this session's second half.
+
+**The repository is ready to be read by strangers, except for one licence question.** #192 landed the public
+`docs/README.md`, `docs/runbook.md`, a corrected `docs/TRD.md`, an MIT `LICENSE` and an archived history. Description,
+15 topics and homepage are set on the repo. **[#195](https://github.com/TolongLabs/MakanLah/issues/195) is the only
+thing between here and public**, and it is an owner decision, not a technical one.
+
+## The Fix That Was Merged And Not Live
+
+@makanlah-9e found `pork` still in the production chip rail hours after #190 merged, and was right to stop before
+putting it in a public README rather than after.
+
+|                              |                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------- |
+| **What #190 did**            | Removed `pork` from the unprompted default chip pool                            |
+| **Merged as**                | `7c5e892`                                                                       |
+| **What the API was serving** | `08b5aeb` — the commit immediately before it                                    |
+| **Why nobody noticed**       | The merge was green, the PR closed, and nothing reports the gap between the two |
+
+This is **[#116](https://github.com/TolongLabs/MakanLah/issues/116) for the second time today**, and this time the diff
+genuinely did touch a deployed path. The header block above exists because of the first time.
+
+**Now: `/suggestions` returns `['soup','rice','chicken','curry','BKT','fish']` on three consecutive calls.**
+
+### The Half That Would Have Looked Like Success
+
+"No pork chip" is satisfied just as well by having broken pork retrieval entirely, so that is the half worth testing.
+`POST /recommend` with `bak kut teh` returns 5 results, `degraded:false`, every one cited — Kepong Ba Kut Teh
+(3), 興记肉骨茶 (5), 旧巷子肉骨茶Authentic Klang Bak Kut Teh (3). **Unoffered, not unreachable**, which is what #190 was
+for.
+
+@makanlah-a6 then confirmed the retrieval battery carries over unchanged, by diff before probe: between `08b5aeb` and
+`cff13c2b` the only request-path Python change is `makanlah/suggest.py`, and `suggest` is referenced exactly once in the
+API, at `api/main.py:563`, inside the `/suggestions` handler. Nothing on the `/recommend` path imports it. **Reachable
+~250, slots ~325, rate 30% stand.**
+
+## Two Traps Found In The Deploy Path
+
+**`vercel deploy` failed with `Not authorized` while `vercel whoami` succeeded.** The link in `.vercel/project.json` was
+stale. Relinking fixed it, and `projectId` was unchanged before and after — `prj_0PQ1bU2Vz1h4shbF0aHID8FwiMBt` — which
+is how the relink is known to have hit the same project rather than a lookalike.
+
+**`vercel link` appends `.env*` to the tracked `.gitignore`.** Line 25 already carries `.env.*`, so the addition is
+redundant, and it leaves the tree dirty — which `scripts/deploy-api.sh` then correctly refuses to deploy from. Revert it
+after any relink.
+
+## makanlah.pages.dev Is Not Ours
+
+It returns 200 and serves a third-party APK page in Malay, titled _"777RT APK Versi Terbaru…"_. **Ours is
+`makanlah-b5h.pages.dev` and only that.** Never write the short form in a README, a deck, or the launch post — a reader
+who guesses it lands on someone else's site.
+
+## Branches: 10 → 4
+
+Six deleted. Four had merged PRs; the other two were checked against **main's own content** rather than their PR state,
+because a squash merge leaves a branch reading `unmerged` when its work has fully landed:
+
+| Branch                         | Why It Was Safe                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------------------- |
+| `docs/correct-huayang-comment` | The ledger isolation is in main as `_never_touch_the_real_ledger`, `tests/conftest.py:21` |
+| `feat/gmaps-discovery-wip`     | Main's `ingest/gmaps.py` is a strict superset — it adds only `discover`, main has seven   |
+
+**`feat/render-blueprint` was kept deliberately.** Its content is genuinely not in main, and given how often #116
+resurfaces, an already-written Render blueprint is worth more than a tidy branch list. Remaining alongside it:
+`docs/checkpoint-2` (#165) and `docs/readme-screenshots` (#194).
+
+## Open, And Who Owns It
+
+| Item                        | Owner        | Note                                                                                        |
+| --------------------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| **#195 Live2D licence**     | Owner        | Blocks going public. Four options costed in the issue; option 4 first, it may moot the rest |
+| **#194 README screenshots** | @makanlah-9e | Needs a rebase onto `cff13c2` — the branch predates the README rewrite — and a re-shoot     |
+| Demo video, pitch deck      | @makanlah-9e | #187 narration drift still open                                                             |
+| #179, #177, #189, #193      | —            | Deferred, not blocking launch                                                               |
+
+**The chip row is time-banded.** @makanlah-a6 caught this: a frame shot in one MYT window will not match one shot in
+another, so `/suggestions` has to be checked in the same minute as the screenshot rather than assumed from an earlier
+call. My own call came back `band: "late night supper"`.
+
+**Web client is live:** <https://makanlah-b5h.pages.dev> · **API is live:** <https://makanlah-api.vercel.app>
+
+---
+
+## 2026-08-30 (Earlier) — The coverage ceiling came off, and the browser stopped being the way in
 
 **`main` is at `977caf6`. API `/health` reports `977caf6`, client `build.json` reports `3c99b62`.** The client is
 correctly behind by one commit: `3c99b62` is the copilot voice change, which touches `makanlah/` only and is not in the
