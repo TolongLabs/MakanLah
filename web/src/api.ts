@@ -152,6 +152,17 @@ export type RecommendResponse = {
       signal at all — a completely different sentence from "these are not exact
       matches", and the reader is entitled to the first one. */
   coverage_gaps?: string[]
+  /** Which wizard answers actually shaped THIS response, as keys. #170: the page
+      said "Filtered by your answers" and named all five while three were being
+      discarded, because `prefs` was not a field on the request model.
+
+      `craving` and `range_m` are excluded by the API deliberately -- they are
+      already the query string and `radius_m`, so naming them here would count one
+      filter twice. The client keeps owning those two.
+
+      Absent means an API predating #171, where the three genuinely did nothing, so
+      undefined and `[]` mean the same thing to the client and both are honest. */
+  applied_prefs?: string[]
   evidence_gap?: EvidenceGap
   distance_gap?: DistanceGap
   error?: string

@@ -443,3 +443,47 @@ describe('the gap surface tells the two evidence classes apart', () => {
     expect(rowFor(/Contradiction Corner/i)?.textContent).not.toMatch(/\b0 posts?\b/)
   })
 })
+
+describe('the filter line names only what actually filtered', () => {
+  // #170. The line said "Filtered by your answers" and listed all five while the
+  // API was silently discarding three of them -- `prefs` was not a field on
+  // `RecommendRequest`, so Pydantic dropped the object. #171 wires them and returns
+  // `applied_prefs`, naming only what shaped that response.
+  const answered = { craving: ['bak kut teh'], company: 'family', range_m: 0, mood: 'comfort', budget: 'mid' }
+
+  async function line(container: HTMLElement) {
+    await screen.findByText(/Filtered by your answers/i)
+    return container.querySelector('.find-prefs')?.textContent ?? ''
+  }
+
+  it('names nothing the response did not claim', async () => {
+    // An API that predates #171 sends no `applied_prefs` at all, and on that build
+    // the three genuinely did nothing. Absent and empty mean the same thing here.
+    recommend.mockReset().mockResolvedValue(empty)
+    const { container } = show({ prefs: answered })
+    const text = await line(container)
+    expect(text).toMatch(/bak kut teh/)
+    expect(text).toMatch(/All of KL/)
+    expect(text).not.toMatch(/Family|Something familiar|Mid/)
+  })
+
+  it('names the ones the response says applied, and no others', async () => {
+    recommend.mockReset().mockResolvedValue({ ...empty, applied_prefs: ['company', 'mood'] })
+    const { container } = show({ prefs: answered })
+    const text = await line(container)
+    expect(text).toMatch(/Family/)
+    expect(text).toMatch(/Something familiar/)
+    // Budget dropped out because the corpus had no priced candidate for this query.
+    expect(text).not.toMatch(/Mid/)
+  })
+
+  it('still names craving and distance, which are not in applied_prefs by design', async () => {
+    // They are already the query string and radius_m. The API excludes them so one
+    // filter is not counted twice, so the client keeps owning those two.
+    recommend.mockReset().mockResolvedValue({ ...empty, applied_prefs: [] })
+    const { container } = show({ prefs: answered })
+    const text = await line(container)
+    expect(text).toMatch(/bak kut teh/)
+    expect(text).toMatch(/All of KL/)
+  })
+})

@@ -10,6 +10,16 @@ import { loadPrefs, summarise } from '../prefs'
 import { RANGE } from '../taste/options'
 import { cacheResults } from '../venueCache'
 
+/** `applied_prefs` keys to the rows `summarise()` produces. #170: the page named
+    all five answers while the API discarded three of them, so the three that can
+    only be confirmed by the response are named only when it confirms them. */
+const APPLIED_TERM: Record<string, string> = { company: 'With', mood: 'Mood', budget: 'Budget' }
+
+/** The two the client owns. The API excludes them from `applied_prefs` on purpose:
+    they ARE the query string and `radius_m`, so naming them there would count one
+    filter twice. */
+const CLIENT_TERMS = new Set(['Craving', 'Within'])
+
 type Geo = { lat: number; lng: number } | null
 type Handoff = { prefs?: Prefs; geo?: Geo; geoRefused?: boolean }
 
@@ -165,7 +175,13 @@ export function Discover() {
   const hasCraving = (prefs.craving?.length ?? 0) > 0
   // Once the craving is dropped it stops being advertised as well as stops being
   // sent. Claiming a filter that is no longer applied is the same bug in reverse.
-  const shown = useCraving ? summary : summary.filter((r) => r.term !== 'Craving')
+  // Named only where the response confirms it filtered. An older API sends no
+  // `applied_prefs` and on that build the three did nothing, so absent and empty
+  // land in the same place -- which is the honest one either way.
+  const applied = new Set((data?.applied_prefs ?? []).map((k) => APPLIED_TERM[k]).filter(Boolean))
+  const shown = summary
+    .filter((r) => useCraving || r.term !== 'Craving')
+    .filter((r) => CLIENT_TERMS.has(r.term) || applied.has(r.term))
 
   return (
     <div className="page discover">
@@ -228,7 +244,7 @@ export function Discover() {
           <Link className="btn btn-quiet find-taste" to="/taste">
             {summary.length > 0 ? 'Redo My Taste' : 'Answer Four Questions'}
           </Link>
-          {summary.length > 0 && (
+          {shown.length > 0 && (
             <p className="find-prefs">
               Filtered by your answers: {shown.map((r) => r.value).join(', ')}.{' '}
               {hasCraving && useCraving && (
