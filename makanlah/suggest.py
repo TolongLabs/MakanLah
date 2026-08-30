@@ -19,7 +19,7 @@ import json
 import unicodedata
 from datetime import datetime, timedelta, timezone
 
-from makanlah import config, db, models
+from makanlah import config, db, dishes, models
 
 # MYT. Fixed offset, no DST, and pulling in a tz database for one number is not
 # worth the dependency.
@@ -67,10 +67,24 @@ DEFAULT_POOL_EXCLUDED = frozenset({'pork', 'babi', '猪肉', '豬肉'})
 
 
 def offerable(dish) -> bool:
-    """Whether this dish may appear in the six unprompted chips."""
-    if not isinstance(dish, str):
+    """Whether this dish may appear in the six unprompted chips.
+
+    Matched per term, not per label. Comparing the whole label against the four
+    strings only ever caught a chip named exactly `pork`, so `sup tulang babi`
+    was offerable while carrying an excluded term as one of its own words. That
+    is the spelling list failing at its documented job.
+
+    Latin is whole-word and Han is substring, which is the project's dish rule
+    and the reason widening this does not become a cuisine list: `猪肉` is not a
+    substring of `肉骨茶`, so bak kut teh stays offerable exactly as decided.
+    """
+    if not isinstance(dish, str) or not dish.strip():
         return False
-    return bool(dish.strip()) and _key(dish) not in DEFAULT_POOL_EXCLUDED
+    key = _key(dish)
+    if key in DEFAULT_POOL_EXCLUDED:
+        return False
+    words = set(dishes.WORDS.findall(key))
+    return not any(term in key if dishes.HAN.search(term) else term in words for term in DEFAULT_POOL_EXCLUDED)
 
 
 def _candidates(con) -> list[dict]:

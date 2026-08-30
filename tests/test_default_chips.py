@@ -58,3 +58,35 @@ def test_the_excluded_set_stays_small_and_literal():
     """If this grows into a cuisine filter, it has become the thing the module
     docstring refuses to be. Six terms is a spelling list, not a dietary one."""
     assert len(DEFAULT_POOL_EXCLUDED) <= 6
+
+
+def test_the_spelling_list_catches_the_word_inside_a_longer_label():
+    """`sup tulang babi` names pork in so many words and was still offerable.
+
+    The exclusion compared the WHOLE label against four strings, so it only ever
+    caught a chip labelled exactly `pork`. Anything carrying the term as one word
+    of several walked straight through -- which is the list failing at its own
+    documented job, not the cuisine question it deliberately declines.
+    """
+    assert offerable('sup tulang babi') is False
+    assert offerable('babi panggang') is False
+    assert offerable('pork chop') is False
+    assert offerable('minced pork noodle') is False
+
+
+def test_the_deliberate_decision_is_not_quietly_reversed():
+    """`bak kut teh` stays offerable. That is a recorded call, not an oversight.
+
+    Widening to whole-word matching must not become the hand-written non-halal
+    list `suggest.py` refuses to build. Han matching is substring by project rule,
+    so this also pins that `猪肉` does not appear inside `肉骨茶` and cannot catch
+    it by accident.
+    """
+    for dish in ('bak kut teh', 'bkt', '肉骨茶', '中药肉骨茶', 'char siew', 'siu yuk'):
+        assert offerable(dish) is True, dish
+
+
+def test_a_word_boundary_is_a_boundary_not_a_substring():
+    """Latin is whole-word, so a term buried in an unrelated word does not match."""
+    assert offerable('porkkala') is True
+    assert offerable('babika') is True
