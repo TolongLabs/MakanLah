@@ -202,6 +202,32 @@ _GAP_CLAIM = {
     'halal': re.compile(r'halal|muslim|清真|masjid|mosque|mesra\s+muslim', re.I),
 }
 
+# "Halal-friendly" and "halal" are different claims in Malaysia, and the gap between
+# them is the whole question. Halal implies certification; muslim-friendly or
+# pork-free is weaker, and is the strongest claim many Chinese-Malaysian eateries
+# can honestly make.
+_FRIENDLY_DEGREE = re.compile(r'清真友好|halal[\s-]*friendly|muslim[\s-]*friendly|mesra\s+muslim', re.I)
+_STATUS_ASSERTION = re.compile(
+    r'dinyatakan\s+halal|disahkan\s+halal|sah\s+halal|certified\s+halal|halal[\s-]*certified|清真认证', re.I
+)
+
+
+def _only_friendly_evidence(citations):
+    """True when every halal token in the excerpts sits inside a 'friendly' remark.
+
+    Strips the friendly phrases and asks whether any halal token survives outside
+    them. 清真友好 leaves nothing; 清真认证 or a bare halal statement does.
+    """
+    saw = False
+    for c in citations:
+        text = c.get('excerpt') or ''
+        if not _supports_gap(text, 'halal'):
+            continue
+        saw = True
+        if _supports_gap(_FRIENDLY_DEGREE.sub('', text), 'halal'):
+            return False
+    return saw
+
 
 def withhold_unsupported_gap_claims(entries, gaps):
     """Drop a `why` that asserts a dietary property the evidence does not carry.
@@ -231,6 +257,17 @@ def withhold_unsupported_gap_claims(entries, gaps):
         for gap in gaps:
             pattern = _GAP_CLAIM.get(gap)
             if pattern and gap not in supported and pattern.search(why):
+                e['why'] = None
+                break
+            # Supported topic, overstated degree (#123). A friendliness remark may
+            # licence "mesra Muslim"; it may not licence "dinyatakan halal", which
+            # in Malay asserts halal STATUS and implies certification.
+            if (
+                gap == 'halal'
+                and gap in supported
+                and _STATUS_ASSERTION.search(why)
+                and _only_friendly_evidence(e.get('citations') or [])
+            ):
                 e['why'] = None
                 break
     return entries
