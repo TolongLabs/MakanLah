@@ -293,9 +293,6 @@ def venues_with_citations(con, venue_ids, per_venue=3):
                 'sentiment': {'positive': 0, 'mixed': 0, 'negative': 0},
             },
         )
-        b = sentiment_bucket(r['sentiment'])
-        if b:
-            v['sentiment'][b] += 1
         for d in r['dishes'] or []:
             if d not in v['dishes']:
                 v['dishes'].append(d)
@@ -312,6 +309,42 @@ def venues_with_citations(con, venue_ids, per_venue=3):
 
     for venue_id, cites in pool.items():
         out[venue_id]['citations'] = diverse_citations(cites, per_venue)
+    for venue_id, counts in tally_sentiment(rows).items():
+        out[venue_id]['sentiment'] = counts
+    return out
+
+
+# Most critical wins when one post yields several mention rows.
+RANK_BUCKET = {'positive': 0, 'mixed': 1, 'negative': 2}
+
+
+def tally_sentiment(rows):
+    """Bucket counts per venue, one vote per POST and only posts a reader can open.
+
+    Counting mention rows made a card say "1 post" and "All 9 posts positive" at
+    once -- 9 of 10 venues disagreed with their own corroboration count. Counting
+    dead posts repeats #111: a breakdown that cannot be traced to an openable post
+    is the unverifiable assertion this product exists not to make.
+
+    When one post yields several mention rows the most critical bucket wins. A
+    complaint must not be averaged away by the same post's milder lines.
+    """
+    by_venue = {}
+    for r in rows:
+        if r['dead']:
+            continue
+        b = sentiment_bucket(r['sentiment'])
+        if not b:
+            continue
+        seen = by_venue.setdefault(r['venue_id'], {})
+        if RANK_BUCKET[b] > RANK_BUCKET.get(seen.get(r['post_url']), -1):
+            seen[r['post_url']] = b
+    out = {}
+    for venue_id, by_post in by_venue.items():
+        counts = {'positive': 0, 'mixed': 0, 'negative': 0}
+        for b in by_post.values():
+            counts[b] += 1
+        out[venue_id] = counts
     return out
 
 
