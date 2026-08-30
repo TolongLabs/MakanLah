@@ -1035,9 +1035,16 @@
   color: var(--ink-faint);
 }
 
-.why-row > * + *::before {
+/* The separator TRAILS its token rather than leading the next one.
+   As a `::before` it belonged to the token after it, so once the row grew long
+   enough to wrap -- which the price token is what finally did -- the middot wrapped
+   with it and line two opened `· Subang`. A separator hanging at the start of a
+   line reads as an orphaned fragment rather than as a row continuing. Trailing, the
+   break falls after the middot, which is how a breadcrumb behaves and reads as
+   "more follows" instead. */
+.why-row > *:not(:last-child)::after {
   content: "·";
-  margin-right: var(--s2);
+  margin-left: var(--s2);
   color: var(--rule-strong);
 }
 
