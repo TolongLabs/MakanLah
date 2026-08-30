@@ -41,14 +41,15 @@ poster.
 my request."** It ships, and `DESIGN.md` now carries the override with its qualifiers rather than quietly contradicting
 itself. **A standing design rule that gets silently broken is worse than one that records its exceptions.**
 
-### The Two Checks That Passed By Agreeing With Themselves
+### The Three Checks That Passed By Agreeing With Themselves
 
-Both are the failure this repo keeps meeting, and neither was caught by reading code.
+All three are the failure this repo keeps meeting, and none was caught by reading code.
 
-| Check                 | Reported        | Actually                                             |
-| --------------------- | --------------- | ---------------------------------------------------- |
-| One-row chip rail     | Fixed           | Never hid a chip at any width                        |
-| `narrate.sh` tail pad | `tail-pad 2.9s` | Computed the pad, then discarded it on the next line |
+| Check                 | Reported               | Actually                                                       |
+| --------------------- | ---------------------- | -------------------------------------------------------------- |
+| One-row chip rail     | Fixed                  | Never hid a chip at any width                                  |
+| `narrate.sh` tail pad | `tail-pad 2.9s`        | Computed the pad, then discarded it on the next line           |
+| `bun run typecheck`   | `nothing to typecheck` | Tested `[ -d src ]` from a root where the source is `web/src/` |
 
 **The chip rail hid nothing.** `el.hidden = true` was the entire mechanism and `.chip-button { display: inline-flex }`
 beats the UA sheet's `[hidden]`, so the attribute was set on every overflowing chip and every one kept rendering. It
@@ -57,10 +58,32 @@ needed hiding**. The verification had been run at the one width where the mechan
 `.chip-button[hidden] { display: none }`: **3 chips at 320px, 4 at 430, 5 at 540, 6 at 1024 and up, one row at all nine
 widths tested.**
 
+**`bun run typecheck` could not fail.** It tested `[ -d src ]` from the repo root, where `src/` does not exist — the
+source is `web/src/`. So it printed "nothing to typecheck" and exited 0 on every run since the client was created,
+including the run immediately before CI rejected this branch on `error TS2532`. **The command AGENTS.md documents as the
+typecheck was a no-op the whole time.** It now runs `tsc --noEmit` from `web/`, where the `vite/client` and
+`vitest/globals` type packages actually live — pointing it at `web/tsconfig.json` from the root was not enough and
+failed on CI's clean install with TS2688 while passing here. Exit codes checked both ways: **0 clean, 2 with the
+narrowing guard removed.**
+
 **`narrate.sh` promised in a comment what an unconditional `tpad=""` threw away**, so the closing line played 2.5s over
 no picture. **ffprobe reports the two stream durations separately and never calls a mismatch an error**, so every mux
 "worked". Video was 163.08s against 165.62s of audio; it is now 166.04s, and the frame at 165.4s renders the close slide
 with the whole final subtitle.
+
+### The Walkthrough Video Is Sound, And Its Narration Drifts — #187
+
+166.04s video against 165.62s audio, mean volume −20.9 dB, no silence gap over 6s, real content in every sampled frame.
+**But 2 of 19 narration lines are spoken while a different beat is on screen**, and 15 of 19 are pushed later than
+intended, drift peaking at **10.7s**.
+
+`schedule.py` pushes any line that would still be speaking when the next starts, and the pushes cascade. It begins at
+line 0: `record.mjs` marks `landing`, waits 1400ms, marks `compare` — and the landing line takes **6549ms** to read,
+injecting 5.2s before anything else happens. **The total is not the problem, the distribution is:** `taste` has 9.4s of
+slack and `market` 9.6s.
+
+Filed rather than fixed here. It needs a fresh capture against prod and a re-verification of all 19 lines, not a text
+edit, and **no narration text needs to change** so no measured figure is at risk.
 
 ### The Link Preview Was Broken And Looked Fine
 
