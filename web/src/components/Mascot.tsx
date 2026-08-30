@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { type MascotMood, readingFor } from '../evidence'
+import { StageBoundary } from './StageBoundary'
 
 const MascotStage = lazy(() => import('../live2d/MascotStage'))
 
@@ -58,9 +59,11 @@ export function Mascot({ mood }: { mood: MascotMood }) {
   return (
     <div ref={hostRef} className={phase === 'live' ? 'mascot mascot-live' : 'mascot'}>
       {phase !== 'idle' && phase !== 'failed' && (
-        <Suspense fallback={null}>
-          <MascotStage mood={mood} onReady={() => setPhase('live')} onFail={() => setPhase('failed')} />
-        </Suspense>
+        <StageBoundary onFail={() => setPhase('failed')}>
+          <Suspense fallback={null}>
+            <MascotStage mood={mood} onReady={() => setPhase('live')} onFail={() => setPhase('failed')} />
+          </Suspense>
+        </StageBoundary>
       )}
       <div className={phase === 'live' ? 'mascot-reading' : 'mascot-fallback'}>
         <p className="mascot-read">{read}</p>

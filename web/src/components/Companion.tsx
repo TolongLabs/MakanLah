@@ -4,6 +4,7 @@ import { type CompanionStep, scripted } from '../companion/lines'
 import { rememberVoice, speaker, synth, voiceEnabled } from '../companion/voice'
 import type { MascotMood } from '../evidence'
 import type { Live2DStage } from '../live2d/Live2DStage'
+import { StageBoundary } from './StageBoundary'
 
 const MascotStage = lazy(() => import('../live2d/MascotStage'))
 
@@ -203,16 +204,22 @@ export function Companion({ step, picked, seed }: { step: CompanionStep; picked:
     <div className={live ? 'companion companion-live' : 'companion'}>
       <div className="companion-stage">
         {wide && !failed && (
-          <Suspense fallback={null}>
-            <MascotStage
-              mood={MOOD[step]}
-              onReady={() => setLive(true)}
-              onFail={() => setFailed(true)}
-              onStage={(s) => {
-                stage.current = s
-              }}
-            />
-          </Suspense>
+          /* Suspense handles the PENDING import; only the boundary handles the
+             rejected one. Without it, one failed fetch of the 508 KB chunk threw
+             through render and took THE ENTIRE ONBOARDING SCREEN with it --
+             measured with a control at zero step panels and zero options. */
+          <StageBoundary onFail={() => setFailed(true)}>
+            <Suspense fallback={null}>
+              <MascotStage
+                mood={MOOD[step]}
+                onReady={() => setLive(true)}
+                onFail={() => setFailed(true)}
+                onStage={(s) => {
+                  stage.current = s
+                }}
+              />
+            </Suspense>
+          </StageBoundary>
         )}
       </div>
       <p className="companion-bubble fade-in" key={line} aria-live="polite">

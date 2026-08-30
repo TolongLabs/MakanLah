@@ -3,6 +3,7 @@ import { type AskResponse, ask, type Citation } from '../api'
 import { rememberVoice, speaker, synth, voiceEnabled } from '../companion/voice'
 import { type CompanionPhase, type Evidence, type MascotMood, moodFor, readingFor } from '../evidence'
 import type { Live2DStage } from '../live2d/Live2DStage'
+import { StageBoundary } from './StageBoundary'
 
 const MascotStage = lazy(() => import('../live2d/MascotStage'))
 
@@ -141,16 +142,21 @@ export function AskCompanion({
     <div className={live ? 'ask-companion is-live' : 'ask-companion'}>
       {wide && !failed && (
         <div className="ask-stage">
-          <Suspense fallback={null}>
-            <MascotStage
-              mood={mood}
-              onReady={() => setLive(true)}
-              onFail={() => setFailed(true)}
-              onStage={(s) => {
-                stage.current = s
-              }}
-            />
-          </Suspense>
+          {/* Suspense handles the PENDING import; only the boundary handles the
+              rejected one. Without it a failed chunk fetch throws through render
+              and takes the panel with it. */}
+          <StageBoundary onFail={() => setFailed(true)}>
+            <Suspense fallback={null}>
+              <MascotStage
+                mood={mood}
+                onReady={() => setLive(true)}
+                onFail={() => setFailed(true)}
+                onStage={(s) => {
+                  stage.current = s
+                }}
+              />
+            </Suspense>
+          </StageBoundary>
         </div>
       )}
 

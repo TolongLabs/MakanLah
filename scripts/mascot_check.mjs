@@ -212,6 +212,46 @@ const browser = await chromium.launch()
   await page.close()
 }
 
+// ------------------------------- the chunk fails: onboarding must still work
+//
+// Break the subject on purpose. `React.lazy` plus `Suspense` handles a PENDING
+// import, not a REJECTED one, so before StageBoundary a single failed fetch of the
+// 508 KB mascot chunk threw through render and took /taste with it: measured with a
+// control at ZERO step panels and ZERO options, against 4 and 4 with the chunk
+// allowed. That is the first screen every guest has to complete, and the failure is
+// silent -- a white page, no error, no retry.
+//
+// The trigger is mundane. A redeploy leaves a browser holding an index.html naming a
+// chunk hash that no longer exists; a mobile connection drops one request; a proxy or
+// a CDN edge misses.
+//
+// Asserting that she mounts when the chunk loads cannot fail on any of that, which is
+// the whole reason this block aborts the request rather than trusting the happy path.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
+  await ctx.route('**/MascotStage-*.js', (route) => route.abort())
+  const page = await ctx.newPage()
+  await page.goto(`${BASE}/taste`, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(3000)
+  const state = await page.evaluate(() => ({
+    panels: document.querySelectorAll('.step-panel').length,
+    options: document.querySelectorAll('.step-panel:not([hidden]) .option').length,
+    heading: (document.querySelector('.step-question')?.textContent ?? '').trim().length,
+    bubble: (document.querySelector('.companion-bubble')?.textContent ?? '').trim().length,
+    canvas: document.querySelectorAll('.companion canvas').length,
+    body: (document.body.innerText ?? '').trim().length
+  }))
+  say(state.body > 0, `chunk fails: the page is not blank  bodyLen=${state.body}`)
+  say(state.panels > 0, `chunk fails: the step panels render  panels=${state.panels}`)
+  say(state.options > 0, `chunk fails: there are options to pick  options=${state.options}`)
+  say(state.heading > 0, `chunk fails: the question is on screen  chars=${state.heading}`)
+  // The reading is the information and the face is the presentation. Losing one must
+  // not lose the other.
+  say(state.bubble > 0, `chunk fails: she still has a line to say  chars=${state.bubble}`)
+  say(state.canvas === 0, `chunk fails: no half-built canvas is left behind  found=${state.canvas}`)
+  await ctx.close()
+}
+
 // ------------------------------------------------- phone: never mounted, not hidden
 {
   const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage()
