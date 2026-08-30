@@ -11,8 +11,24 @@ import unicodedata
 from opencc import OpenCC
 
 CJK = re.compile(r'[一-鿿]')
-MS = re.compile(r'\b(nasi|makan|sedap|kedai|restoran|jalan|murah|enak|ayam|ikan|daun)\b', re.I)
-EN = re.compile(r'\b(the|and|food|restaurant|best|good|really|place|try|with)\b', re.I)
+MS = re.compile(
+    r'\b(nasi|makan|sedap|kedai|restoran|jalan|murah|enak|ayam|ikan|daun'
+    r'|dan|yang|tak|sangat|boleh|sini|tempat|harga|rasa|pun|lagi)\b',
+    re.I,
+)
+# Ten keywords missed 24 Maps reviews that were plainly English -- "Decent coffee.
+# Nice sandwiches." used none of them (#133). Function words carry the signal a
+# topic word cannot. Adding to this list is monotonic: detect_langs is plural, so a
+# wider EN can only ADD 'en' to a row, never take 'ms' or 'zh' off one -- and a Malay
+# review carrying an English loanword genuinely is code-switching.
+EN = re.compile(
+    r'\b(the|and|food|restaurant|best|good|really|place|try|with'
+    r'|is|it|was|this|that|very|my|we|they|but|not|have|had|will|can'
+    r'|all|more|than|from|are|were|been|here|there|again|only|just'
+    r'|nice|great|love|like|order|service|staff|price|taste|worth'
+    r'|friendly|clean|fresh|coffee|chicken|rice|noodle|closed|visited)\b',
+    re.I,
+)
 
 # Latin generics need a word boundary; CJK ones must not have one. \b sits between
 # a word and a non-word character, and every CJK glyph is a word character, so

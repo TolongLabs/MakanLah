@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from ingest import cdp, gmaps
 from makanlah import db
+from makanlah.text import detect_langs
 
 STARS = re.compile(r'([1-5])\s*star')
 
@@ -125,7 +126,11 @@ def _apply_records(con, records, stats):
                 url=review_url(rec['name']),
                 author_handle=None,
                 posted_at_raw=rv.get('when') or None,
-                langs=['und'],
+                # The RedNote path has always called this; the Maps path hardcoded
+                # 'und' and tagged 1,388 of 1,507 posts as language-unknown (#133).
+                # Language-aware retrieval reads this column, so every Maps review
+                # was invisible to it.
+                langs=detect_langs(text),
                 raw_text=text,
                 media_urls=[],
                 raw_payload={'stars': rv.get('stars'), 'venue_name': rec['name']},
