@@ -1,10 +1,10 @@
 # Progress — 2026-08-29 · the citation trail holds on every surface, and the dish lane reads the corpus
 
-**`main` is at `0d9a933`.** Client `0d9a933`, API `/health` reports `0d9a933` — **all three aligned**, after this
-session found the API running two commits behind a client that had already shipped the UI for #110. **435 Python tests,
-134 web tests, 13 guard cases, lint and format clean, CI green.** Verified on `main` rather than on a branch:
-`/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link, `/ask` answers from the corpus and
-admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `5bdd17d`, and API, client and `main` all report it.** Client `0d9a933`, API `/health` reports `0d9a933`
+— **all three aligned**, after this session found the API running two commits behind a client that had already shipped
+the UI for #110. **435 Python tests, 134 web tests, 13 guard cases, lint and format clean, CI green.** Verified on
+`main` rather than on a branch: `/recommend` with a radius returns cited results, `/venue/{id}` serves a deep link,
+`/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
 
 **Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
 **fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
@@ -22,6 +22,54 @@ measured against a 3s target in [`PRD.md`](PRD.md)** and still not met, delibera
 console before repinning.
 
 **Web client is live:** <https://makanlah-b5h.pages.dev> · **API is live:** <https://makanlah-api.vercel.app>
+
+---
+
+## 2026-08-30 (Launch Ready) — Three Personas Yes, And A Safeguard That Was A Coin Flip
+
+**MakanLah is launch-ready.** All three UAT personas returned YES, verified independently against prod at `5bdd17d`:
+**Kelvin** (`肉骨茶`, `蛋挞` clean, every citation opens), **Emilia** (empty state names the distance rather than
+blaming the corpus), **Nabilah** (told plainly what the app does not know, shown one real `清真友好` testimony, asked to
+judge it herself). **The citation trail holds for all three, which is what sank two of them in round one** — 6 of 8
+cards linking dead posts and an audit page broken on 5 of 8, both closed and independently re-measured.
+
+**Nabilah is a yes as a discovery tool, not a decision tool.** She still cannot filter by halal, and the notice she
+reads is English while the evidence it points her to is Chinese. Recorded on #115, not hidden.
+
+### The Halal Safeguard Was Probabilistic, And One Sample Could Not See It
+
+`why` is **regenerated per request by a model**. #122 and #124 filtered the text it produced, so both were only as good
+as the phrasing they anticipated. Peer 3 measured **12 identical calls** where this session had measured one:
+
+|                                | Before #126 | After #126 |
+| ------------------------------ | ----------- | ---------- |
+| Non-empty `why` on a gap query | **5**       | 0          |
+| Of those, asserting halal      | **4**       | 0          |
+
+`Nasional halal, dekat Masjid Jamek` reached a **rendered card, in Malay**. The same query returned `why=''` on other
+calls, which is exactly why the single-sample check passed. **A safeguard that is probabilistic on halal is not a
+safeguard.**
+
+#126 made it structural: a query raising a coverage gap drops **every** `why` in the response. No model output to match,
+nothing to phrase around. It cost one defensible line — `清真友好，国民老店` quotes the poster and infers nothing — and
+bought a guarantee independent of what a model said this time. **The evidence is untouched**: `gap_mentions` still marks
+the venue and the citation stays on the card.
+
+**The new lesson, and it is a different one:** every other catch this run was an instrument problem. This was the first
+where the **subject** is stochastic and the instrument was fine. **A check that samples a non-deterministic generator
+once measures that sample, not the system** — verifying it needs a rate over N, not a pass over one.
+
+### Also This Session
+
+**Ten instrument-versus-subject catches**, now split between false all-clears and false alarms: a cancelled CI deploy
+leaving a merged green fix undeployed (#116), a probe run against a stale local `main` reporting a pass for a check that
+never executed, an `expect(phase, …)` assertion that could not fail (#118), and a coverage notice that was **correct
+end-to-end on the server, present in every response, and rendered by nobody** — with no test failing on either side.
+
+**The video is recorded, verified and handed over.** `HANDOVER.md` records its validity as **conditional** —
+frame-by-frame against one query's ranking, margin of one venue and ~200 px of scroll — and states the audio as
+**unjudged rather than unverified**: silence, clipping, dead air, channel and dynamics all checked mechanically, nobody
+has heard it.
 
 ---
 
