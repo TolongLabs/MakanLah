@@ -170,11 +170,11 @@ def _apply_records(con, records, stats):
     return stats
 
 
-async def run(limit=None, want_reviews=True, only_missing=True, offset=0):
+async def run(limit=None, want_reviews=True, only_missing=True, offset=0, discovered_only=False):
     if not cdp.alive():
         raise SystemExit('CDP is not up. Run: scripts/chrome-session.sh start')
     with db.connect(direct=True) as con:
-        venues = pending_venues(con, limit, only_missing, offset)
+        venues = pending_venues(con, limit, only_missing, offset, discovered_only=discovered_only)
         print(f'{len(venues)} venues to enrich', flush=True)
         if not venues:
             return {}
@@ -226,8 +226,14 @@ def main():
     ap.add_argument('--no-reviews', action='store_true')
     ap.add_argument('--all-venues', action='store_true', help='not just the ones missing coordinates')
     ap.add_argument('--offset', type=int, default=0, help='skip the first N, to walk past venues already re-captured')
+
+    ap.add_argument(
+        '--discovered-only',
+        action='store_true',
+        help='only venues Maps itself found, which have no evidence yet (#157)',
+    )
     a = ap.parse_args()
-    stats = asyncio.run(run(a.limit, not a.no_reviews, not a.all_venues, a.offset))
+    stats = asyncio.run(run(a.limit, not a.no_reviews, not a.all_venues, a.offset, a.discovered_only))
     print(stats)
 
 
