@@ -11,6 +11,7 @@
       "!**/.agents",
       "!**/.claude",
       "!docs/source",
+      "!**/graphify-out",
       "!**/dist",
       "!web/public/live2dcubismcore.min.js",
       "!web/public/models"

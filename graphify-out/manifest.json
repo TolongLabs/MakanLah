@@ -895,9 +895,9 @@
     "semantic_hash": "2d300c002098e5594948e7e7e5ae22a9"
   },
   "web/src/routes/Discover.tsx": {
-    "mtime": 1788105229.3292959,
-    "ast_hash": "750971fa3e1c51bde92cc40c49638979",
-    "semantic_hash": "750971fa3e1c51bde92cc40c49638979"
+    "mtime": 1788115014.4665687,
+    "ast_hash": "6cb24458ec44f5f21a37a8aaff3884cb",
+    "semantic_hash": ""
   },
   "web/src/routes/Landing.tsx": {
     "mtime": 1788043851.79252,
@@ -1022,6 +1022,11 @@
   "web/index.html": {
     "mtime": 1788105229.327296,
     "ast_hash": "a36bfb09a479db178248febaa5104238",
+    "semantic_hash": ""
+  },
+  "scripts/chip_row_check.mjs": {
+    "mtime": 1788115014.4665687,
+    "ast_hash": "f9380969c879c4508c294580ceac33fe",
     "semantic_hash": ""
   }
 }

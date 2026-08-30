@@ -69,7 +69,7 @@ He was right, and fixing him is most of what this repository is a record of.
 
 ## What It Looks Like
 
-Seven frames, all shot against production at `2ede89f` on 2026-08-30, 18:01 UTC. Nothing is mocked and nothing is a
+Seven frames, all shot against production at `2ede89f` on 2026-08-30, 18:37 UTC. Nothing is mocked and nothing is a
 mockup.
 
 <img src="img/landing-desktop-light.webp" alt="MakanLah landing page: Loved By Malaysians. Not invented by a robot." width="100%">
@@ -122,17 +122,16 @@ row, names no venue and makes no claim — `makanlah/companion.py` drops any lin
 she still talks, from scripted lines.
 
 **The chip row is one row at every width, by decision** — a second row would push the results down, and the results are
-the point. The distance control below it is a 2×2 grid at this width; it was an `inline-flex` row until #197, which left
-a band of empty pill on every phone: 244px at 390, and 284px at 430, the worst case.
-
-**This frame shows four chips, and that is a bug rather than a fit.** The row hid a wrapped chip and measured the next
-one against the layout the hiding had just created, so `fish` slid into the gap `curry` left and the two dishes ranked
-above it were dropped. Fixed in #199; the frame is replaced once that deploys.
+the point. Desktop fits six, the phone fits three, and what is hidden is always a suffix of the ranking: the row can be
+shorter than the list but never a different list. The distance control below it is a 2×2 grid here; it was an
+`inline-flex` row until #197, which left a band of empty pill on every phone — 244px at 390, and 284px at 430, the worst
+case.
 
 <sub>Chips are ranked by how often the corpus mentions each dish and are time-banded. This was the <b>late night
 supper</b> band, reading <b>soup</b> 728, <b>rice</b> 665, <b>chicken</b> 619, <b>curry</b> 272, <b>BKT</b> 256,
-<b>fish</b> 246, confirmed against <code>/suggestions</code> in the same minute as the capture. A different hour reads
-differently, so these numbers date the screenshot rather than describe a fixed row.</sub>
+<b>fish</b> 246, confirmed against <code>/suggestions</code> in the same minute as the capture — the phone frame shows
+the first three of those. A different hour reads differently, so these numbers date the screenshot rather than describe
+a fixed row.</sub>
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
