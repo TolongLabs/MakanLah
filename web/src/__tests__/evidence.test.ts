@@ -136,7 +136,25 @@ describe('moodFor', () => {
 
 describe('basisLine', () => {
   it('admits when nothing the user typed appears in the post', () => {
-    expect(basisLine('semantic')).toMatch(/no exact match/i)
+    expect(basisLine('semantic')).toMatch(/no post here uses your words/i)
+  })
+
+  it('calls the semantic lane weaker than a named dish, because it measurably is', () => {
+    // Not decoration. #140: `canonical_for_query` resolves only curated dish names,
+    // so all 14 common ingredient words fall through to this lane -- the one with
+    // near-zero citation support against 12/12 on dish matches. A reader shown a
+    // chicken rice shop for `crab` is entitled to know which lane produced it.
+    expect(basisLine('semantic')).toMatch(/weaker/i)
+    expect(basisLine('dish')).toMatch(/strongest/i)
+  })
+
+  it('never repeats the subtitle it sits under', () => {
+    // The disclosure exists to ADD to the fact row. `whyRow` leads a semantic card
+    // with "Close in meaning", and an expander restating that phrase rebuilds the
+    // buried-footnote problem inside the fix for it -- which it did, and the row
+    // rendered the phrase twice until this caught it.
+    expect(basisLine('semantic')).not.toMatch(/close in meaning/i)
+    expect(basisLine('dish')).not.toMatch(/^names /i)
   })
 
   it('says nothing when the API reports no basis', () => {

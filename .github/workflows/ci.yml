@@ -163,6 +163,31 @@ jobs:
           BASE: http://127.0.0.1:4188
         run: node scripts/taste_tablet_check.mjs
 
+      # The owner read his own results page and reported that nothing said why any
+      # pick was there. The information had been on the card since the first build --
+      # as the eighth line, in the same grey as two sentences answering different
+      # questions. A check that asserts the DATA is present would have passed
+      # throughout, so this asserts the rendered HIERARCHY: that the answer leads the
+      # card and outweighs the metadata beside it. Mutation-tested by flattening
+      # .why-lead back to the metadata colour, which reddens this and nothing else.
+      - name: A result must say why it is on screen
+        env:
+          BASE: http://127.0.0.1:4188
+        run: node scripts/discover_why_check.mjs "$BASE"
+
+      # Two things here fail silently. Mounting the character in the ask dialog
+      # without unmounting her from the aside gives one character two WebGL
+      # contexts, and on some drivers the second kills the first -- the page keeps
+      # rendering and the aside just goes black, with nothing logged. And the tool
+      # trace is the only place a user can watch "she answers from stored excerpts
+      # or declines" actually hold; if it stops rendering, every other check still
+      # passes. Mutation-tested by letting the aside keep its stage, which reddens
+      # the two handoff assertions and nothing else.
+      - name: The copilot shows its working, and there is one of her
+        env:
+          BASE: http://127.0.0.1:4188
+        run: node scripts/copilot_check.mjs "$BASE"
+
       # Scrollbars, selection, focus, autofill and tooltips are the parts most
       # likely to be left at the OS default, and they do not follow a theme on
       # their own. Each is asserted in BOTH schemes so "theme-aware" means the

@@ -22,6 +22,11 @@
   --ink-faint: #6c6f60;
   --rule: #d9dad0;
   --rule-strong: #b9bbae;
+  /* #141's sketchboard ground, and the only token that is allowed to be invisible.
+     It sits BEHIND evidence, so it is graded against the paper rather than against
+     the ink: far enough from the ground to read as deliberate, near enough that a
+     1px dot never competes with an excerpt sitting on it. */
+  --dot: #dcddd2;
   --enamel: #0b6b5e;
   --enamel-quiet: #e3efec;
   --warn: #8a5a00;
@@ -128,6 +133,7 @@
     --ink-faint: #84877a;
     --rule: #2c2e25;
     --rule-strong: #43463a;
+    --dot: #262820;
     --enamel: #3fa697;
     --enamel-quiet: #15302c;
     --warn: #d9a441;
@@ -158,6 +164,7 @@
   --ink-faint: #84877a;
   --rule: #2c2e25;
   --rule-strong: #43463a;
+  --dot: #262820;
   --enamel: #3fa697;
   --enamel-quiet: #15302c;
   --warn: #d9a441;

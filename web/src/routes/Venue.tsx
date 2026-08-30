@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError, venue as fetchVenue, type Result } from '../api'
-import { Testimony } from '../components/Testimony'
-import { citable, evidenceOf } from '../evidence'
+import { VenueTrail } from '../components/VenueTrail'
+import { citable } from '../evidence'
 import { dishLine, distance, platformName } from '../format'
 import { cachedVenue } from '../venueCache'
 
-type State = { status: 'loading' } | { status: 'ready'; result: Result } | { status: 'missing' } | { status: 'failed' }
+export type State =
+  | { status: 'loading' }
+  | { status: 'ready'; result: Result }
+  | { status: 'missing' }
+  | { status: 'failed' }
 
 /**
  * The full citation trail for one pick: every post, grouped by platform, each one
@@ -17,8 +21,13 @@ type State = { status: 'loading' } | { status: 'ready'; result: Result } | { sta
  * from /discover is instant, and GET /venue/{id} is still the source of truth. A cold
  * load, a deep link or a new tab therefore works the same as a click.
  */
-export function Venue() {
-  const { venueId } = useParams()
+/**
+ * Cache-first, API-authoritative. Exported because the All Sources modal loads the
+ * same venue the same way — two copies of "try the cache, then the API, and tell a
+ * 404 apart from a network failure" is two chances to get the 404 branch wrong, and
+ * that branch is the one that says "nobody has written about this".
+ */
+export function useVenue(venueId: string | undefined): State {
   const [state, setState] = useState<State>(() => {
     const hit = venueId ? cachedVenue(venueId) : null
     return hit ? { status: 'ready', result: hit } : { status: 'loading' }
@@ -42,6 +51,13 @@ export function Venue() {
       live = false
     }
   }, [venueId])
+
+  return state
+}
+
+export function Venue() {
+  const { venueId } = useParams()
+  const state = useVenue(venueId)
 
   if (state.status === 'loading') return <Waiting />
   if (state.status === 'missing') return <NotCited />
@@ -88,25 +104,7 @@ export function Venue() {
         </p>
       </header>
 
-      <section className="trail">
-        <h2 className="h-sub">Everything Written About It</h2>
-        <p className="body-soft section-lede">
-          {evidenceOf(result) === 'corroborated'
-            ? 'Two platforms carry this place, written by different people.'
-            : 'One platform carries this place so far.'}
-        </p>
-        <ul className="trail-list">
-          {cited.map((c) => (
-            <li className="trail-item" key={`${c.platform}:${c.post_url}`}>
-              <div className="trail-source">
-                <span>{platformName(c.platform)}</span>
-                {c.posted_at && <span className="meta-line">{c.posted_at}</span>}
-              </div>
-              <Testimony citation={c} attributed={false} />
-            </li>
-          ))}
-        </ul>
-      </section>
+      <VenueTrail result={result} />
     </div>
   )
 }

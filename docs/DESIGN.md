@@ -136,6 +136,25 @@ Two posts from **one** platform is not corroboration. It is one source saying it
 `evidenceOf()` in `web/src/evidence.ts` is the single derivation, shared by the row, the venue page and the mascot, so
 the face and the layout can never disagree about what the corpus holds.
 
+### A Count Must Match What Is Rendered, Or Name What It Counts
+
+**Four bugs in this project were one bug.** `#87` stamped "Corroborated by two independent sources" on cards rendering
+one testimony. `#111` counted dead citations toward a number whose whole meaning was that a reader could go and check
+them. `#153` printed "1 post" on a venue where three different people had written, because a Maps URL is not a post
+identity. And the sentiment line read "Of the 3 posts here" beside a card that shows at most two excerpts and a dialog
+that deliberately renders dead ones.
+
+Every one was **true by its own rule and false as English**, which is why unit tests passed through all four.
+
+> **Any count a surface renders must either equal the number of items visible on that surface, or name the property it
+> counts.** `3 posts still open` passes by naming. `Of the 3 posts here` fails, because "here" is a claim about the page
+> and the page shows something else.
+
+The second half is the usable one, because the counts here legitimately differ from what renders: excerpts are capped at
+two per card, citations are trimmed to `per_venue` before they ship, and dead posts are shown but not counted. **The fix
+is never to hide the record to make a number true** — a stamp reading four posts over a page showing one invites exactly
+the doubt the stamp exists to answer. Name the property instead.
+
 The columns are keyed to the **container**, not the viewport. The same pair renders inside a full-width result row and
 inside the landing page's specimen, which is half as wide; a viewport query splits the specimen into two columns too
 narrow to read Chinese in.
@@ -161,11 +180,23 @@ fabricated. No image may sit inside, beside, or above a cited result.
 
 Three exceptions, and the reasoning is the same in each: none of them can be mistaken for evidence.
 
-| Asset                      | Where                              | Why It Is Allowed                                                                                 |
-| -------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **The mark**               | Icon, favicon, share card          | A quotation mark in `--enamel` on `--paper`. It depicts nothing and claims nothing                |
-| **The closing photograph** | Landing page, final section only   | Atmosphere in a section that names no venue. No signage, no faces, no identifiable place, no dish |
-| **The mascot**             | `/taste`, and the `/discover` rail | A rendered character, not a photograph. It reports evidence strength and is dismissible           |
+| Asset                      | Where                              | Why It Is Allowed                                                                                    |
+| -------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **The mark**               | Icon, favicon, share card          | A quotation mark in `--enamel` on `--paper`. It depicts nothing and claims nothing                   |
+| **The closing photograph** | Landing page, final section only   | Atmosphere in a section that names no venue. No signage, no faces, no identifiable place, no dish    |
+| **The mascot**             | `/taste`, and the `/discover` rail | A rendered character, not a photograph. It reports evidence strength and is dismissible              |
+| **The map**                | The All Sources dialog, once       | Depicts a location, not an opinion. Makes no claim about the food, which is all the citations attest |
+
+**The map is a fourth exception and the reasoning is the same as the other three: it cannot be mistaken for evidence.**
+It shows where a place is, not whether the food is good, and whether the food is good is the only thing the citations
+are evidence _of_. **The product already stakes more on those coordinates than the map does** — every card prints a
+distance from the same geocode and the whole list is ordered by it, so if the pin is wrong the distance was already
+wrong. The map makes an existing claim visible rather than adding a new one.
+
+**It is served from our side, never fetched from a tile server by the browser.** The image is pulled once per venue at
+ingestion and stored. Rendering OSM rasters client-side was built, worked, and was reverted: OSM's tile usage policy is
+explicit about bulk use by applications, and a tile request per viewer per venue is a rate limit on infrastructure we
+neither own nor pay for. Attribution travels with the image wherever it is served from.
 
 **The mark is a quotation mark, not a bowl.** Every food app is a bowl. The differentiator here is that somebody was
 quoted, so the mark is the quote. It resolves at 16px and uses exactly two colours, `#0B6B5E` and `#F7F7F4`, with no

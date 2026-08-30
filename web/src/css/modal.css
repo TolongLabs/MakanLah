@@ -1,0 +1,533 @@
+/* Floating panels over a dimmed, blurred page.
+   Used by the Ask dialog and by All Sources, both on /discover. */
+
+/* Native <dialog> renders in the top layer, above every stacking context on the
+   page, so it needs no z-index and cannot be trapped by an `overflow: hidden`
+   ancestor the way an absolutely positioned div can. That is most of why this is a
+   dialog element and not a portal. */
+.modal {
+  padding: 0;
+  border: 0;
+  background: none;
+  max-width: 100vw;
+  max-height: 100dvh;
+  width: 100%;
+  height: 100%;
+  overscroll-behavior: contain;
+  /* The dialog box IS the click target for the backdrop, so it fills the viewport
+     and centres the panel inside itself. Padding here rather than on the panel
+     keeps `event.target === dialog` meaning "the backdrop and nothing else". */
+  display: grid;
+  place-items: end center;
+  color: var(--ink);
+}
+
+@media (min-width: 40rem) {
+  .modal {
+    place-items: center;
+    padding: var(--s6) var(--s4);
+  }
+}
+
+/* Dimmed AND blurred, which is the request. The blur is doing real work here rather
+   than being decoration: the page underneath is a dense list of quoted text, and
+   dimming alone leaves it legible enough to compete with the panel in front of it. */
+.modal::backdrop {
+  background: rgb(12 13 10 / 45%);
+  backdrop-filter: blur(6px);
+}
+
+.modal-panel {
+  width: min(42rem, 100%);
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  /* Phone: a sheet anchored to the bottom edge, square where it meets it. Reaching
+     the top-right of a full-height dialog with a thumb is the standard mobile modal
+     failure, and the actions inside this one are all near the bottom. */
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  box-shadow: var(--e3);
+}
+
+@media (min-width: 40rem) {
+  .modal-panel {
+    border-radius: var(--r-panel);
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding: var(--s5) var(--s5) var(--s4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.modal-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* Venue names arrive in Han script, in Latin, and often in both at once. They keep
+   the writer's script and are never transliterated, so the title has to survive a
+   name twice as tall as the English around it. */
+.modal-title-subject {
+  font-weight: 600;
+}
+
+.modal-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px 0 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--ink-faint);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-chip);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.modal-body {
+  padding: var(--s5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-actions {
+  margin-top: var(--s5);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--rule);
+}
+
+.modal-body .trail + .modal-actions {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* The trail is the whole content of the All Sources dialog, so it does not repeat
+   the heading the panel already carries in its title bar. */
+.modal-body .trail > .h-sub {
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+/* The ask form leads the dialog rather than trailing it: the field is what the
+   reader came here to use, and it holds focus from the moment it opens. */
+.ask-form-modal {
+  margin-bottom: var(--s4);
+}
+
+.ask-bubble-modal {
+  margin: 0;
+}
+
+/* The trail was written for a full page, where a 48px tail and a 12rem source
+   column are right. Inside a 42rem panel that tail lands between the last item's
+   rule and the actions rule, reading as an empty row, and the source column takes a
+   third of the width to hold the word "RedNote". */
+.modal-body .trail {
+  padding-block: 0;
+}
+
+.modal-body .trail-list > .trail-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+@media (min-width: 48rem) {
+  .modal-body .trail-item {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: var(--s4);
+  }
+}
+
+/* ------------------------------------------------------------------- the brief */
+
+/* What a reader needs to act, above the writing they came to read. Map beside the
+   facts where there is room, stacked below the title where there is not. */
+.brief {
+  display: grid;
+  gap: var(--s4);
+  padding-bottom: var(--s5);
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 34rem) {
+  .brief {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s5);
+    align-items: start;
+  }
+}
+
+.brief-facts {
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+  min-width: 0;
+}
+
+/* Label above value, wrapping. Half the corpus has no area and a query with no
+   geolocation has no distance, so this has to look deliberate with one entry as
+   well as three. */
+.brief-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3) var(--s5);
+}
+
+.brief-list dt,
+.brief-label {
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+.brief-list dd {
+  margin-top: 2px;
+  font-size: var(--t-ms);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.brief-dishes {
+  font-size: var(--t-ms);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.brief-go {
+  justify-self: start;
+  min-height: 38px;
+  padding-block: 0;
+  font-size: var(--t-sm);
+}
+
+/* The same lines the card's disclosure carries. Set quietly: they qualify the trail
+   below rather than competing with it. */
+.brief-notes {
+  margin-top: var(--s4);
+  display: grid;
+  gap: var(--s1);
+  list-style: none;
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+  max-width: 54ch;
+}
+
+/* ------------------------------------------------------------------ the mapshot */
+
+.mapshot {
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-card);
+  background: var(--paper-sunk);
+}
+
+.mapshot-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.mapshot-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* OSM raster is a light-mode asset. Inverting it produces the well-known ugly
+   negative map, so this only takes the glare off a bright rectangle in a dark
+   dialog. */
+:root:not([data-theme="light"]) .mapshot-img {
+  filter: brightness(0.78) saturate(0.85);
+}
+
+.mapshot-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--seal);
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 1px 4px rgb(22 24 15 / 45%);
+}
+
+.mapshot-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  background: rgb(255 255 255 / 78%);
+  border-top-left-radius: var(--r-input);
+}
+
+.mapshot-credit a {
+  color: inherit;
+}
+
+/* --------------------------------------------------------------------- the chat */
+
+/* A conversation, not a lookup. Character beside the log where there is room for
+   her, log and composer stacked where there is not. */
+.chat {
+  display: grid;
+  gap: var(--s4);
+}
+
+@media (min-width: 48rem) {
+  .chat {
+    grid-template-columns: 190px minmax(0, 1fr);
+    grid-template-areas:
+      "stage log"
+      "stage form";
+    column-gap: var(--s5);
+    align-items: end;
+  }
+
+  .chat-stage {
+    grid-area: stage;
+    align-self: end;
+  }
+
+  .chat-log {
+    grid-area: log;
+  }
+
+  .chat-form {
+    grid-area: form;
+  }
+}
+
+.chat-stage {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+}
+
+.chat-stage canvas {
+  display: block;
+}
+
+/* Bounded so a long conversation scrolls inside the dialog rather than growing it
+   past the viewport. min-height keeps the composer from jumping up on the first
+   answer. */
+.chat-log {
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+  min-height: 8rem;
+  max-height: min(46vh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: var(--s2);
+}
+
+.chat-opener,
+.chat-waiting {
+  font-size: var(--t-ms);
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.chat-waiting::after {
+  content: "";
+  display: inline-block;
+  width: 0.6em;
+  animation: chat-tick 1.1s steps(4, end) infinite;
+}
+
+@keyframes chat-tick {
+  0% {
+    content: "";
+  }
+  33% {
+    content: "·";
+  }
+  66% {
+    content: "··";
+  }
+  100% {
+    content: "···";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-waiting::after {
+    animation: none;
+    content: "…";
+  }
+}
+
+/* What the reader said. Set apart by alignment and ground rather than by a coloured
+   bubble on a rail, which is the messaging-app cliche and carries no information. */
+.chat-said {
+  justify-self: end;
+  max-width: 85%;
+  padding: var(--s2) var(--s4);
+  border-radius: var(--r-card);
+  background: var(--paper-sunk);
+  font-size: var(--t-ms);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.chat-reply {
+  display: grid;
+  gap: var(--s2);
+  max-width: 90%;
+}
+
+.chat-answer {
+  font-size: var(--t-ms);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* Why there is nothing to click. Set like the sources it stands in for, because it
+   occupies their slot and answers the question their absence raises. */
+.chat-uncited {
+  font-size: var(--t-sm);
+  color: var(--ink-faint);
+}
+
+/* The reach error, at full strength rather than as a muted aside. */
+.chat-uncovered {
+  font-size: var(--t-ms);
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------- tool steps */
+
+/* The evidence claim, watchable. Not a debug view: copilot.py already enforces that
+   she answers from stored excerpts or declines, and this is the first time anyone
+   can see it happen. */
+.steps {
+  display: grid;
+  gap: var(--s1);
+  list-style: none;
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+.step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+}
+
+.step-name {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.step-name::before {
+  content: "→ ";
+  color: var(--enamel);
+}
+
+.step-running .step-name {
+  opacity: 0.75;
+}
+
+.step-running .step-out {
+  animation: step-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes step-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-running .step-out {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+.steps-done {
+  font-size: var(--t-xs);
+}
+
+.steps-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 20px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  list-style: none;
+}
+
+.steps-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.steps-toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentcolor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.steps-done[open] .steps-toggle::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steps-toggle::before {
+    transition: none;
+  }
+}
+
+.steps-done .steps {
+  margin-top: var(--s2);
+  padding-left: var(--s4);
+}
+
+.chat-form {
+  display: flex;
+  gap: var(--s2);
+}
+
+.chat-form .ask-input {
+  flex: 1;
+  min-width: 0;
+}
