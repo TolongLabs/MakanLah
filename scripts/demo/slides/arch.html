@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f7f7f4; --ink: #16180f; --ink-soft: #5c5f52; --rule: #d9dad0;
+    --enamel: #0b6b5e; --seal: #c3272b;
+    --chrome: "Archivo", system-ui, sans-serif;
+    --testimony: "Newsreader", Georgia, serif;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    width: 1920px; height: 1080px; background: var(--paper); color: var(--ink);
+    font-family: var(--chrome); padding: 92px 120px 200px; display: flex; flex-direction: column;
+  }
+  .eyebrow {
+    font-size: 21px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 500;
+  }
+  h1 { font-size: 62px; font-weight: 600; letter-spacing: -0.02em; margin-top: 18px; }
+  .sub { font-family: var(--testimony); font-size: 30px; color: var(--ink-soft); margin-top: 16px; max-width: 1180px; }
+  .flow { display: flex; align-items: stretch; gap: 0; margin-top: 104px; }
+  .step { flex: 1; padding-right: 34px; border-top: 3px solid var(--ink); padding-top: 20px; }
+  .step:last-child { padding-right: 0; border-top-color: var(--seal); }
+  .step .n { font-size: 18px; color: var(--ink-soft); letter-spacing: 0.14em; }
+  .step .t { font-size: 37px; font-weight: 600; margin-top: 12px; }
+  .step .d { font-family: var(--testimony); font-size: 25px; color: var(--ink-soft); margin-top: 16px; line-height: 1.6; }
+  .rules { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; border-top: 1px solid var(--rule); padding-top: 40px; }
+  .rule-k { font-size: 27px; font-weight: 600; }
+  .rule-v { font-family: var(--testimony); font-size: 23px; color: var(--ink-soft); margin-top: 9px; line-height: 1.5; }
+  .seal { color: var(--seal); }
+  .foot { margin-top: 34px; font-size: 20px; color: var(--ink-soft); letter-spacing: 0.05em; }
+</style>
+<body>
+  <div class="eyebrow">How It Works</div>
+  <h1>Nothing is fetched while you wait.</h1>
+  <p class="sub">
+    The corpus is built in the background. A request only ever reads what is already on disk, so a slow
+    platform is a background problem, never yours.
+  </p>
+
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="t">Capture</div>
+      <div class="d">A signed-in browser reads public posts. RedNote and Google&nbsp;Maps, on a schedule.</div></div>
+    <div class="step"><div class="n">02</div><div class="t">Extract</div>
+      <div class="d">Venue, dish, sentiment and the writer's own excerpt, parsed into one schema.</div></div>
+    <div class="step"><div class="n">03</div><div class="t">Corpus</div>
+      <div class="d">Normalised, deduplicated, geocoded. Postgres, not a cache of somebody else's API.</div></div>
+    <div class="step"><div class="n">04</div><div class="t">Rank</div>
+      <div class="d">Craving, company, distance and the hour of the day, scored locally.</div></div>
+    <div class="step"><div class="n">05</div><div class="t seal">Cite</div>
+      <div class="d">Every result carries the post it came from, or it is not returned at all.</div></div>
+  </div>
+
+  <div class="rules">
+    <div>
+      <div class="rule-k">No single source is load-bearing</div>
+      <div class="rule-v">Any platform can go dark mid-sprint. Two sources mean the app degrades instead of dying.</div>
+    </div>
+    <div>
+      <div class="rule-k">A pick with no post is not a pick</div>
+      <div class="rule-v">An entry that cannot be cited is dropped before the response is built, never returned with a caveat.</div>
+    </div>
+  </div>
+  <div class="foot">MakanLah — architecture</div>
+</body>
