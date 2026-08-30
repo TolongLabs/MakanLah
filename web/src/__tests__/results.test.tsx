@@ -170,3 +170,75 @@ describe('the landing page never puts an image near evidence', () => {
     expect(container.querySelectorAll('img')).toHaveLength(0)
   })
 })
+
+/**
+ * What the corpus cannot answer, on the page rather than only in the payload.
+ *
+ * UAT, Malay persona: `tempat makan halal untuk keluarga` returned a list under
+ * "None of these match your words exactly" — a RELEVANCE disclaimer standing in
+ * for a COVERAGE one. `coverage_gaps: ['halal']` was in the response the whole
+ * time and nothing rendered it, so the page stayed silent about the one thing
+ * she came to find out. Her verdict was MAYBE, and this is why.
+ *
+ * The live payload for that query, which these fixtures mirror: rank 1 Hock Kee
+ * with `gap_mentions: ['halal']` — a real person wrote 清真友好 — and rank 2 鱼你
+ * with `[]`.
+ */
+describe('a coverage gap is said on the row that earned it and nowhere else', () => {
+  const withGap = (mentions: string[]) =>
+    result({
+      venue: {
+        id: 'v9',
+        name: 'Hock Kee Heritage',
+        area: null,
+        lat: null,
+        lng: null,
+        maps_url: '',
+        dishes: [],
+        gap_mentions: mentions
+      }
+    })
+
+  it('says so where somebody actually wrote about it', () => {
+    render(
+      <MemoryRouter>
+        <ResultRow result={withGap(['halal'])} rank={1} gaps={['halal']} />
+      </MemoryRouter>
+    )
+    expect(screen.getByText(/mentions halal/i)).toBeTruthy()
+  })
+
+  it('stays silent on a row nobody wrote about', () => {
+    // The important half. "No halal information" on every other card converts a
+    // fact about the corpus into an implied verdict on the restaurant, which is
+    // the one error a Malaysian user will not forgive.
+    render(
+      <MemoryRouter>
+        <ResultRow result={withGap([])} rank={2} gaps={['halal']} />
+      </MemoryRouter>
+    )
+    expect(screen.queryByText(/halal/i)).toBeNull()
+  })
+
+  it('says nothing at all when the query raised no gap', () => {
+    render(
+      <MemoryRouter>
+        <ResultRow result={withGap(['halal'])} rank={1} gaps={[]} />
+      </MemoryRouter>
+    )
+    expect(screen.queryByText(/mentions halal/i)).toBeNull()
+  })
+
+  it('never states the venue IS halal', () => {
+    // #123: `Dinyatakan halal` overstates 清真友好. A person's word is not a
+    // certification, and the row must report who said it rather than assert it.
+    render(
+      <MemoryRouter>
+        <ResultRow result={withGap(['halal'])} rank={1} gaps={['halal']} />
+      </MemoryRouter>
+    )
+    const text = document.body.textContent ?? ''
+    expect(text).toMatch(/Somebody writing about this one mentions halal/i)
+    expect(text).not.toMatch(/is halal|halal certified|Dinyatakan halal/i)
+  })
+})

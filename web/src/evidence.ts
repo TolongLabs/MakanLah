@@ -222,3 +222,41 @@ export function independentlyBacked(result: Result): boolean {
 export function sharedPostCount(citation: Citation): number {
   return citation.shared_with?.length ?? 0
 }
+
+/**
+ * What the corpus cannot answer, said as a sentence rather than a key.
+ *
+ * UAT, Malay persona: `tempat makan halal untuk keluarga` returned a list under
+ * **"None of these match your words exactly"** — a RELEVANCE disclaimer standing
+ * in for a COVERAGE one. "We do not hold halal information" and "these are not
+ * exact matches" are completely different sentences, and she only ever saw the
+ * second. `coverage_gaps` was in the payload the whole time and nothing rendered
+ * it, so the page stayed silent about the one thing she came to find out.
+ *
+ * The wording is deliberately about US and not about the venues. The corpus
+ * holding nothing is a fact about the corpus; whether a restaurant is halal is a
+ * fact about the restaurant, and this line may not be read as either answer.
+ */
+export function coverageLine(gap: string): string {
+  switch (gap) {
+    case 'halal':
+      return 'We hold no halal information. Nothing here is a halal listing, and no absence below means no.'
+    default:
+      // Named rather than dropped. A gap the client has no copy for is still a
+      // gap, and silently ignoring an unknown key is how a corpus limitation
+      // becomes invisible the moment somebody adds a second one.
+      return `We hold no ${gap} information for any of these.`
+  }
+}
+
+/** What a post about THIS venue actually mentions, as a sentence. Never a claim
+    about the venue: somebody writing 清真友好 is a person's word, not a
+    certification, and the row says which of those it is. */
+export function mentionLine(gap: string): string {
+  switch (gap) {
+    case 'halal':
+      return 'Somebody writing about this one mentions halal. Read it below and judge for yourself.'
+    default:
+      return `Somebody writing about this one mentions ${gap}.`
+  }
+}

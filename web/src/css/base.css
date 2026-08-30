@@ -222,6 +222,26 @@ a {
   font-size: var(--t-ms);
 }
 
+/* A limit of the corpus, not a degradation of it. --warn is reserved for
+   staleness and outage per DESIGN.md, and nothing is failing here: we simply do
+   not hold the information. Set in ink rather than tinted, because a coloured
+   panel reads as an alert and this is the plainest statement on the page --
+   directly above a list somebody is about to trust. */
+.notice-coverage {
+  margin-bottom: var(--s3);
+  font-size: var(--t-ms);
+  color: var(--ink);
+  font-weight: 500;
+  max-width: var(--measure);
+}
+
+/* Said only on the rows that earned it. See ResultRow: a row with nothing to say
+   renders nothing, because "no halal information" on every other card converts a
+   fact about the corpus into an implied verdict on the restaurant. */
+.mentions-gap {
+  color: var(--ink-soft);
+}
+
 .notice a,
 .notice-plain a {
   color: inherit;

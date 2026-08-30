@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Result } from '../api'
-import { basisLine, citationHref, independentlyBacked, leadPair, sharedPostCount } from '../evidence'
+import { basisLine, citationHref, independentlyBacked, leadPair, mentionLine, sharedPostCount } from '../evidence'
 import { dishLine, distance } from '../format'
 import { Chop } from './Chop'
 import { Testimony } from './Testimony'
@@ -20,11 +20,16 @@ export function ResultRow({
   result,
   rank,
   showBasis = true,
+  gaps = [],
   onAsk
 }: {
   result: Result
   rank: number
   showBasis?: boolean
+  /** What the corpus cannot answer about this query. A row says which of them a
+      real post about IT mentions -- and says nothing at all for the rest, because
+      silence in the corpus is not a "no" about the restaurant. */
+  gaps?: string[]
   /** Hands this venue to the companion. Absent on surfaces that have no companion,
       which is why the control is conditional rather than always rendered. */
   onAsk?: (venue: { id: string; name: string }) => void
@@ -47,6 +52,11 @@ export function ResultRow({
   const dist = distance(result.distance_m)
   const dishes = dishLine(venue.dishes)
   const basis = showBasis ? basisLine(result.match?.basis) : null
+  // Only where somebody actually wrote about it. A row with nothing to say here
+  // renders nothing: adding "no halal information" to every other card would turn
+  // a fact about the corpus into an implied verdict on the restaurant, which is
+  // the one error a Malaysian user will not forgive.
+  const mentioned = gaps.filter((g) => (venue.gap_mentions ?? []).includes(g))
 
   return (
     <li className="result">
@@ -84,6 +94,11 @@ export function ResultRow({
           </p>
         )}
         {why && <p className="why">{why}</p>}
+        {mentioned.map((g) => (
+          <p className="basis mentions-gap" key={g}>
+            {mentionLine(g)}
+          </p>
+        ))}
         {basis && <p className="basis">{basis}</p>}
         {shared > 0 && (
           <p className="basis shared-source">

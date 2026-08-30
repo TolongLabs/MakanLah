@@ -37,6 +37,10 @@ export type Venue = {
       answer here, not a missing one** (#58): the UI must never invent a label to
       fill it, because the whole point is admitting the ambiguity. */
   disambiguator?: string | null
+  /** Which of the response's `coverage_gaps` a real post about THIS venue actually
+      mentions. Empty means nobody wrote about it either way, which is not the same
+      as "no" and must never be rendered as one. */
+  gap_mentions?: string[]
   /** Distinct counts behind this venue, added for #87. "Two independent sources"
       is only true when `authors >= 2` AND `posts >= 2`: two mentions from one
       author on one post are one voice however many platforms carry it. Optional
@@ -81,6 +85,11 @@ export type RecommendResponse = {
   /** Why it is degraded, in plain language. Shown to the user, not logged. */
   degraded_reasons?: string[]
   sources_used: string[]
+  /** What the corpus cannot answer about this query, as keys rather than prose so
+      the client owns the wording. `['halal']` means the corpus holds no halal
+      signal at all — a completely different sentence from "these are not exact
+      matches", and the reader is entitled to the first one. */
+  coverage_gaps?: string[]
   evidence_gap?: EvidenceGap
   error?: string
 }
