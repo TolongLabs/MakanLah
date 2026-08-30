@@ -78,3 +78,32 @@ class TestDetectingIsWiderThanNaming:
         # `rice` inside `rice bowl for lunch` is an ingredient, not the dish asked
         # for, and ranking already handles it.
         assert dish_named_inside('rice bowl for lunch', frozenset({'rice'})) is None
+
+
+class TestTheGapDoesNotApplyAWeakerStandardThanTheRanking:
+    """Peer 3: Kapitan cannot be ranked -- every post naming it is dead -- but was
+    named as `nearest serving` in exactly the shape of a venue backed by three
+    readable posts. `roti canai` is the sharp case: its entire gap answer rests on
+    evidence no user can read, and the payload said nothing about that.
+
+    A restaurant does not stop serving roti canai because a post 404s, so it is
+    still named. It is just never presented as though it were checkable.
+    """
+
+    @staticmethod
+    def _entry(row):
+        return {
+            'live_citations': int(row['live_citations'] or 0),
+            'verifiable': bool(row['live_citations']),
+        }
+
+    def test_a_venue_with_live_evidence_is_marked_verifiable(self):
+        got = self._entry({'live_citations': 9})
+        assert got == {'live_citations': 9, 'verifiable': True}
+
+    def test_a_venue_whose_posts_are_all_dead_is_named_but_not_verifiable(self):
+        got = self._entry({'live_citations': 0})
+        assert got == {'live_citations': 0, 'verifiable': False}
+
+    def test_a_null_count_is_not_verifiable_rather_than_crashing(self):
+        assert self._entry({'live_citations': None}) == {'live_citations': 0, 'verifiable': False}

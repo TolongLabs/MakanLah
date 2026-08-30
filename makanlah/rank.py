@@ -529,6 +529,12 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                             'area': r['area'],
                             'distance_m': int(r['distance_m']) if r['distance_m'] is not None else None,
                             'maps_url': maps_url(r),
+                            # A venue whose every post is dead still serves the dish --
+                            # a restaurant does not stop cooking because a post 404s,
+                            # and the attribution was extracted while they were live.
+                            # So it is named, but never as though it were checkable.
+                            'live_citations': int(r['live_citations'] or 0),
+                            'verifiable': bool(r['live_citations']),
                         }
                         for r in db.nearest_serving(con, sorted(elsewhere), lat, lng)[:GAP_VENUES]
                     ],
@@ -586,6 +592,12 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     # case and it is the part worth a reader's attention. A mean
                     # of this distribution reads "excellent" almost everywhere.
                     'sentiment': v.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
+                    # How many posts the breakdown above describes. The client used to
+                    # infer this by checking sum(sentiment) == corroboration.posts,
+                    # which cannot tell "these describe the same set" from "these
+                    # coincidentally tie" -- and they stopped tying once sentiment
+                    # started counting the dead citation the card actually shows.
+                    'sentiment_posts': sum((v.get('sentiment') or {}).values()),
                     'lat': v['lat'],
                     'lng': v['lng'],
                     'maps_url': maps_url(v),
@@ -650,6 +662,7 @@ def one(venue_id, *, lat=None, lng=None):
             'name': entry['name'],
             'area': entry['area'],
             'sentiment': entry.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
+            'sentiment_posts': sum((entry.get('sentiment') or {}).values()),
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),

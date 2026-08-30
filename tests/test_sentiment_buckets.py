@@ -64,15 +64,21 @@ def test_one_post_is_one_vote_however_many_mentions_it_makes():
     assert tally_sentiment(rows)['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
 
 
-def test_a_dead_post_casts_no_vote():
-    # #111 again: a breakdown counting posts a reader cannot open is an assertion
-    # with no evidence behind it, which is the one thing this product must not do.
-    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', 1.0, dead=True)]
-    assert tally_sentiment(rows)['v1'] == {'positive': 1, 'mixed': 0, 'negative': 0}
+def test_a_dead_post_on_the_card_does_vote():
+    # The opposite of what corroboration does, deliberately. Corroboration claims a
+    # reader can go and check two independent people, so a post nobody can open is
+    # not a second source (#111). This summarises the testimony ON the card, and the
+    # card shows dead citations -- labelled, but shown. 1919餐馆 displayed 「别去」
+    # (don't go) and read "all positive" because the tally skipped the dead post the
+    # reader was looking at. What we show is what we count.
+    rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', -1.0, dead=True)]
+    assert tally_sentiment(rows)['v1'] == {'positive': 1, 'mixed': 0, 'negative': 1}
 
 
-def test_a_venue_whose_every_post_is_dead_reports_nothing():
-    assert tally_sentiment([_row('v1', 'p1', 1.0, dead=True)]) == {}
+def test_a_venue_whose_every_post_is_dead_still_reports_what_it_shows():
+    # Its citations are still rendered, so a silent breakdown beside a visible
+    # excerpt is the same contradiction in the other direction.
+    assert tally_sentiment([_row('v1', 'p1', 1.0, dead=True)])['v1']['positive'] == 1
 
 
 def test_mentions_behind_one_url_are_averaged_not_reduced_to_the_worst():
@@ -89,9 +95,10 @@ def test_a_lone_bad_review_is_still_reported_as_bad():
     assert tally_sentiment([_row('v1', 'p1', -1.0)])['v1']['negative'] == 1
 
 
-def test_totals_equal_the_number_of_live_posts():
-    # The invariant the client gates on: sum(sentiment) must equal the post count
-    # the corroboration line shows, or the card stays dark.
+def test_totals_equal_the_number_of_posts_shown():
+    # The client reads `sentiment_posts` rather than inferring agreement with
+    # corroboration.posts, which counts a different set on purpose: corroboration
+    # excludes dead posts, this does not.
     rows = [
         _row('v1', 'p1', 1.0),
         _row('v1', 'p1', 0.9),
@@ -100,7 +107,7 @@ def test_totals_equal_the_number_of_live_posts():
         _row('v1', 'p4', 1.0, dead=True),
     ]
     counts = tally_sentiment(rows)['v1']
-    assert sum(counts.values()) == 3
+    assert sum(counts.values()) == 4
 
 
 def test_venues_are_counted_separately():
