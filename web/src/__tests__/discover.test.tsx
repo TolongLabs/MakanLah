@@ -11,8 +11,15 @@ vi.mock('../api', async () => {
 })
 
 // The Live2D chunk is 500 KB of pixi behind a lazy import and never resolves in
-// jsdom. The panel is not what these assertions are about.
-vi.mock('../components/AskCompanion', () => ({ AskCompanion: () => null }))
+// jsdom. The panel is not what these assertions are about -- but the PROPS it is
+// handed are, so the stub records them.
+const companionProps: Record<string, unknown>[] = []
+vi.mock('../components/AskCompanion', () => ({
+  AskCompanion: (p: Record<string, unknown>) => {
+    companionProps.push(p)
+    return null
+  }
+}))
 
 import { Discover } from '../routes/Discover'
 
@@ -28,6 +35,7 @@ function show(state: Record<string, unknown>) {
 
 beforeEach(() => {
   localStorage.clear()
+  companionProps.length = 0
   recommend.mockReset().mockResolvedValue(empty)
   suggestions.mockReset().mockResolvedValue({ chips: [], band: 'lunch', source: 'corpus' })
 })
@@ -179,5 +187,68 @@ describe('when the corpus knows the dish and cannot show the writing', () => {
     show({ prefs: { craving: ['poutine'], range_m: 0 } })
     await waitFor(() => expect(screen.getByText(/anywhere in the corpus/i)).toBeTruthy())
     expect(screen.queryByText(/cannot show you what people wrote/i)).toBeNull()
+  })
+})
+
+/**
+ * The companion and the page must not contradict each other.
+ *
+ * Measured on prod: the gap screen showed `Filtered by your answers: nasi lemak
+ * 椰浆饭, On my own, All of KL, Something familiar` with the companion directly
+ * beneath it reading `Answer the four questions and this fills in.` Two elements
+ * on one screen, and the companion's was the false one — the `curious` mood
+ * collapsed "nothing searched yet" into "searched and found nothing".
+ *
+ * Asserted as AGREEMENT between the two elements rather than against the string
+ * the fix chose, because a check that only reads the new copy passes the moment
+ * somebody changes the copy back.
+ */
+describe('the companion and the page agree about what has happened', () => {
+  const phase = () => companionProps[companionProps.length - 1]?.phase
+
+  it('does not ask for answers the page is already reciting', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    show({ prefs: { craving: ['nasi lemak'], range_m: 0 } })
+    // The page's own claim that the questions were answered.
+    await waitFor(() => expect(screen.getByText(/Filtered by your answers/i)).toBeTruthy())
+    // `phase` and not `phase()` in the first draft: a function reference is never
+    // equal to 'idle', so the assertion could not fail. Caught by mutating the
+    // component to always pass 'idle' and watching this test stay green -- which
+    // is why the mutation run happens before the commit and not after it.
+    expect(phase(), 'the page recites the answers, so the companion may not ask for them').not.toBe('idle')
+  })
+
+  it('reports picks when there are picks', async () => {
+    recommend.mockReset().mockResolvedValue({
+      results: [
+        {
+          venue: { id: 'v1', name: 'Village Park', area: null, lat: null, lng: null, maps_url: '', dishes: [] },
+          rank: 1,
+          why: '',
+          distance_m: null,
+          citations: [
+            {
+              post_url: 'https://rednote/a',
+              excerpt: 'sedap',
+              platform: 'rednote',
+              author_handle: null,
+              posted_at: null
+            }
+          ]
+        }
+      ],
+      degraded: false,
+      sources_used: ['rednote']
+    })
+    show({ prefs: { craving: ['nasi lemak'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText('Village Park')).toBeTruthy())
+    expect(phase()).toBe('picks')
+  })
+
+  it('reports empty on the evidence-gap screen, where there is nothing to tap Ask on', async () => {
+    recommend.mockReset().mockResolvedValue(GAP)
+    show({ prefs: { craving: ['roti canai'], range_m: 0 } })
+    await waitFor(() => expect(screen.getByText('Kapitan')).toBeTruthy())
+    expect(phase()).toBe('empty')
   })
 })
