@@ -471,6 +471,23 @@
   background: var(--paper-sunk);
 }
 
+/* Below ~480px the four options do not fit one row, and `flex-wrap` leaves the
+   container as wide as the three that did fit, with the fourth alone underneath and
+   a grey void filling the rest of the pill -- unfinished rather than deliberate, on
+   the one screen most people will see. Measured on production: wraps 3+1 from 360 to
+   430px, fits one row from 480px up, so the query stops short of where it fits.
+   Two columns fills both rows instead, and the container hugs them. */
+@media (max-width: 29.9rem) {
+  .segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* --r-chip is 999px, which is a pill. On a two-row block that draws round ends
+       the square-cornered grid cannot fill, so the container's own radius shows
+       behind the options. A card radius reads as the panel it has become. */
+    border-radius: var(--r-card);
+  }
+}
+
 .segment {
   font: inherit;
   font-size: var(--t-sm);
