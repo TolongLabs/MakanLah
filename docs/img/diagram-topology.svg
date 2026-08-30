@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" role="img" aria-labelledby="title desc">
+  <title id="title">Three deployables and one shared library</title>
+  <desc id="desc">A hungry person reaches the static web app, which calls the API over HTTPS. The API and an off-request-path ingestion workstation share Neon and import the same library.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,4 L0,8 Z" fill="#315d79" /></marker>
+    <style>
+      text { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #172536; }
+      .group { fill: #f7fafc; stroke: #9aafbd; stroke-width: 2; }
+      .node { fill: #ffffff; stroke: #315d79; stroke-width: 2; }
+      .person { fill: #eef6fa; stroke: #527d96; stroke-width: 2; }
+      .store { fill: #e8f4ef; stroke: #287052; stroke-width: 2.2; }
+      .library { fill: #eaf1fb; stroke: #3d6896; stroke-width: 2; }
+      .line { fill: none; stroke: #315d79; stroke-width: 2.2; marker-end: url(#arrow); }
+      .dash { fill: none; stroke: #60798a; stroke-width: 2; stroke-dasharray: 8 7; marker-end: url(#arrow); }
+      .title { font-size: 24px; font-weight: 750; }
+      .heading { font-size: 16px; font-weight: 700; }
+      .label { font-size: 14px; font-weight: 650; }
+      .small { font-size: 13px; }
+      .arrow-label { font-size: 12px; font-weight: 700; fill: #496578; }
+    </style>
+  </defs>
+  <rect width="1000" height="650" fill="#f3f6f8" />
+  <text class="title" x="500" y="40" text-anchor="middle">Three deployables and one shared library</text>
+
+  <rect class="person" x="65" y="114" width="178" height="68" rx="14" />
+  <text class="heading" x="154" y="154" text-anchor="middle">Somebody hungry</text>
+  <path class="line" d="M243 148 H320" />
+
+  <rect class="node" x="320" y="96" width="276" height="104" rx="14" />
+  <text class="heading" x="458" y="128" text-anchor="middle">web/</text>
+  <text class="small" x="458" y="153" text-anchor="middle">Cloudflare Pages, static,</text>
+  <text class="small" x="458" y="174" text-anchor="middle">holds no secret</text>
+  <path class="line" d="M596 148 H696" />
+  <text class="arrow-label" x="646" y="137" text-anchor="middle">HTTPS</text>
+
+  <rect class="node" x="696" y="88" width="252" height="120" rx="14" />
+  <text class="heading" x="822" y="121" text-anchor="middle">api/</text>
+  <text class="small" x="822" y="146" text-anchor="middle">FastAPI on Vercel sin1,</text>
+  <text class="small" x="822" y="167" text-anchor="middle">reads the corpus,</text>
+  <text class="small" x="822" y="188" text-anchor="middle">never scrapes</text>
+
+  <path class="line" d="M822 208 V287" />
+  <rect class="store" x="707" y="287" width="230" height="92" rx="16" />
+  <ellipse cx="822" cy="306" rx="92" ry="13" fill="#f7fbf9" stroke="#287052" stroke-width="1.5" />
+  <text class="heading" x="822" y="337" text-anchor="middle">Neon</text>
+  <text class="small" x="822" y="359" text-anchor="middle">ap-southeast-1</text>
+
+  <rect class="group" x="58" y="288" width="470" height="185" rx="18" />
+  <text class="heading" x="80" y="320">Workstation - off the request path entirely</text>
+  <rect class="node" x="111" y="350" width="364" height="88" rx="14" />
+  <text class="heading" x="293" y="382" text-anchor="middle">ingest/</text>
+  <text class="small" x="293" y="407" text-anchor="middle">Hermes Agent, holds the signed-in session</text>
+  <path class="line" d="M475 394 H650 Q676 394 676 350 H707" />
+
+  <rect class="library" x="333" y="532" width="334" height="82" rx="14" />
+  <text class="heading" x="500" y="566" text-anchor="middle">makanlah/</text>
+  <text class="small" x="500" y="590" text-anchor="middle">shared library</text>
+  <path class="dash" d="M545 532 C600 445 704 438 780 208" />
+  <text class="arrow-label" x="666" y="434" transform="rotate(-57 666 434)">imported by</text>
+  <path class="dash" d="M455 532 C410 480 365 468 331 438" />
+  <text class="arrow-label" x="400" y="482" transform="rotate(35 400 482)">imported by</text>
+</svg>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="720" viewBox="0 0 1100 720" role="img" aria-labelledby="title desc">
+  <title id="title">Two runtimes that never share a request</title>
+  <desc id="desc">Three sources flow through the Hermes ingestion pipeline into Neon. User queries and Neon data meet only in the separate request path, which returns cited results.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#315d79" />
+    </marker>
+    <style>
+      text { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill: #172536; }
+      .group { fill: #f7fafc; stroke: #9aafbd; stroke-width: 2; }
+      .node { fill: #ffffff; stroke: #315d79; stroke-width: 2; }
+      .source { fill: #eef6fa; stroke: #527d96; stroke-width: 1.7; }
+      .store { fill: #e8f4ef; stroke: #287052; stroke-width: 2.2; }
+      .accent { fill: #eaf1fb; stroke: #3d6896; stroke-width: 2; }
+      .line { fill: none; stroke: #315d79; stroke-width: 2; marker-end: url(#arrow); }
+      .label { font-size: 14px; font-weight: 650; }
+      .small { font-size: 13px; }
+      .group-title { font-size: 16px; font-weight: 700; }
+      .title { font-size: 24px; font-weight: 750; }
+    </style>
+  </defs>
+  <rect width="1100" height="720" fill="#f3f6f8" />
+  <text class="title" x="550" y="38" text-anchor="middle">Two runtimes that never share a request</text>
+
+  <rect class="group" x="26" y="65" width="430" height="625" rx="18" />
+  <text class="group-title" x="46" y="94">
+    <tspan x="46" dy="0">Hermes Agent</tspan>
+    <tspan class="small" x="46" dy="20">ingestion, around the clock, nobody is waiting</tspan>
+  </text>
+
+  <rect class="source" x="48" y="142" width="112" height="58" rx="10" />
+  <text class="label" x="104" y="176" text-anchor="middle">RedNote</text>
+  <rect class="source" x="174" y="142" width="126" height="58" rx="10" />
+  <text class="label" x="237" y="167" text-anchor="middle">
+    <tspan x="237">Google Maps</tspan><tspan x="237" dy="17">Places API</tspan>
+  </text>
+  <rect class="source" x="314" y="142" width="120" height="58" rx="10" />
+  <text class="label" x="374" y="167" text-anchor="middle">
+    <tspan x="374">Food blogs via</tspan><tspan x="374" dy="17">Firecrawl</tspan>
+  </text>
+
+  <path class="line" d="M104 200 V228 H241 V250" />
+  <path class="line" d="M237 200 V250" />
+  <path class="line" d="M374 200 V228 H241 V250" />
+  <rect class="node" x="145" y="250" width="192" height="58" rx="11" />
+  <text class="label" x="241" y="284" text-anchor="middle">capture to raw cache</text>
+  <path class="line" d="M241 308 V342" />
+  <rect class="node" x="145" y="342" width="192" height="58" rx="11" />
+  <text class="label" x="241" y="376" text-anchor="middle">extract (EN, MS, ZH)</text>
+  <path class="line" d="M241 400 V434" />
+  <rect class="node" x="145" y="434" width="192" height="58" rx="11" />
+  <text class="label" x="241" y="468" text-anchor="middle">resolve venue</text>
+  <path class="line" d="M241 492 V526" />
+  <rect class="node" x="145" y="526" width="192" height="58" rx="11" />
+  <text class="label" x="241" y="560" text-anchor="middle">geocode</text>
+  <path class="line" d="M241 584 V618" />
+  <rect class="node" x="145" y="618" width="192" height="50" rx="11" />
+  <text class="label" x="241" y="648" text-anchor="middle">embed</text>
+
+  <rect class="store" x="480" y="299" width="142" height="116" rx="18" />
+  <ellipse cx="551" cy="319" rx="55" ry="12" fill="#f7fbf9" stroke="#287052" stroke-width="1.6" />
+  <text class="group-title" x="551" y="352" text-anchor="middle">Neon</text>
+  <text class="small" x="551" y="375" text-anchor="middle">Postgres +</text>
+  <text class="small" x="551" y="394" text-anchor="middle">pgvector</text>
+  <path class="line" d="M337 643 H451 Q465 643 465 629 V382 Q465 357 480 357" />
+
+  <rect class="group" x="646" y="65" width="428" height="625" rx="18" />
+  <text class="group-title" x="666" y="94">
+    <tspan x="666">Request path</tspan>
+    <tspan class="small" x="666" dy="20">Vercel sin1, a user is waiting</tspan>
+  </text>
+  <rect class="source" x="676" y="150" width="118" height="54" rx="10" />
+  <text class="label" x="735" y="182" text-anchor="middle">query</text>
+  <path class="line" d="M622 357 H632 Q636 357 636 337 V247 Q636 232 651 232 H798 Q812 232 812 250" />
+  <path class="line" d="M735 204 V232 H812 V250" />
+  <rect class="node" x="724" y="250" width="176" height="58" rx="11" />
+  <text class="label" x="812" y="284" text-anchor="middle">distance filter</text>
+  <path class="line" d="M812 308 V332 H728 V354" />
+  <path class="line" d="M812 308 V332 H936 V354" />
+  <rect class="accent" x="666" y="354" width="152" height="58" rx="11" />
+  <text class="label" x="742" y="379" text-anchor="middle"><tspan x="742">pgvector</tspan><tspan x="742" dy="17">retrieval</tspan></text>
+  <rect class="accent" x="844" y="354" width="176" height="58" rx="11" />
+  <text class="label" x="932" y="388" text-anchor="middle">lexical dish lane</text>
+  <path class="line" d="M742 412 V438 H812 V462" />
+  <path class="line" d="M932 412 V438 H812 V462" />
+  <rect class="node" x="724" y="462" width="176" height="58" rx="11" />
+  <text class="label" x="812" y="496" text-anchor="middle">LLM re-rank</text>
+  <path class="line" d="M812 520 V546" />
+  <rect class="node" x="700" y="546" width="224" height="72" rx="11" />
+  <text class="label" x="812" y="575" text-anchor="middle"><tspan x="812">attach citations</tspan><tspan x="812" dy="18">from the database</tspan></text>
+  <path class="line" d="M812 618 V640" />
+  <rect class="store" x="750" y="640" width="124" height="42" rx="10" />
+  <text class="label" x="812" y="666" text-anchor="middle">results</text>
+</svg>
