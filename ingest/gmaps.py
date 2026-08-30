@@ -16,9 +16,11 @@ nothing re-fetched that the corpus already has.
 """
 
 import asyncio
+import json
 import re
 import urllib.parse
 
+from ingest import cdp
 from ingest.cdp import Session
 
 PAUSE = 2.0
@@ -85,6 +87,87 @@ def _place_id_from(href):
     return m.group(1) if m else None
 
 
+# The results feed of a Maps search. `resolve` reads querySelector -- the FIRST
+# result -- because it exists to turn a known name into a place. Discovery needs
+# the whole list, which is the difference between enriching a venue and finding one.
+LIST_JS = """JSON.stringify([...document.querySelectorAll('a[href*="/maps/place/"]')]
+  .map(a => ({
+    href: a.getAttribute('href') || '',
+    name: (a.getAttribute('aria-label') || '').trim()
+  }))
+  .filter(x => x.name && x.href))"""
+
+# Maps renders about seven results and loads the rest only as the feed scrolls.
+# Measured on 'nasi lemak Bangsar': 7 anchors on arrival, 47 after six scrolls and
+# still climbing. Reading the feed without this collects a seventh of the page.
+SCROLL_JS = """(() => {
+  const f = document.querySelector('div[role="feed"]');
+  if (!f) return 0;
+  f.scrollTop = f.scrollHeight;
+  return document.querySelectorAll('a[href*="/maps/place/"]').length;
+})()"""
+
+# Klang Valley. Same bound resolve() applies, for the same reason: a hit outside
+# it matched the wrong place, and a wrong coordinate is worse than a null one.
+KLANG_VALLEY = (2.6, 3.6, 101.2, 102.1)
+
+
+def parse_feed(items, limit=60):
+    """Anchor dicts from LIST_JS -> [{name, place_id, lat, lng}], deduped.
+
+    Kept separate from the navigation so the discard rules are testable without a
+    browser. Every rule here throws a row away, and each one is a row that would
+    otherwise enter the corpus as a venue nobody can verify.
+    """
+    out, seen = [], set()
+    for d in items or []:
+        if not isinstance(d, dict):
+            continue
+        name = (d.get('name') or '').strip()
+        href = d.get('href') or ''
+        if not name:
+            continue
+        lat, lng = _coords_from(href)
+        place_id = _place_id_from(href)
+        if lat is None or not place_id or place_id in seen:
+            continue
+        lo_lat, hi_lat, lo_lng, hi_lng = KLANG_VALLEY
+        if not (lo_lat <= lat <= hi_lat and lo_lng <= lng <= hi_lng):
+            continue
+        seen.add(place_id)
+        out.append({'name': name, 'place_id': place_id, 'lat': lat, 'lng': lng})
+        if len(out) >= limit:
+            break
+    return out
+
+
+async def discover(page, query, limit=60, scrolls=8):
+    """Search Maps and return every place the results feed will give up.
+
+    The only path by which a venue can enter the corpus without a RedNote post
+    naming it first (#157). Returns [] rather than raising when the feed is not
+    there -- a query with no results is a normal outcome, not an error.
+    """
+    await page.goto(f'https://www.google.com/maps/search/{urllib.parse.quote(query)}/?hl=en', settle=9)
+    seen_count = 0
+    for _ in range(scrolls):
+        n = await page.js(SCROLL_JS)
+        try:
+            n = int(n)
+        except (TypeError, ValueError):
+            break
+        if n <= seen_count:
+            break
+        seen_count = n
+        if n >= limit:
+            break
+        await asyncio.sleep(2.5)
+    raw = await page.js(LIST_JS)
+    if not raw:
+        return []
+    return parse_feed(json.loads(raw), limit=limit)
+
+
 async def resolve(page, name, area=None, city='Kuala Lumpur'):
     """Name -> (lat, lng, address, place_id, resolved_name) or None.
 
@@ -112,9 +195,40 @@ async def resolve(page, name, area=None, city='Kuala Lumpur'):
     return lat, lng, d.get('address') or None, place_id, d.get('name') or name
 
 
+# A search for an unambiguous name lands on the place page; an ambiguous one --
+# which is most short or Chinese-only names -- lands on the results feed instead.
+# `reviews` needs the place page, so on the feed it finds no tab and returns [].
+# That failure was silent and looked exactly like a venue with no reviews:
+# 興记肉骨茶 and VCR both resolved to coordinates and yielded 0, while Village
+# Park, whose name is unambiguous, yielded 5 from the same code.
+OPEN_FIRST_JS = """(() => {
+  if (document.querySelector('button[role="tab"]')) return 'already';
+  const a = document.querySelector('a[href*="/maps/place/"]');
+  if (!a) return 'none';
+  a.click();
+  return 'clicked';
+})()"""
+
+
+async def ensure_place_page(page, settle=6.0):
+    """Open the first result when the tab is on a results feed rather than a place.
+
+    Returns True when a place page is showing. Coordinates were already correct in
+    both cases -- it is the review capture that needs the place open.
+    """
+    state = await page.js(OPEN_FIRST_JS)
+    if state == 'already':
+        return True
+    if state != 'clicked':
+        return False
+    await asyncio.sleep(settle)
+    return bool(await page.js('document.querySelector(\'button[role="tab"]\') ? 1 : 0'))
+
+
 async def reviews(page, limit=8):
     """Read reviews from the place page already open. Returns [] if the tab is
     not on one, which is a normal outcome, not an error."""
+    await ensure_place_page(page)
     opened = await page.js("""(() => {
       const b = [...document.querySelectorAll('button[role="tab"]')]
         .find(x => /^Reviews/i.test(x.getAttribute('aria-label') || ''));
@@ -185,4 +299,12 @@ async def enrich(venues, want_reviews=True, tab_every=6, on_record=None):
                     await asyncio.sleep(PAUSE)
         except Exception as e:
             print(f'  tab batch failed: {str(e)[:90]}', flush=True)
+            # A dead browser is not a failed batch, it is the end of the run. Without
+            # this the loop walks every remaining batch against a socket that is gone:
+            # measured at 28 identical 'Connection refused' lines after Chrome died
+            # 18 venues into a 183-venue shard, which reads in the log exactly like
+            # work being attempted.
+            if not cdp.alive():
+                print('  CDP is gone -- stopping rather than retrying a dead browser', flush=True)
+                break
     return out

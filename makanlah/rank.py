@@ -13,6 +13,7 @@ import math
 import re
 
 from makanlah import config, db, dishes, models
+from makanlah import prefs as prefs_mod
 from makanlah.text import fold_variants
 
 
@@ -455,13 +456,61 @@ def match_block(venue_id, *, lexical_set, dish, scores):
     }
 
 
-def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50):
+def distance_gap_for(con, query, lat, lng):
+    """The corpus knows this dish and nothing in range serves it -- so say where.
+
+    Detect with the wide lane, NAME with the strict one. Whether the corpus knows
+    this dish at all is a recall question: `nasi lemak sedap` must reach
+    `nasi lemak`. Which restaurants to put in front of somebody is a precision
+    question, and getting it wrong invents the claim the gap exists to avoid.
+
+    Returns None when the corpus cannot name the dish, which is the honest answer
+    -- there is no nearest anything to report for a dish nobody has written about.
+    """
+    if lat is None or lng is None:
+        return None
+    wide = frozenset(dishes.fold(d) for d in db.dish_vocabulary(con) if dishes.fold(d))
+    _, label = dishes.named_in(query, wide)
+    label = label or dishes.dish_named_inside(query, wide)
+    elsewhere = dishes.gap_terms(label, wide) if label else frozenset()
+    if not elsewhere:
+        return None
+    return {
+        'term': label,
+        'nearest': [
+            {
+                'name': r['name'],
+                'area': r['area'],
+                'distance_m': int(r['distance_m']) if r['distance_m'] is not None else None,
+                'maps_url': maps_url(r),
+                # A venue whose every post is dead still serves the dish -- a
+                # restaurant does not stop cooking because a post 404s, and the
+                # attribution was extracted while they were live. So it is named,
+                # but never as though it were checkable.
+                'live_citations': int(r['live_citations'] or 0),
+                'verifiable': bool(r['live_citations']),
+            }
+            for r in db.nearest_serving(con, sorted(elsewhere), lat, lng)[:GAP_VENUES]
+        ],
+    }
+
+
+def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=50, prefs=None):
     s = config.settings()
     with db.connect() as con:
         degraded, _, reasons = db.source_health(con)
         candidate_ids = db.filter_candidates(con, lat=lat, lng=lng, radius_m=radius_m)
         if not candidate_ids:
-            return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
+            # Nothing inside the radius. This early return used to sit ABOVE the gap
+            # logic, so the tighter the radius the more likely the response was a
+            # bare empty list -- exactly when "not here, but 2km that way" is the
+            # most useful thing the corpus can say. `bak kut teh` at 300m returned
+            # nothing at all while the same query wider returned five picks.
+            empty = {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
+            far = distance_gap_for(con, query, lat, lng)
+            if far:
+                empty['distance_gap'] = far
+            return empty
 
         # The lexical lane. It fires only when the WHOLE query names a dish, so
         # a mood query stays on the semantic lane, which is what that lane is for.
@@ -508,37 +557,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         # pasta, tacos and a bakery, ranked, with `coverage_gaps: []` and a
         # corroboration stamp on each (#162). Every citation was real; the ranked
         # ANSWER asserted a relevance no post supported.
-        far = None
-        if not named:
-            wide = frozenset(dishes.fold(d) for d in db.dish_vocabulary(con) if dishes.fold(d))
-            # Detect with the wide lane, NAME with the strict one. Whether the corpus
-            # knows this dish at all is a recall question -- `nasi lemak sedap` must
-            # reach `nasi lemak`. Which restaurants to put in front of somebody is a
-            # precision question, and getting it wrong invents the claim the gap
-            # exists to avoid.
-            _, label = dishes.named_in(query, wide)
-            label = label or dishes.dish_named_inside(query, wide)
-            elsewhere_dish = label
-            elsewhere = dishes.gap_terms(label, wide) if label else frozenset()
-            if elsewhere:
-                far = {
-                    'term': elsewhere_dish,
-                    'nearest': [
-                        {
-                            'name': r['name'],
-                            'area': r['area'],
-                            'distance_m': int(r['distance_m']) if r['distance_m'] is not None else None,
-                            'maps_url': maps_url(r),
-                            # A venue whose every post is dead still serves the dish --
-                            # a restaurant does not stop cooking because a post 404s,
-                            # and the attribution was extracted while they were live.
-                            # So it is named, but never as though it were checkable.
-                            'live_citations': int(r['live_citations'] or 0),
-                            'verifiable': bool(r['live_citations']),
-                        }
-                        for r in db.nearest_serving(con, sorted(elsewhere), lat, lng)[:GAP_VENUES]
-                    ],
-                }
+        far = distance_gap_for(con, query, lat, lng) if not named else None
 
         enriched = db.venues_with_citations(con, ordered)
 
@@ -576,7 +595,21 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
     if not candidates:
         return {'results': [], 'degraded': degraded, 'degraded_reasons': reasons, 'sources_used': []}
 
-    picked = models.rerank(query, candidates, limit=limit)
+    # How many of the candidates the corpus can actually cost. `budget` is claimed
+    # only when this is non-zero: with no priced candidate, a budget filter either
+    # empties the list or changes nothing, and naming it either way is false (#158).
+    price_coverage = sum(1 for c in candidates if c.get('price_band'))
+    applied = prefs_mod.applied_names(prefs, price_coverage=price_coverage)
+    # Apply it where it is claimed, and claim it only where it applied. Reporting
+    # `budget` in applied_prefs while never filtering would be #170 again, one
+    # layer further in -- the page would name a filter that still did not run.
+    if 'budget' in applied:
+        kept_by_budget = [c for c in candidates if prefs_mod.within_budget(c, prefs)]
+        if kept_by_budget:
+            candidates = kept_by_budget
+        else:
+            applied = [a for a in applied if a != 'budget']
+    picked = models.rerank(query, candidates, limit=limit, preference=prefs_mod.preference_hint(prefs))
 
     results = []
     for position, (idx, why) in enumerate(picked, start=1):
@@ -600,6 +633,9 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
                     'sentiment_posts': sum((v.get('sentiment') or {}).values()),
                     'lat': v['lat'],
                     'lng': v['lng'],
+                    # 1..4, or absent. The corpus held 49 priced mentions while the
+                    # client rendered none, because nothing serialized this (#158).
+                    'price_band': v.get('price_band'),
                     'maps_url': maps_url(v),
                     'dishes': v['dishes'][:6],
                 },
@@ -630,6 +666,10 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         # back; they come back with the gap named rather than reading as an
         # answer to a question nobody can answer from these posts.
         'coverage_gaps': gaps,
+        # Which wizard answers actually shaped this response. The page says
+        # "Filtered by your answers" and named all five while three were being
+        # dropped (#170); it may now name only what this list carries.
+        'applied_prefs': applied,
     }
 
 
@@ -663,6 +703,7 @@ def one(venue_id, *, lat=None, lng=None):
             'area': entry['area'],
             'sentiment': entry.get('sentiment') or {'positive': 0, 'mixed': 0, 'negative': 0},
             'sentiment_posts': sum((entry.get('sentiment') or {}).values()),
+            'price_band': entry.get('price_band'),
             'lat': entry['lat'],
             'lng': entry['lng'],
             'maps_url': maps_url(entry),
