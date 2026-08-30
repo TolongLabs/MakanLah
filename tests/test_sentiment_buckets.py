@@ -20,7 +20,7 @@ def test_three_stars_and_mild_qualification_are_mixed():
     # called plain, which the card then reported as a critical verdict (#149).
     assert sentiment_bucket(0.0) == 'mixed'
     assert sentiment_bucket(-0.2) == 'mixed'
-    assert sentiment_bucket(-0.4) == 'mixed'
+    assert sentiment_bucket(-0.3) == 'mixed'
 
 
 def test_one_and_two_stars_are_critical():
@@ -128,3 +128,33 @@ def test_no_kept_set_means_count_every_live_post():
     # function silently changes meaning for any other caller.
     rows = [_row('v1', 'p1', 1.0), _row('v1', 'p2', -1.0)]
     assert sum(tally_sentiment(rows)['v1'].values()) == 2
+
+
+def test_the_cut_separates_a_verdict_from_a_qualification():
+    """Read by hand across all 14 negative RedNote mentions in the corpus (#155).
+
+    RedNote has no stars; the extraction model scores it continuously, and it
+    compresses negative text -- a post saying 不推荐 twice scores only -0.4. These
+    are the two sides of where that population actually separates.
+    """
+    # 王美记: "不推荐" twice, "性价比很低", dry chicken, char siew not freshly made.
+    assert sentiment_bucket(-0.4) == 'negative'
+    # 兴记: "中规中矩... 特意去没必要" -- mediocre, not worth a special trip.
+    assert sentiment_bucket(-0.3) == 'mixed'
+    # 海脚人: "可吃可不吃" -- take it or leave it.
+    assert sentiment_bucket(-0.2) == 'mixed'
+
+
+def test_the_cut_does_not_move_google_maps():
+    """Maps is quantised by star_sentiment, so only RedNote feels the exact value.
+
+    Guards the reasoning that made -0.4 safe to pick: if a future change puts a
+    Maps score between -0.5 and 0, the two platforms stop being separable this way.
+    """
+    assert [sentiment_bucket((n - 3) / 2) for n in (1, 2, 3, 4, 5)] == [
+        'negative',
+        'negative',
+        'mixed',
+        'positive',
+        'positive',
+    ]
