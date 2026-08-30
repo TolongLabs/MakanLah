@@ -219,9 +219,24 @@ export function Discover() {
       // Everything visible first, or a row that just got wider can never grow back.
       for (const el of items) el.hidden = false
       const top = items[0]?.offsetTop
-      for (const el of items) if (el.offsetTop !== top) el.hidden = true
+      // Read every position BEFORE hiding anything. `hidden` reflows immediately, so
+      // hiding a wrapped chip pulls the ones after it up into the gap -- and reading
+      // their offsetTop in the same loop then measures the layout the hiding just
+      // created. At 390px that kept `fish` (246 posts) while dropping `curry` (272)
+      // and `BKT` (256), because fish alone was narrow enough to fit the space curry
+      // vacated. The counts are evidence volume, so a row that skips the middle of
+      // the ranking is not a shorter row, it is a wrong one.
+      const tops = items.map((el) => el.offsetTop)
+      const firstWrapped = tops.findIndex((t) => t !== top)
+      if (firstWrapped === -1) return
+      for (const el of items.slice(firstWrapped)) el.hidden = true
     }
     fitOneRow()
+    // Re-fit once the webfont lands. The first pass can run against the fallback
+    // face, whose chips are a different width, and nothing else re-measures until
+    // the viewport changes -- so a row fitted against Arial stays fitted against
+    // Arial while Archivo renders. Guarded because jsdom has no `document.fonts`.
+    document.fonts?.ready?.then(fitOneRow).catch(() => {})
     // Measure once regardless, observe only where the browser can. jsdom has no
     // ResizeObserver and constructing one unguarded threw inside a layout effect,
     // which React surfaces by unmounting the whole route -- the page went blank in
