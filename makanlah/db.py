@@ -162,6 +162,28 @@ def venue_dishes(con, venue_ids):
     return {r['venue_id']: r['dishes'] for r in rows}
 
 
+def venue_dish_counts(con, venue_ids):
+    """{venue_id: {dish: mentions}}. How much a venue is actually about a dish.
+
+    `venue_dishes` answers "does this venue serve it", which stopped being enough
+    once Maps review text was tagged: one passing mention and a shop named after
+    the dish became indistinguishable, and the lexical lane hands the re-ranker
+    only its first sixteen.
+    """
+    if not venue_ids:
+        return {}
+    rows = con.execute(
+        """select m.venue_id, d, count(*) as n
+           from mention m, unnest(m.dishes) d
+           where m.venue_id = any(%s) group by m.venue_id, d""",
+        (list(venue_ids),),
+    ).fetchall()
+    out = {}
+    for r in rows:
+        out.setdefault(r['venue_id'], {})[r['d']] = r['n']
+    return out
+
+
 # Which excerpt leads, and why not confidence.
 #
 # Confidence measures how easy the text was to extract, which is close to the
