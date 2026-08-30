@@ -487,3 +487,26 @@ describe('the filter line names only what actually filtered', () => {
     expect(text).toMatch(/All of KL/)
   })
 })
+
+describe('the distance row reports the radius the search actually used', () => {
+  // #172, found by Peer 3. Geo rides router state and is never persisted, so a
+  // returning user arrives with prefs and no geo. run() drops the radius without
+  // one, and the request goes out unbounded -- while the filter line kept reading
+  // `prefs.range_m` and claimed "1 km". The empty state was already honest here,
+  // reading `askedRadius`, so one screen carried both sentences at once.
+  it('says All of KL when geolocation never resolved, whatever the wizard answered', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 1000 } })
+    await screen.findByText(/Filtered by your answers/i)
+    const text = container.querySelector('.find-prefs')?.textContent ?? ''
+    expect(text).toMatch(/All of KL/)
+    expect(text).not.toMatch(/1 km/)
+  })
+
+  it('still names the radius when one was genuinely applied', async () => {
+    recommend.mockReset().mockResolvedValue(empty)
+    const { container } = show({ prefs: { craving: ['nasi lemak'], range_m: 3000 }, geo: { lat: 3.04, lng: 101.44 } })
+    await screen.findByText(/Filtered by your answers/i)
+    expect(container.querySelector('.find-prefs')?.textContent ?? '').toMatch(/3 km/)
+  })
+})
