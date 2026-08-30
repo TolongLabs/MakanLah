@@ -88,9 +88,15 @@ plausible finding into a real one.
 
 - **`gh` cannot read check-runs with this token** (`gh pr checks`, `gh api .../check-runs` both 403). `guard-merge.sh`
   falls back to `gh run list`, so merging still works. Use `gh run list --branch <ref>` to read CI
-- **`/recommend` does not emit `distance_gap` at a tight radius.** `bak kut teh` at `radius_m=300` returns `results: []`
-  with no gap of either kind; the same query at radius 0 returns 5 picks. It degrades honestly to "Nothing for X within
-  0.3 km of you", so it is a quality gap rather than a lie. Peer 1 has it, behind #170
+- **`distance_gap` fires on 54% of dense-anchor requests, and its `verifiable: true` class is the majority.** Peer 3
+  measured 14 of 26 requests firing across 3 anchors x 10 dishes, **36 entries, 25 true against 11 false**, with live
+  counts up to 13. **Do not sample this surface from a far-flung anchor.** Peer 2 scanned 16 dishes from Penang, JB and
+  Kuantan, found one trigger, and concluded the true class was unobserved. It was the sample: where nothing in range
+  serves the dish AND the wide lane knows nothing either, nothing can fire. The product scenario is the dense anchor,
+  someone standing in KL on a tight radius, and there it fires constantly
+- **A narrower case is still real:** `bak kut teh` at `radius_m=300` from KL centre returns `results: []` with no gap of
+  either kind, where radius 0 returns 5 picks. It degrades honestly to "Nothing for X within 0.3 km of you", so it is a
+  quality gap rather than a lie. Peer 1 has it, behind #170
 - **`readingFor()`'s five labels stay sentence case.** `One source`, `Two sources`, `Thin evidence`, `Nothing to read`,
   `Listening`. TitleCase arguably applies; five labels that read as a deliberate set are a set, and converting them one
   at a time is how a consistent thing becomes inconsistent
