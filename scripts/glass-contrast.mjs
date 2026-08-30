@@ -117,6 +117,16 @@ function rgb([r, g, b]) {
 
 console.log(`\nsampled ${checked} surface edges across ${ROUTES.length} routes x 2 themes, floor ${MIN_RATIO}:1`)
 
+// Silence is not a pass. Rename `.foot`, break the route, fail to reach the server,
+// and every surface is skipped -- leaving `findings` empty and this script happily
+// reporting that everything reads. That is the shape of failure this whole file
+// exists to catch, so it has to be able to catch it in itself.
+const EXPECTED = SURFACES.length * ROUTES.length * 2
+if (checked < EXPECTED) {
+  console.log(`\nmeasured ${checked} of ${EXPECTED} expected edges -- a surface went missing rather than passing`)
+  process.exit(1)
+}
+
 if (!findings.length) {
   console.log('every glass surface reads against the ground behind it')
   process.exit(0)
