@@ -107,6 +107,23 @@ export type EvidenceGap = {
   total: number
 }
 
+/** The corpus knows the dish and nothing within the radius serves it. Distinct from
+    `evidence_gap`, which is "every venue serving it has lost its posts" — that is a
+    fact about the EVIDENCE, this is a fact about the DISTANCE, and the two need
+    different sentences because the user's next move differs. Here, widening the
+    search actually works.
+
+    **`nearest` mixes two evidence classes and the payload cannot tell them apart.**
+    Some entries have live citations; some are the #101 all-dead-citation venues,
+    suppressed from ranked results but still real restaurants. Until an entry-level
+    flag exists, this surface may name them and may not imply we can show what anyone
+    wrote about them. */
+export type DistanceGap = {
+  term: string
+  /** At most three, nearest first. Every one genuinely carries the dish. */
+  nearest: { name: string; area: string | null; distance_m: number; maps_url: string }[]
+}
+
 export type RecommendResponse = {
   results: Result[]
   degraded: boolean
@@ -119,6 +136,7 @@ export type RecommendResponse = {
       matches", and the reader is entitled to the first one. */
   coverage_gaps?: string[]
   evidence_gap?: EvidenceGap
+  distance_gap?: DistanceGap
   error?: string
 }
 

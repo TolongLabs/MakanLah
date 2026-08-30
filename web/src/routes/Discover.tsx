@@ -5,7 +5,7 @@ import { AskCompanion } from '../components/AskCompanion'
 import { AskModal, type AskTarget } from '../components/AskModal'
 import { ResultRow } from '../components/ResultRow'
 import { coverageLine, evidenceOf, listBasisLine, sharedBasis } from '../evidence'
-import { count } from '../format'
+import { count, distance } from '../format'
 import { loadPrefs, summarise } from '../prefs'
 import { RANGE } from '../taste/options'
 import { cacheResults } from '../venueCache'
@@ -140,6 +140,7 @@ export function Discover() {
   const results = data?.results ?? []
   const gap = data?.evidence_gap ?? null
   const gaps = data?.coverage_gaps ?? []
+  const outOfRange = data?.distance_gap ?? null
   // ONE caveat about the list, and only the caveat the cards cannot carry.
   //
   // Every card's subtitle now leads with its own basis, so "Every one of these is a
@@ -338,7 +339,69 @@ export function Discover() {
             </div>
           )}
 
-          {!loading && data && results.length === 0 && !failed && !gap && (
+          {/* THE CORPUS HAS THE DISH AND NOTHING IN RANGE SERVES IT.
+              Before this signal existed the API returned semantically-close venues
+              with `coverage_gaps: []`, so a `nasi lemak` search at walking distance
+              came back as pasta and tacos presented as Rank 1, 2, 3 -- some of them
+              stamped "Corroborated by two independent sources", which was true about
+              the posts and deeply misleading about the answer. The client had no way
+              to know and correctly did not guess (#82).
+
+              WHAT THIS MAY NOT SAY. `nearest` mixes venues with readable posts and
+              #101 venues whose every citation is dead, and the payload cannot tell
+              them apart. So these are named as places and linked to Maps, and
+              nothing here offers to show what anybody wrote -- for some entries that
+              would be false and there is no way to know which. Same restraint
+              `evidence_gap` already exercises, for a different reason. */}
+          {!loading && outOfRange && !failed && (
+            <div className="empty empty-centred gap">
+              {/* The radius is named only when we actually hold one. `distance_gap`
+                  can only arrive from a request that carried lat, lng and a radius,
+                  so in practice `askedRadius` is set -- but a copy line that divides
+                  by a number it has not checked prints "Nothing within 0.0 km of
+                  you", which reads as a bug and is one. */}
+              <p className="gap-lede">
+                {askedRadius > 0 ? (
+                  <>Nothing within {(askedRadius / 1000).toFixed(askedRadius < 1000 ? 1 : 0)} km of you serves </>
+                ) : (
+                  <>Nothing near you serves </>
+                )}
+                <strong lang="und">{outOfRange.term}</strong>.
+              </p>
+              <p>
+                {outOfRange.nearest.length === 1
+                  ? 'The nearest one that does:'
+                  : `The nearest ${outOfRange.nearest.length} that do:`}
+              </p>
+              <ul className="gap-venues">
+                {outOfRange.nearest.map((v) => (
+                  <li key={v.maps_url}>
+                    <a className="link" href={v.maps_url} target="_blank" rel="noreferrer noopener">
+                      <span lang="und">{v.name}</span>
+                    </a>
+                    <span className="posted">
+                      {distance(v.distance_m)}
+                      {v.area ? ` · ${v.area}` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setRadius(0)
+                    void run(asked, 0)
+                  }}
+                >
+                  Search All Of KL
+                </button>
+              </p>
+            </div>
+          )}
+
+          {!loading && data && results.length === 0 && !failed && !gap && !outOfRange && (
             <div className="empty empty-centred">
               {askedRadius > 0 ? (
                 <>

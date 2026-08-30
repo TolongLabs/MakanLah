@@ -206,6 +206,82 @@ const thirdDetail = await page.locator('.result').nth(2).locator('.why-more-body
 note(!/critical|positive|mixed/i.test(thirdDetail), 'held even where the counts agree')
 note(/across 2 platforms/.test(thirdDetail), `the rest of the disclosure still renders  ${JSON.stringify(thirdDetail)}`)
 
+// ------------------------------------------- nothing in range serves the dish
+//
+// Asserted against the real page, not against fixture markup. A unit test that
+// renders its own copy of the JSX proves the fixture says the right thing and would
+// stay green while the component said something else entirely.
+{
+  const gap = await browser.newPage({ viewport: { width: 390, height: 844 } })
+  await gap.route('**/recommend', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results: [],
+        degraded: false,
+        sources_used: [],
+        distance_gap: {
+          term: 'nasi lemak',
+          nearest: [
+            // Readable posts behind it.
+            { name: 'Nasi Lemak Bumbung', area: null, distance_m: 1777, maps_url: 'https://maps/?query_place_id=a' },
+            // #101: every citation dead. Indistinguishable in this payload, and a
+            // Chinese area label beside a Latin name.
+            { name: 'Kapitan', area: '印度区', distance_m: 2400, maps_url: 'https://maps/?query_place_id=b' },
+            // The longest mixed-script name in the corpus, at phone width.
+            {
+              name: '兴记肉骨茶 Hing Kee Bakuteh',
+              area: 'Jalan Ipoh',
+              distance_m: 9391,
+              maps_url: 'https://maps/?query_place_id=c'
+            }
+          ]
+        }
+      })
+    })
+  )
+  await gap.route('**/suggestions', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"chips":[],"band":"","source":"corpus"}' })
+  )
+  await gap.route('**/companion', (route) => route.fulfill({ status: 200, body: '{}' }))
+  await gap.goto(BASE, { waitUntil: 'domcontentloaded' })
+  await gap.evaluate((p) => localStorage.setItem('makanlah.prefs', JSON.stringify(p)), { ...PREFS, range_m: 1500 })
+  await gap.goto(`${BASE}/discover`, { waitUntil: 'domcontentloaded' })
+  await gap.waitForSelector('.gap-venues', { timeout: 30000 }).catch(() => {})
+  await gap.waitForTimeout(400)
+
+  const shown = (
+    await gap
+      .locator('.empty.gap')
+      .innerText()
+      .catch(() => '')
+  ).replace(/\s+/g, ' ')
+  note(shown.length > 0, 'the out-of-range surface renders at all')
+  note(/nasi lemak/.test(shown), `it names the dish  ${JSON.stringify(shown.slice(0, 90))}`)
+  note((await gap.locator('.gap-venues li').count()) === 3, 'it names all three nearest')
+
+  // WHAT IT MAY NOT SAY. `nearest` mixes venues with readable posts and #101 venues
+  // whose every citation is dead, and the payload cannot tell them apart. Offering
+  // to show the writing would be false for some entries with no way to know which.
+  note(!/wrote|read the post|excerpt|what people say/i.test(shown), 'it promises no evidence it cannot produce')
+  note((await gap.locator('.excerpt').count()) === 0, 'no excerpt is rendered on this surface')
+
+  note(/印度区/.test(shown), 'a Chinese area label survives beside a Latin venue name')
+  note(/兴记肉骨茶 Hing Kee Bakuteh/.test(shown), 'a mixed-script name renders whole at 390')
+  const overflow = await gap.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
+  note(!overflow, 'no horizontal overflow at 390 with the longest name in the set')
+
+  const links = await gap.locator('.gap-venues a').evaluateAll((as) => as.map((a) => a.getAttribute('href')))
+  note(
+    links.length === 3 && links.every((h) => h?.includes('query_place_id=')),
+    'every entry links out to Maps by place id'
+  )
+  // Widening actually works here, which is what separates this from evidence_gap.
+  note((await gap.getByRole('button', { name: 'Search All Of KL' }).count()) === 1, 'it offers the wider search')
+  await gap.close()
+}
+
 await browser.close()
 if (fail.length > 0) {
   console.error(`\n${fail.length} failed:\n${fail.map((f) => `  - ${f}`).join('\n')}`)
