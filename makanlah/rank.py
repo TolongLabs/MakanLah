@@ -222,10 +222,22 @@ def add_corroboration(entries):
     for e in entries:
         vid = e['venue']['id']
         cites = e.get('citations') or []
+        # A post nobody can open is not a second source (#111). Counting dead ones
+        # put "Corroborated by two independent sources" on 11 of 59 results whose
+        # card could only render ONE testimony, because leadPair correctly refuses
+        # the dead citation the count had just relied on. 阿喜 read 3 posts / 2
+        # authors / 2 platforms and had exactly one openable post behind it.
+        #
+        # This is the whole claim, not a detail: corroboration means a reader can
+        # go and check two people. An unopenable post is precisely what they cannot
+        # check, so counting it manufactures the confidence the signal exists to
+        # earn. `shared_with` below still walks every citation -- one listicle
+        # driving three ranks is worth saying whether or not it still resolves.
+        live = [c for c in cites if c.get('dead') is not True]
         e['venue']['corroboration'] = {
-            'posts': len({c['post_url'] for c in cites}),
-            'authors': len({c['author_handle'] for c in cites if c.get('author_handle')}),
-            'platforms': len({c['platform'] for c in cites if c.get('platform')}),
+            'posts': len({c['post_url'] for c in live}),
+            'authors': len({c['author_handle'] for c in live if c.get('author_handle')}),
+            'platforms': len({c['platform'] for c in live if c.get('platform')}),
         }
         for c in cites:
             others = backers.get(c['post_url'], set()) - {vid}

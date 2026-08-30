@@ -82,3 +82,57 @@ class TestSharedWith:
 
     def test_empty(self):
         assert add_corroboration([]) == []
+
+
+class TestADeadPostIsNotASecondSource:
+    """#111. `add_corroboration` counted every citation, dead ones included.
+
+    Measured on prod across 8 queries and 59 results: **11 carried "Corroborated
+    by two independent sources" while the card could render exactly one
+    testimony**, because `leadPair` correctly refuses a dead citation that the
+    count had just relied on. 阿喜 read 3 posts / 2 authors / 2 platforms and had
+    one openable post behind it.
+
+    This is the claim itself and not a detail. Corroboration means a reader can go
+    and check two people; an unopenable post is precisely what they cannot check,
+    so counting it manufactures the confidence the signal exists to earn.
+    """
+
+    def _one(self, citations):
+        e = {'venue': {'id': 'v1'}, 'citations': citations}
+        return add_corroboration([e])[0]['venue']['corroboration']
+
+    def test_the_prod_shape_that_overclaimed(self):
+        # 阿喜: one live Google Maps review, two dead RedNote posts.
+        c = self._one(
+            [
+                {'post_url': 'm1', 'platform': 'google_maps', 'author_handle': None, 'dead': None},
+                {'post_url': 'r1', 'platform': 'rednote', 'author_handle': 'a', 'dead': True},
+                {'post_url': 'r2', 'platform': 'rednote', 'author_handle': 'b', 'dead': True},
+            ]
+        )
+        assert c == {'posts': 1, 'authors': 0, 'platforms': 1}
+        assert not (c['posts'] >= 2 and (c['authors'] >= 2 or c['platforms'] >= 2))
+
+    def test_an_unchecked_post_still_counts(self):
+        # `dead` is tri-state. Only `true` is measured dead; `null` is unchecked,
+        # and a cooled-down re-probe resolved exactly such a row live on the venue
+        # with the strongest evidence in the corpus.
+        c = self._one(
+            [
+                {'post_url': 'm1', 'platform': 'google_maps', 'author_handle': None, 'dead': None},
+                {'post_url': 'r1', 'platform': 'rednote', 'author_handle': 'a'},
+            ]
+        )
+        assert c == {'posts': 2, 'authors': 1, 'platforms': 2}
+
+    def test_shared_with_still_walks_every_citation(self):
+        """One listicle driving three ranks is worth saying whether or not it still
+        resolves, so the dead filter must not reach `shared_with` (#87)."""
+        entries = [
+            {'venue': {'id': 'a'}, 'citations': [{'post_url': 'p', 'platform': 'rednote', 'dead': True}]},
+            {'venue': {'id': 'b'}, 'citations': [{'post_url': 'p', 'platform': 'rednote', 'dead': True}]},
+        ]
+        out = add_corroboration(entries)
+        assert out[0]['citations'][0]['shared_with'] == ['b']
+        assert out[1]['citations'][0]['shared_with'] == ['a']
