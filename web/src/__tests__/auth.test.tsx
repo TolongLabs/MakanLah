@@ -123,6 +123,31 @@ describe('the nav while signed in', () => {
     expect(screen.queryByRole('link', { name: 'Get Started' })).toBeNull()
   })
 
+  it('puts Sign Out under the email it signs out of, not in the nav list', () => {
+    // Owner decision, 2026-08-30. Sign Out belongs to the account, so it reads as
+    // an action on the account rather than as a destination alongside Discover.
+    // Asserted on document order because "under" is the whole request -- a test
+    // that only checks both exist passes with them in either arrangement.
+    saveSession({ token: 't', user: { email: 'someone@example.com', is_guest: false, shared: false } })
+    shell()
+    const footer = document.querySelector('.nav-drawer-footer')
+    expect(footer).toBeTruthy()
+    const email = footer?.querySelector('.nav-drawer-signed-in')
+    const out = footer?.querySelector('.nav-drawer-action')
+    expect(email?.textContent).toBe('someone@example.com')
+    expect(out?.textContent).toBe('Sign Out')
+    expect(email?.compareDocumentPosition(out as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('keeps Get Started and the theme switch out of the drawer', () => {
+    // Both live in the topbar the drawer opens from. Two controls for one setting
+    // is two places to wonder which is authoritative.
+    const drawer = () => document.querySelector('[data-nav-drawer]')
+    shell()
+    expect(drawer()?.querySelector('.theme-switch')).toBeNull()
+    expect(drawer()?.textContent).not.toMatch(/Get Started/)
+  })
+
   it('lets somebody choose a theme, including following the machine', () => {
     // Three states, not two. A two-state toggle cannot express "follow my OS", so
     // the first tap would silently take that away.
