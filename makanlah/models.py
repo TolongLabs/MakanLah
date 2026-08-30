@@ -184,7 +184,15 @@ def answer_language(query):
 # candidates with three long excerpts each took 9.0s, which misses the 3s target
 # in docs/PRD.md by a factor of three. The re-rank is 96% of request latency and
 # scales with prompt size, so this is the knob that matters.
-RERANK_CANDIDATES = 16
+# The pool the re-ranker chooses from. It MUST exceed the largest `limit`
+# /recommend will honour (20), or the truncation decides how many results exist
+# before the model does -- which is what 16 was doing. Measured across 46 real
+# queries: total results filled stayed flat at ~190 while the corpus tripled,
+# because every query was capped at 16 candidates regardless of how many matched.
+# On eight queries directly, 16 -> 40 took results from 36 to 60 and median
+# re-rank latency from 1.4s to 1.9s. Every candidate costs tokens, so it stays
+# bounded rather than unbounded.
+RERANK_CANDIDATES = 40
 RERANK_EXCERPT_CHARS = 260
 RERANK_EXCERPTS_PER_VENUE = 2
 
