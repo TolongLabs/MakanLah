@@ -378,6 +378,7 @@ export function Discover() {
             evidence={best ? evidenceOf(best) : null}
             degraded={data?.degraded ?? false}
             phase={best ? 'picks' : data || gap ? 'empty' : 'idle'}
+            paused={target != null}
           />
         </aside>
       </div>

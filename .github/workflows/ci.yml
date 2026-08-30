@@ -175,6 +175,19 @@ jobs:
           BASE: http://127.0.0.1:4188
         run: node scripts/discover_why_check.mjs "$BASE"
 
+      # Two things here fail silently. Mounting the character in the ask dialog
+      # without unmounting her from the aside gives one character two WebGL
+      # contexts, and on some drivers the second kills the first -- the page keeps
+      # rendering and the aside just goes black, with nothing logged. And the tool
+      # trace is the only place a user can watch "she answers from stored excerpts
+      # or declines" actually hold; if it stops rendering, every other check still
+      # passes. Mutation-tested by letting the aside keep its stage, which reddens
+      # the two handoff assertions and nothing else.
+      - name: The copilot shows its working, and there is one of her
+        env:
+          BASE: http://127.0.0.1:4188
+        run: node scripts/copilot_check.mjs "$BASE"
+
       # Scrollbars, selection, focus, autofill and tooltips are the parts most
       # likely to be left at the OS default, and they do not follow a theme on
       # their own. Each is asserted in BOTH schemes so "theme-aware" means the

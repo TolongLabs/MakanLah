@@ -265,3 +265,88 @@ export function ask(venueId: string, question: string): Promise<AskResponse> {
     body: JSON.stringify({ venue_id: venueId, question })
   })
 }
+
+/**
+ * One step the copilot took before answering.
+ *
+ * The tool trace is not a debug view. It is the evidence claim made watchable:
+ * `makanlah/copilot.py` enforces that she answers from stored excerpts or not at
+ * all, and until now that guarantee was invisible — the user was told she had
+ * looked. Watching `read_citations → 4 posts` happen is the same claim, checkable.
+ * It also makes `covered: false` stronger: she is seen looking and finding nothing.
+ */
+export type ToolStep = {
+  id: string
+  /** Human-readable by contract. `read_citations`, never `_fn_0`. */
+  name: string
+  args?: Record<string, unknown>
+  /** One line, rendered as-is. The raw payload is deliberately not sent. */
+  summary?: string
+  count?: number
+}
+
+export type AskEvent =
+  | ({ type: 'tool_call' } & Omit<ToolStep, 'summary' | 'count'>)
+  | { type: 'tool_result'; id: string; summary: string; count?: number }
+  | { type: 'delta'; text: string }
+  | { type: 'done'; covered: boolean; answer?: string; citations: Citation[] }
+
+export type AskTurn = { role: 'user' | 'assistant'; content: string }
+
+/** Thrown when the streaming route is not deployed. The caller falls back to the
+    one-shot `/ask`, which is why `POST /ask` must keep working unchanged. */
+export class NoStream extends Error {}
+
+/**
+ * The copilot, as a stream of events rather than one answer.
+ *
+ * Parses SSE and NDJSON with the same reader: a `data:` prefix is stripped if
+ * present and the rest is JSON either way, so whichever the API settles on works
+ * without a client change.
+ *
+ * An unparseable line is skipped rather than killing the stream. A malformed frame
+ * mid-answer should cost that frame, not the conversation.
+ */
+export async function* askStream(venueId: string, messages: AskTurn[], signal?: AbortSignal): AsyncGenerator<AskEvent> {
+  let res: Response
+  try {
+    res = await fetch(`${apiBase()}/ask/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ venue_id: venueId, messages }),
+      signal
+    })
+  } catch {
+    throw new NoStream('unreachable')
+  }
+  // 404 and 405 are "not deployed yet", which is a normal state and not an error.
+  if (res.status === 404 || res.status === 405) throw new NoStream(`status ${res.status}`)
+  if (!res.ok || !res.body) throw new ApiError(res.status, `ask/stream ${res.status}`)
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      // The last fragment may be half an event; it waits for the next chunk.
+      buffer = lines.pop() ?? ''
+      for (const raw of lines) {
+        const line = raw.trim()
+        if (!line || line.startsWith(':')) continue
+        const json = line.startsWith('data:') ? line.slice(5).trim() : line
+        if (!json || json === '[DONE]') continue
+        try {
+          yield JSON.parse(json) as AskEvent
+        } catch {
+          // One bad frame costs that frame, not the conversation.
+        }
+      }
+    }
+  } finally {
+    reader.cancel().catch(() => {})
+  }
+}

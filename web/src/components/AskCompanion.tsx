@@ -30,7 +30,8 @@ const STAGE_AT = '(min-width: 48rem)'
 export function AskCompanion({
   evidence,
   degraded,
-  phase = 'idle'
+  phase = 'idle',
+  paused = false
 }: {
   evidence: Evidence | null
   degraded: boolean
@@ -38,6 +39,10 @@ export function AskCompanion({
       carry this: `curious` means both "ask me something" and "I found nothing",
       and only one of those should tell you to answer the onboarding questions. */
   phase?: CompanionPhase
+  /** True while the ask dialog is open. She moves into it rather than being
+      duplicated: two Live2D stages is two WebGL contexts for one character, and the
+      second can silently lose the first depending on the driver. */
+  paused?: boolean
 }) {
   const mood: MascotMood = moodFor(evidence, degraded)
   const reading = readingFor(mood, phase)
@@ -100,7 +105,7 @@ export function AskCompanion({
 
   return (
     <div className={live ? 'ask-companion is-live' : 'ask-companion'}>
-      {wide && !failed && (
+      {wide && !failed && !paused && (
         <div className="ask-stage">
           {/* Suspense handles the PENDING import; only the boundary handles the
               rejected one. Without it a failed chunk fetch throws through render
