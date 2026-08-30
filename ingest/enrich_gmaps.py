@@ -74,9 +74,9 @@ def pending_venues(con, limit=None, only_missing=True, offset=0, discovered_only
     # `mention` -- so excluding it here is what stranded it.
     known = 'exists (select 1 from mention m where m.venue_id = venue.id)'
     if discovered_only:
-        sql = f'select id, name, area from venue where place_id is not null and not {known}'
+        sql = f'select id, name, area, place_id from venue where place_id is not null and not {known}'
     else:
-        sql = f'select id, name, area from venue where ({known} or place_id is not null)'
+        sql = f'select id, name, area, place_id from venue where ({known} or place_id is not null)'
     if only_missing:
         sql += """ and not exists (
                      select 1 from mention m

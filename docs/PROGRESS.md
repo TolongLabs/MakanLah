@@ -1,26 +1,27 @@
-# Progress — 2026-08-30 · launch-ready, and the halal safeguard that was a coin flip
+# Progress — 2026-08-30 · the coverage ceiling came off, and the browser stopped being the way in
 
-**`main` is at `d12ac69`. API `/health` reports `5bdd17d`, client `build.json` reports `d12ac69`.** The API is correctly
-behind: the only commit between them touches `ingest/` and `docs/`, neither of which is in the API bundle (`vercel.json`
-includes `makanlah/**` and `api/**`). **A differing sha is not drift — the question is whether the diff touches a
-deployed path**, and #116 exists because answering it by hand has failed twice. **475 Python tests, lint and format
-clean, CI green.** Verified on `main` rather than on a branch: `/recommend` with a radius returns cited results,
-`/venue/{id}` serves a deep link, `/ask` answers from the corpus and admits a gap, `/auth/guest` reports `shared: true`.
+**`main` is at `977caf6`. API `/health` reports `977caf6`, client `build.json` reports `3c99b62`.** The client is
+correctly behind by one commit: `3c99b62` is the copilot voice change, which touches `makanlah/` only and is not in the
+client bundle. **A differing sha is not drift — the question is whether the diff touches a deployed path** (#116). **644
+Python tests, lint and format clean.**
 
-**Agents merge on green CI now.** #23 replaced the blanket `gh pr merge` deny with `.claude/hooks/guard-merge.sh`, which
-**fails closed**: it requires an explicit PR number, an OPEN state, every reported check passed, `mergeStateStatus`
-CLEAN, and refuses `--admin`. Thirteen cases in `tests/test_merge_guard.sh`. **The first autonomous merge was #27.** The
-hook takes effect only after a session restart — the harness caches permissions at start.
+**The corpus tripled, and then had to be made reachable.** Those are two different jobs and only the first is scraping.
 
-**Ranking is measured, not asserted.** `evals/` holds pinned ground truth and a runner. **p@5 0.982, wd@5 0.000, top1
-49/51, p95 4.36s** — see the excerpt-ordering trade below, which cost 2 top1 and bought back 0.3s. **p95 is still
-measured against a 3s target in [`PRD.md`](PRD.md)** and still not met, deliberately. Tracked as **#16**.
+|                         | Start of day | Now       |
+| ----------------------- | ------------ | --------- |
+| Venues                  | 256          | **823**   |
+| With evidence (citable) | 247          | **814**   |
+| Carrying a price        | 45           | **627**   |
+| Posts                   | 1,507        | **4,523** |
+| Mentions                | 1,653        | **4,764** |
+| Distinct authors        | 118          | **2,190** |
 
-**A full eval run costs ~134k tokens**, 13% of a lane's free allowance, which does not refill before it expires on
-**2026-10-13**. The runner prints the bill before spending it; use `--quick` while iterating.
+**Reachable through real queries is the number that matters, and it is not that one.** @makanlah-92's 46-query battery
+read **114 → 142** before the candidate ceiling was raised, while citable grew 229%. Reachable-as-a-share-of-citable
+_fell_ from 46% to 17%. That gap was the whole evening's second act: coverage was solved and retrieval was not.
 
-**Every model lane is pinned to a dated free-quota snapshot.** The rolling DashScope aliases carry none. Re-check the
-console before repinning.
+**Price went 0% user-visible to 78%**, measured on the client by the session that filed it, not by the one that fixed
+it. 75 of 95 results and 56 of 72 distinct venues carry a band, rendered as words rather than `$` symbols.
 
 **Web client is live:** <https://makanlah-b5h.pages.dev> · **API is live:** <https://makanlah-api.vercel.app>
 
@@ -101,6 +102,105 @@ measurement rather than folded into an already-large green PR.
 
 **Also gitignored `scratchpad/`.** Untracked but unignored, it turned `bun run lint` red through the `**/*.md` glob
 while CI stayed green on its clean checkout — **a gate that failed only on the machine doing the work.**
+
+## 2026-08-30 (Evening) — Google Maps Became A Source, And Four Ceilings Came Off
+
+### The Browser Is No Longer The Ingestion Path
+
+Owner directed the switch after CDP enrichment spent an afternoon on 52 venues. `ingest/places_api.py` and
+`ingest/enrich_places.py` replace it. Measured on the same venues:
+
+|              | CDP over Chrome                             | Places API          |
+| ------------ | ------------------------------------------- | ------------------- |
+| Per venue    | ~25s                                        | **~1s**             |
+| Review text  | 1,008 of 1,388 cut off at Google's "… More" | **whole**           |
+| Price        | parsed from prose, 3% of mentions           | `priceRange` in MYR |
+| Failure mode | Chrome died and the loop kept going         | an HTTP status      |
+
+**500 venues in 9 minutes. Cost MYR 0.00** — 998 calls against free monthly allowances of 1,000 Place Details Enterprise
+and 5,000 Text Search Pro. Google replaced the $200 monthly credit with per-SKU free calls on 2025-03-01. Field masks
+are narrow on purpose: `reviews`, `priceLevel`, `priceRange` and `rating` are Enterprise, and adding one unneeded field
+to a search mask would cut the discovery allowance fivefold.
+
+**`place_id` in this corpus is not a Places API place ID.** It is the `!1s0x...:0x...` pair lifted from a Maps URL — a
+CID. 809 of 821 stored ids are that shape, and trusting the column sent one 400 per venue, **505 in a single run**
+before it was stopped. `is_api_place_id` refuses anything `0x`-prefixed. Sharper than it sounds: the 5-venue test passed
+_before_ this bug existed, because `pending_venues` did not return `place_id` at all. **Adding it as an optimisation is
+what broke the run.**
+
+### Four Ceilings, Each Invisible Until The Corpus Outgrew It
+
+Every one of these was correct for a 250-venue corpus and wrong for an 823-venue one. None was caught by a unit test,
+because each test builds its own inputs and never meets the real distribution.
+
+1. **Embeddings.** 571 of 814 citable venues had none, so retrieval could not see them. `nasi lemak` went from 8 results
+   to **1**. Fixed by running `embed_pending()`; 571 embedded in under a minute.
+2. **The re-rank input.** `models.rerank` reads only the first 16 candidates, and the lexical lane was built by
+   iterating a dict. `nasi lemak` matched 192 venues and an arbitrary 16 reached the model. Ordering by candidate order
+   alone made it _worse_ — 3 results, all vegetarian caterers whose reviews merely said the words. Now ordered by how
+   often a venue's own posts name the dish, with distance as the tie-break.
+3. **The candidate ceiling.** `filter_candidates` returned the 400 nearest. At 400 the vocabulary is 624 terms and
+   `steamboat` does not match; at the full 740 in range it is 806 and it does. `steamboat` returned 2 in the afternoon
+   and **0** in the evening because 400 newer venues sat between the user and it. Now 2000. **This is the answer to
+   citable +229% against reachable +25%.**
+4. **The copilot's inputs.** It refused every price question while 627 venues carried a band, because `_shape` fed it
+   only excerpt prose.
+
+### Decisions Recorded
+
+**Price has two provenances and they are not interchangeable.** A band parsed from a post's own words is evidence and
+cites that post; a band from Google's `priceRange` is a third party's figure carried without a citation (#179). The
+copilot may state the second and may not cite it. Conflating them would have it say "a reviewer said RM20" about a
+figure no reviewer wrote.
+
+**Only 257 of 315 parsed price figures were written.** 240 state an explicit RM range and 17 carry a per-person marker;
+the other 58 are a bare figure in prose and stay null. One reads _"on the pricey side (a mangorange drink costs around
+RM12)"_ and parsed to band 1, the cheapest, on a venue the writer had just called expensive. Found by eyeballing twelve
+real rows, not by re-reading the parser.
+
+**Pork leaves the default suggestion chips and stays fully searchable.** This is a **neutral-defaults** decision, not a
+halal safeguard — @makanlah-92 measured that the `soup` chip still returns three bak kut teh houses one tap in, so
+calling it a safeguard would overclaim exactly where `rank.py` says overclaiming is unforgivable. **No hand-written
+non-halal dish list**: a list that catches `pork` but misses `siu yuk`, `char siew`, `babi` or `肉骨茶` looks like a
+safeguard and is not. The version that satisfies the principle is a wizard question, filed rather than built.
+
+**The copilot is LiveroiD**, the character `companion.py` already voiced. The persona sits UNDER the honesty rules and
+the prompt says so explicitly, because a model reads a personality as permission unless told otherwise. Six tests pin
+that the rules, the 40-word cap and the refusal wording survive any later tone edit. Description did not land the voice
+and temperature did nothing at 0.1 vs 0.45; **three worked examples did**.
+
+### What A Killed Run Leaves Behind
+
+`source_status` is `distinct on (platform) order by started_at desc`, and `start_run` inserts with `ok = null`. So a
+`kill -9` leaves an open row forever and every request reads "the last Google Maps refresh did not finish" — two apology
+panels above the first result. It does **not** latch on failure; it reflects the latest run. **The rule: the last ingest
+run of a session must be allowed to finish.** Confirmed false on prod after the final run completed.
+
+### Instrument Failures, Fourth And Fifth Of The Day
+
+**A check that did not vary what it claimed to vary.** The first candidate-ceiling comparison mutated
+`db.CANDIDATE_CEILING` after import and reported 52 results against 71. Python binds default arguments at definition
+time, so **both runs used 2000** and the entire difference was re-rank nondeterminism. Caught only because the gap was
+too large for a ceiling change and too consistent with the ±3 noise floor @makanlah-92 had warned about.
+
+**A run that looked like work and was not.** Three concurrent CDP shards killed Chrome 18 venues into a 183-venue shard;
+the loop then walked 28 more batches against a dead socket, printing `Connection refused` each time, and reported a
+completed stats dict at the end. A failed batch is a normal outcome; a dead browser is the end of the run, and the two
+shared a handler.
+
+### Open, Deliberately
+
+- **#179** — a cited `RM 20` is evidence in a way a Google band structurally is not. Bands are the stopgap
+- **#177** — the dish vocabulary carries non-dishes (`Spicy` 38 rows, `Classic`, `Breakfast` 45). Review tagging
+  amplifies a pre-existing problem. Option 3 in the issue (require N distinct venues) is probably right
+- **`/ask/stream`** — SSE with visible tool calls, owner-requested. Unbuilt, not merely undeployed. The one-shot `/ask`
+  fallback is verified end to end on prod
+- **Restaurant photos** — the Places API returns 10 per venue with attribution, verified at 800px. Blocked on a
+  platform-terms question: `photoUri` is signed and expires, and re-hosting runs into Maps Platform caching terms
+- **The 61 venues that stopped being reachable** in @makanlah-92's battery. Expected to return now the ceiling is
+  raised, since they were crowded out by distance rather than out-ranked. **Unverified**
+
+---
 
 ---
 

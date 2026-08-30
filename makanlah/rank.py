@@ -456,6 +456,39 @@ def match_block(venue_id, *, lexical_set, dish, scores):
     }
 
 
+def lexical_hits(candidate_ids, tags, named, counts=None):
+    """Venues carrying a named dish, in candidate order.
+
+    Order matters because `models.rerank` reads only the first
+    RERANK_CANDIDATES of what it is handed. This was built by iterating
+    `venue_dishes`, whose order is whatever the query returned; with 250 venues
+    the cap covered nearly every match and the arbitrariness never showed. At
+    823 it does: `nasi lemak` matched 192 venues, an arbitrary 16 reached the
+    model, and one came back -- on the most written-about dish in the corpus.
+
+    `filter_candidates` already returns candidates nearest-first, so preserving
+    that order costs nothing and makes the sixteen the model sees the sixteen
+    NEAREST places serving the dish.
+    """
+    if not named:
+        return []
+    hits = [vid for vid in candidate_ids if any(dishes.fold(d) in named for d in tags.get(vid) or [])]
+    if not counts:
+        return hits
+    # How often this venue's posts actually name the dish, summed across every
+    # spelling of it. Tagging Maps review text took `nasi lemak` from a handful
+    # of venues to 192, most of them a single passing mention, so nearest-first
+    # alone handed the model sixteen vegetarian caterers and never reached a
+    # nasi lemak shop. Strength first, distance as the tie-break.
+    order = {vid: i for i, vid in enumerate(candidate_ids)}
+
+    def strength(vid):
+        per = counts.get(vid) or {}
+        return sum(n for d, n in per.items() if dishes.fold(d) in named)
+
+    return sorted(hits, key=lambda v: (-strength(v), order[v]))
+
+
 def distance_gap_for(con, query, lat, lng):
     """The corpus knows this dish and nothing in range serves it -- so say where.
 
@@ -530,7 +563,7 @@ def recommend(query, *, lat=None, lng=None, radius_m=None, limit=10, retrieve_k=
         tags = db.venue_dishes(con, candidate_ids)
         vocabulary = frozenset(dishes.fold(d) for ds in tags.values() for d in ds if dishes.fold(d))
         named, dish = dishes.named_in(query, vocabulary)
-        lexical = [vid for vid, ds in tags.items() if any(dishes.fold(d) in named for d in ds)] if named else []
+        lexical = lexical_hits(candidate_ids, tags, named, db.venue_dish_counts(con, candidate_ids) if named else None)
 
         try:
             qvec = models.embed([query])[0]
