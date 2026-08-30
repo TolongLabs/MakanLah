@@ -136,7 +136,8 @@ describe('the nav while signed in', () => {
     const out = footer?.querySelector('.nav-drawer-action')
     expect(email?.textContent).toBe('someone@example.com')
     expect(out?.textContent).toBe('Sign Out')
-    expect(email?.compareDocumentPosition(out as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    if (!email || !out) throw new Error('the drawer footer is missing the email or the Sign Out button')
+    expect(email.compareDocumentPosition(out) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('keeps Get Started and the theme switch out of the drawer', () => {
