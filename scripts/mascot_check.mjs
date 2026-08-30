@@ -229,6 +229,10 @@ const browser = await chromium.launch()
   await page.goto(`${BASE}/taste`, { waitUntil: 'networkidle' })
   const canvas = page.locator('.companion canvas')
   await canvas.waitFor({ state: 'attached', timeout: 20000 }).catch(() => {})
+  // A SILENT SKIP IS A CHECK THAT MEASURES NOTHING. Against production this block
+  // found no canvas and printed nothing at all, which reads in the log exactly
+  // like a clean run. If she is not here, that is the finding.
+  say(Boolean(await canvas.count()), 'gaze: there is a canvas to measure')
   if (await canvas.count()) {
     await page.waitForTimeout(4000)
     const frame = async () => decodePng(await canvas.screenshot())

@@ -80,7 +80,14 @@ const read = async (scheme, path = '/') => {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: scheme })
   const page = await ctx.newPage()
   await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(900)
+  // Wait for the nav to EXIST rather than for a magic number of milliseconds.
+  // `/discover` redirects to `/taste` when there are no saved answers, and
+  // `networkidle` fires on the page BEFORE the redirect -- so a fixed 900ms read
+  // the bar before React had rendered it and reported a missing drawer toggle on
+  // production while a direct probe found the toggle, the drawer and the canvas
+  // all present. The app was right and the check was early.
+  await page.waitForSelector('.nav-inner', { timeout: 20000 }).catch(() => {})
+  await page.waitForTimeout(600)
   const out = await page.evaluate(READ)
   await ctx.close()
   return out
