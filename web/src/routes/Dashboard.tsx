@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Health, health, type Result } from '../api'
-import { loadSession } from '../auth'
 import { count } from '../format'
 import { loadPrefs, summarise } from '../prefs'
 import { lastResults } from '../venueCache'
@@ -23,7 +22,6 @@ import { lastResults } from '../venueCache'
  * computed here and none is a placeholder.
  */
 export function Dashboard() {
-  const session = loadSession()
   const [corpus, setCorpus] = useState<Health | null>(null)
   const [recent] = useState<Result[]>(() => lastResults())
   const prefs = loadPrefs()
@@ -42,11 +40,26 @@ export function Dashboard() {
     }
   }, [])
 
+  // "Back" needs evidence of having been here, and an email address is not it: a
+  // first-time signup has one before they have done anything at all, and read
+  // "Good to have you back." as the first sentence after signing up. Saved answers
+  // are the honest signal -- they survive the session, and having them means the
+  // wizard was completed at least once.
+  //
+  // The other two cards on this screen were already state-aware. This one was the
+  // only thing on it asserting something it had not checked, one line above the
+  // product's central honesty claim.
+  const returning = prefs != null
+
   return (
     <div className="page dash">
       <header className="dash-head">
-        <h1 className="dash-title">{session?.user.email ? 'Good to have you back.' : 'Good to have you here.'}</h1>
-        <p className="dash-sub">Everything below comes from something a person actually wrote.</p>
+        <h1 className="dash-title">{returning ? 'Good to have you back.' : 'Welcome to MakanLah.'}</h1>
+        <p className="dash-sub">
+          {returning
+            ? 'Everything below comes from something a person actually wrote.'
+            : 'Start with your taste, or search straight away. Everything you get back cites the post it came from.'}
+        </p>
       </header>
 
       <div className="dash-bento">

@@ -99,3 +99,35 @@ describe('the rail says what it knows and no more', () => {
     expect(screen.getByText(/2 posts/)).toBeTruthy()
   })
 })
+
+/**
+ * The greeting has to have checked before it claims anything.
+ *
+ * It read "Good to have you back." to somebody who had just signed up thirty
+ * seconds earlier, because it keyed off having an email address rather than
+ * having been here. That sentence sat one line above the product's central
+ * honesty claim, which is a poor place to assert something unverified.
+ *
+ * Saved answers are the signal: they survive the session, and having them means
+ * the wizard was completed at least once. The other two cards on this screen were
+ * already state-aware off exactly this kind of evidence.
+ */
+describe('the greeting', () => {
+  it('does not welcome a first-time visitor back', () => {
+    // A brand new account: token minted, nothing else done.
+    dash()
+    expect(screen.queryByText(/have you back/i)).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/Welcome/i)
+  })
+
+  it('welcomes back somebody who has answered before', () => {
+    localStorage.setItem('makanlah.prefs', JSON.stringify({ craving: ['nasi lemak'], range_m: 0 }))
+    dash()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/have you back/i)
+  })
+
+  it('offers a first-time visitor somewhere to start', () => {
+    dash()
+    expect(screen.getByText(/Start with your taste/i)).toBeTruthy()
+  })
+})
