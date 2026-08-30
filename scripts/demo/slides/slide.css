@@ -1,0 +1,131 @@
+/* The deck reads the app's own tokens, so a slide cannot drift from the product it
+   is describing. Values are copied from web/src/css/tokens.css rather than eyeballed.
+
+   Two accents, and they mean different things: --enamel marks WHERE evidence came
+   from, --seal marks THAT a pick is attested. Cinnabar and enamel are near
+   complementary, so no slide carries both in quantity. */
+:root {
+  --paper: #f7f7f4;
+  --paper-sunk: #efefe9;
+  --ink: #16180f;
+  --ink-soft: #5c5f52;
+  --ink-faint: #6c6f60;
+  --rule: #d9dad0;
+  --rule-strong: #b9bbae;
+  --enamel: #0b6b5e;
+  --enamel-quiet: #e3efec;
+  --seal: #c3272b;
+  --chrome: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --testimony: "Newsreader", "Noto Serif SC", ui-serif, Georgia, serif;
+  --num: "Instrument Sans", "Archivo", ui-sans-serif, sans-serif;
+}
+
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* 252px of bottom padding is not spacing, it is the subtitle band. Measured, not
+   guessed: the burned-in plate's top row is 852 of 1080 on a two-line card, so
+   content must stop above that. 208px left the floor at 872 and clipped the source
+   chip on slide 02 and "with a caveat." on slide 01. render.mjs asserts the floor. */
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--chrome);
+  display: flex;
+  flex-direction: column;
+  padding: 74px 132px 252px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Paper tooth. The system is paper-and-ink and a flat #f7f7f4 field reads as a
+   browser default; this is grain, not a texture effect, and it stays under 6%. */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.055;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 20px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.brand .chop {
+  width: 36px;
+  height: 36px;
+  color: var(--seal);
+}
+.brand .wm {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.slug {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-family: var(--num);
+  font-size: 18px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.slug .no {
+  color: var(--rule-strong);
+}
+
+.eyebrow {
+  margin-top: 54px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+h1 {
+  margin-top: 18px;
+  font-size: 74px;
+  font-weight: 600;
+  letter-spacing: -0.026em;
+  line-height: 1.05;
+  max-width: 1400px;
+}
+.sub {
+  margin-top: 20px;
+  font-family: var(--testimony);
+  font-size: 28px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 1150px;
+}
+.foot {
+  margin-top: 30px;
+  font-family: var(--num);
+  font-size: 18px;
+  letter-spacing: 0.09em;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
